@@ -1,0 +1,29 @@
+//general options
+#cmakedefine CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+
+//build options
+#cmakedefine BUILD_APPS
+#cmakedefine BUILD_FASTMATH
+#cmakedefine BUILD_QUAD
+#cmakedefine BUILD_THREADING
+#cmakedefine BUILD_VANILLA
+
+//third parties
+
+#cmakedefine USE_ACML
+#cmakedefine USE_ATLAS
+#cmakedefine USE_BOOST
+#cmakedefine USE_BOOST_UBLAS
+#cmakedefine USE_CILK
+#cmakedefine USE_CLBLAS
+#cmakedefine USE_CUBLAS
+#cmakedefine USE_MKL
+#cmakedefine USE_MPREAL
+#cmakedefine USE_MTL
+#cmakedefine USE_NVBLAS
+#cmakedefine USE_OPENBLAS
+#cmakedefine USE_OPENMP
+#cmakedefine USE_POSIX
+#cmakedefine USE_PTHREADS
+#cmakedefine USE_TBB
+#cmakedefine USE_TCMALLOC
