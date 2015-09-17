@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _REAL_HPP
 #define _REAL_HPP
-#includee "config.h"
+#include "config.h"
 
 // isnan(), isfinite()
 #if _MSC_VER
@@ -17,6 +17,7 @@ typedef __int64 int64_t;
 #include <cstdint>
 #endif
 
+namespace numeric {
 
 enum TPrecision {
 	P_Float,
@@ -25,5 +26,7 @@ enum TPrecision {
 	P_MPFR,
 	P_Undefined
 };
+
+}
 
 #endif /* _REAL_HPP */

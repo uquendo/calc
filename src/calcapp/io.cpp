@@ -1,11 +1,12 @@
-#include "calcapp/io.hpp"
-
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <fstream>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+
+
+#include "calcapp/io.hpp"
 
 using namespace std;
 
@@ -30,8 +31,8 @@ bool IOUtil::readLine(ifstream& in, char * buf, int bufSize)
 
 bool IOUtil::readLine(ifstream& in, string& str)
 {
-	static char buf[MAX_CH_ST];
-	bool r = readLine(in, buf, MAX_CH_ST);
+	char buf[LINE_BUF_SIZE];
+	bool r = readLine(in, buf, LINE_BUF_SIZE);
 	str.assign(buf);
 	return r;
 }
@@ -68,5 +69,5 @@ string IOUtil::fileGrep(const char * fileName, const boost::regex& rx, const boo
     return out;
 }
 
-
 }
+

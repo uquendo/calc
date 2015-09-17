@@ -1,10 +1,12 @@
 #include "calcapp/system.hpp"
+#include "calcapp/exception.hpp"
+#include "calcapp/log.hpp"
 
+#include <cctype>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <fstream>
-#include <cctype>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -39,23 +41,23 @@ bool SysUtil::getFreeDiskMB(double *SizeMB, string Name)
 	return true;
 }
 
-bool SysUtil::isEnoughDiskSpace(const char * fileName, double minMB, double * curMB)
+bool SysUtil::isEnoughDiskSpace(const std::string  fileName, double minMB, double * curMB)
 {
 	double mb;
-	SysUtil::getFreeDiskMB(&mb, std::string(fileName));
+	SysUtil::getFreeDiskMB(&mb, fileName);
 	if ( curMB )
 		*curMB = mb;
 	return ( mb >= minMB );
 }
 
-void SysUtil::throwOnOutOfDiskSpace(PoligonFileType fileType, const char * fileName, double minMB)
+void SysUtil::throwOnOutOfDiskSpace(TFileType fileType, const std::string fileName, double minMB)
 {
 	double mb;
 	if ( ! isEnoughDiskSpace(fileName, minMB, &mb) )
-		throw OutOfDiskSpaceError("No enough free space to write file", fileType, fileName, (unsigned long) mb, (unsigned long) minMB);
+		throw OutOfDiskSpaceError("No enough free space to write file", fileType, fileName.c_str(), (unsigned long) mb, (unsigned long) minMB);
 }
 
-int SysUtil::getCpuCoresCount() {
+unsigned SysUtil::getCpuCoresCount() {
 	return (int) boost::thread::hardware_concurrency();
 }
 

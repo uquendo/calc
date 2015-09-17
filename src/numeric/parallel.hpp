@@ -1,7 +1,9 @@
 #pragma once
 #ifndef _THREAD_HPP
 #define _THREAD_HPP
-#includee "config.h"
+#include "config.h"
+
+namespace numeric {
 
 enum TThreading {
 	T_Serial,
@@ -11,5 +13,7 @@ enum TThreading {
 	T_TBB,
 	T_Undefined
 };
+
+}
 
 #endif /* _THREAD_HPP */

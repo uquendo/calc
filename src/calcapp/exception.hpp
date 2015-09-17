@@ -3,12 +3,28 @@
 #define _EXCEPTION_HPP
 #include "config.h"
 
-#include <string>
 #include <cstddef>
+#include <string>
 
 #include <boost/format.hpp>
 
+#include "calcapp/io.hpp"
+
 namespace Calc {
+
+/* Error codes */
+static const int FERR_NO_ERROR         = 0;
+static const int FERR_GENERAL_ERROR    = 0x001;
+static const int FERR_BAD_FILE_TYPE    = 0x002;
+static const int FERR_IO_GENERAL_READ  = 0x110;
+static const int FERR_IO_GENERAL_WRITE = 0x120;
+static const int FERR_IO_FILE_ACCESS   = 0x130;
+static const int FERR_IO_NO_DISK_SPACE = 0x140;
+static const int FERR_IO_FORMAT_ERROR  = 0x150;
+static const int FERR_IO_PRELIMINARY_EOF = 0x160;
+static const int FERR_OUT_OF_MEMORY    = 0x200;
+static const int FERR_DATA_ERROR       = 0x300;
+
 
 class BaseException : public std::exception {
 protected:

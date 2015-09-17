@@ -3,10 +3,12 @@
 #define _PROGRESS_HPP
 #include "config.h"
 
+#include <cstdarg>
 #include <string>
 #include <utility>
-#include <cstdarg>
 #include <atomic>
+
+#include "calcapp/log.hpp"
 
 namespace Calc {
 
@@ -45,5 +47,7 @@ public:
 	// Logging 
 	virtual Logger& log() = 0;
 };
+
+}
 
 #endif /* _PROGRESS_HPP */

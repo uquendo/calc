@@ -3,6 +3,7 @@
 #define _CLI_HPP
 #include "config.h"
 
+#include <cstring>
 #include <string>
 #include <atomic>
 
@@ -33,20 +34,20 @@ public:
         virtual bool parseInputOptions();
         virtual bool parseOutputOptions();
         virtual bool parseAlgoOptions();
-}
+};
 
 class CliProgress : public ProgressCtrl {
 public:
-    class ProgressBar : public ::ProgressBar {
+    class CliProgressBar : public ProgressBar {
 	private:
 		Logger& m_log;
-		int m_lower, m_upper, m_pos, m_step, m_reportedPercentage;
 		std::string m_title;
+		int m_lower, m_upper, m_pos, m_step, m_reportedPercentage;
 		double m_startTime;
 
 	public:
-		ProgressBar(Logger& log, const char * title);
-		virtual ~ProgressBar();
+		CliProgressBar(Logger& log, const char * title);
+		virtual ~CliProgressBar();
 		virtual void setProgressRange(int lower, int upper);
 		virtual void setProgress(int pos);
 		virtual void setProgressStep(int step);
@@ -66,7 +67,7 @@ public:
 	virtual void setStopNow();
 
 	// Progress bar
-	virtual ::ProgressBar * createProgressBar(const char * title);
+	virtual ProgressBar * createProgressBar(const char * title);
 	virtual void setStatusText(const char * text);
 	virtual void clearStatusText();
 

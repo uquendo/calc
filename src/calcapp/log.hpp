@@ -3,7 +3,10 @@
 #define _LOG_HPP
 #include "config.h"
 
+#include <cstdarg>
 #include <string>
+
+#include <boost/format.hpp>
 
 #if _DEBUG
 #define PERF_METER(log, name) Calc::ExecTimeMeter __etm(log, name);
@@ -13,7 +16,7 @@
 
 namespace Calc {
 
-extern const int LOG_LEVEL_NAME_COUNT;
+static const int LOG_LEVEL_NAME_COUNT=7;
 extern const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT];
 
 class BaseException;

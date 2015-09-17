@@ -1,9 +1,10 @@
-#include "calcapp/cli.hpp"
-#include "calcapp/io.hpp"
-
 #include <fstream>
 
 #include <boost/format.hpp>
+
+#include "calcapp/cli.hpp"
+#include "calcapp/io.hpp"
+#include "calcapp/system.hpp"
 
 namespace Calc {
 
@@ -15,7 +16,7 @@ public:
 
 class DumbLogger : public Logger {
 private:
-	ios_guard<ofstream> m_logFile;
+	ios_guard<std::ofstream> m_logFile;
 	LogLevel m_level;
 	double m_startTime;
 
@@ -54,46 +55,46 @@ CliProgress::CliProgress(Logger::LogLevel severity, const string& logName)
 }
 
 
-CliProgress::ProgressBar::ProgressBar(Logger& log, const char * title) 
+CliProgress::CliProgressBar::CliProgressBar(Logger& log, const char * title) 
 	: m_log(log), m_title(title)
 	, m_lower(0), m_upper(0), m_pos(0), m_step(1), m_reportedPercentage(-1) 
 	, m_startTime(SysUtil::getCurTimeSec())
 {}
 
 
-CliProgress::ProgressBar::~ProgressBar() {
+CliProgress::CliProgressBar::~CliProgressBar() {
 	double elapsed = SysUtil::getCurTimeSec() - m_startTime;
 	m_log.fdebug("%s: done (%f seconds)", m_title.c_str(), elapsed);
 }
 
-void CliProgress::ProgressBar::setProgressRange(int lower, int upper) {
+void CliProgress::CliProgressBar::setProgressRange(int lower, int upper) {
 	m_lower = lower; m_upper = upper;
 }
 
-void CliProgress::ProgressBar::setProgress(int pos) {
+void CliProgress::CliProgressBar::setProgress(int pos) {
 	m_pos = pos;
 	advancePos(false);
 }
 
-void CliProgress::ProgressBar::setProgressStep(int step) {
+void CliProgress::CliProgressBar::setProgressStep(int step) {
 	m_step = step;
 }
 
-void CliProgress::ProgressBar::setTitle(const char * title) {
+void CliProgress::CliProgressBar::setTitle(const char * title) {
 	m_title = title;
 }
 
-void CliProgress::ProgressBar::clearTitle() {
+void CliProgress::CliProgressBar::clearTitle() {
 	m_title.clear();
 }
 
 
-void CliProgress::ProgressBar::stepIt() {
+void CliProgress::CliProgressBar::stepIt() {
 	m_pos += m_step;
 	advancePos(false);
 }
 
-void CliProgress::ProgressBar::advancePos(bool reset) {
+void CliProgress::CliProgressBar::advancePos(bool reset) {
 	if ( m_upper <= m_lower )
 		return;
 
@@ -131,8 +132,8 @@ void CliProgress::setStopNow() {
 }
 
 // Progress bar
-::ProgressBar * CliProgress::createProgressBar(const char * title) {
-	return new ProgressBar(log(), title);
+ProgressBar * CliProgress::createProgressBar(const char * title) {
+	return new CliProgressBar(log(), title);
 }
 
 void CliProgress::setStatusText(const char * text) {
@@ -147,3 +148,4 @@ Logger& CliProgress::log() {
 }
 
 }
+

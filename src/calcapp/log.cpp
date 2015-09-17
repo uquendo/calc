@@ -1,10 +1,8 @@
 #include "config.h"
 
-#include <memory>
 #include <cstdarg>
 #include <cstdio>
-
-#include <boost/format.hpp>
+#include <memory>
 
 #include "calcapp/log.hpp"
 #include "calcapp/exception.hpp"
@@ -12,7 +10,6 @@
 
 namespace Calc {
 
-const int LOG_LEVEL_NAME_COUNT=7;
 const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT] = {
 	" ", // 0
 	"FATAL", // 1
@@ -44,7 +41,7 @@ public:
 	};
 } defLogger;
 
-void Logger::error(Exception * e)
+void Logger::error(BaseException * e)
 { 
 	std::string r = (boost::format("%6x: %s") % e->code() % e->what()).str();
 	IOError * ioe = dynamic_cast<IOError *>(e);

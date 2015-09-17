@@ -3,8 +3,15 @@
 #define _OPTIONS_HPP
 #include "config.h"
 
+#include <cstddef>
 #include <string>
-#include <iostream>
+
+#include "numeric/parallel.hpp"
+#include "numeric/real.hpp"
+
+using namespace numeric;
+using std::string;
+using std::ptrdiff_t;
 
 //common long options
 #define HELP_OPT "help"
@@ -20,7 +27,7 @@ namespace Calc {
         int loglevel;
         bool profile;
         bool progress;
-        std::string logfile;
+        string logfile;
     };
 
     struct ThreadingOptions {
@@ -31,7 +38,7 @@ namespace Calc {
     struct PrecisionOptions {
         TPrecision type;
         unsigned decimal_digits;
-        std::streamsize precision;
+        ptrdiff_t precision;
     };
 
     struct ThreadingOptName {
@@ -51,7 +58,7 @@ namespace Calc {
     extern PrecisionOptName _precision_opt_names[];
 
 class AppOptions {
-private:
+protected:
         LoggingOptions m_logging;
         ThreadingOptions m_threading;
         PrecisionOptions m_precision;

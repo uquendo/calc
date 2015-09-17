@@ -10,9 +10,11 @@
 
 using std::size_t;
 
+namespace numeric {
+
 //helper for simple serial matrix multiplication
 //a -- nrows_a x ncolumns_a, b -- ncolumns_a x ncolumns_b , c=a*b -- nrows_a x ncolumns_b
-template <typename T> inline void matmul_helper(T* const  __restrict a, T* const  __restrict b, T* const __restrict c,
+template <typename T> inline void matmul_helper(const T* const  __restrict a, const T* const  __restrict b, T* const __restrict c,
                                                     const size_t nrows_a, const size_t ncolumns_a, const size_t ncolumns_b)
 {
     size_t i,j,k;
@@ -24,11 +26,12 @@ template <typename T> inline void matmul_helper(T* const  __restrict a, T* const
 }
 
 //version for square matrices
-template <typename T> inline void matmul_square_helper(T* const __restrict a, T* const __restrict b, T* const __restrict c, const size_t sz)
+template <typename T> inline void matmul_square_helper(const T* const __restrict a, const T* const __restrict b, T* const __restrict c,
+        const size_t sz)
 {
     return matmul_helper<T>(a,b,c,sz,sz,sz);
 }
 
-
+}
 
 #endif

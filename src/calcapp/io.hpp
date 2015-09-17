@@ -5,20 +5,32 @@
 
 #include <cstdlib>
 #include <cctype>
+#include <cstring>
+#include <fstream>
 
 #include "boost/regex.hpp"
 
 namespace Calc {
 
 enum TFileType {
-    TMatrix,
-    TCsv,
-    TUndefined
+    FT_None =-1,
+    FT_Matrix = 0,
+    FT_Csv = 1,
+    FT_Count = 2
 };
 
+static const char TFileExt[FT_Count][5] =
+{
+    ".mat",
+    ".csv"
+};
+
+static const int LINE_BUF_SIZE=250;
+
 class IOUtil {
-    static bool readLine(ifstream& in, std::string& str);
-    static bool readLine(ifstream& in, char * buf, int bufSize);
+public:
+    static bool readLine(std::ifstream& in, std::string& str);
+    static bool readLine(std::ifstream& in, char * buf, int bufSize);
     static bool tryOpenFile(const char * name, const char * mode);
     static std::string fileGrep(const char * fileName, const boost::regex& rx, bool firstOnly = true);
 
@@ -36,7 +48,7 @@ class IOUtil {
             while ( start < end && ! isspace(*(unsigned const char *)start) ) ++start;
         }
         return nTok;
-    };
+    }
 
     static inline int scanDoubleArray(const char * str, int nElem, double * dest) { return scan<double>(str, nElem, dest, atof); }
     static inline int scanLongArray(const char * str, int nElem, long * dest) { return scan<long>(str, nElem, dest, atol); }

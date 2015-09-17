@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 include(CMakeDependentOption)
 include(FeatureSummary)
 
-project(numerics)
+project(numeric)
 
 #set path for local find modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
@@ -55,13 +55,25 @@ cmake_dependent_option(USE_BOOST_UBLAS    "enable Boost uBLAS library support" O
 
 
 #generic compiler options
-
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -march=native -mtune=native -mfpmath=sse")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}  -O3 -march=native -mtune=native -mfpmath=sse")
-
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_definitions("-DNDEBUG")
 endif()
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(MSVC)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Wall ")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Wall ")
+else()
+    #compiling with C++11 dialect is slightly more painful for cmake older than 3.1
+    if("${CMAKE_VERSION}" VERSION_LESS "3.1")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+    endif()
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -march=native -mtune=native -mfpmath=sse -Wall -pedantic")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}  -O3 -march=native -mtune=native -mfpmath=sse -Wall -pedantic")
+endif()
+
 
 #build options
 
@@ -80,13 +92,20 @@ if(BUILD_QUAD)
 endif()
 
 if(BUILD_FASTMATH)
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Ofast")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
-    if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fast")
-    endif()
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    if(MSVC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /fp:fast")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast")
+    else()
+        if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fast")
+        else()
+            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Ofast")
+        endif()
+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast")
+        else()
+            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast")
+        endif()
     endif()
 endif()
 
@@ -158,16 +177,20 @@ print_enabled_features ( )
 
 # final compiler setup
 
-set (NUMERICS_LIBS 
+set (numeric_LIBS 
 	${CMAKE_THREAD_LIBS_INIT}
+)
+
+set (calcapp_LIBS
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 #prepare general includes
 add_subdirectory(include)
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include" "${CMAKE_SOURCE_DIR}/src")
 #build generic parts
 add_subdirectory(src)
-#build specific apps
+#build task-specific apps
 if (BUILD_APPS)
 	add_subdirectory(apps)
 endif()

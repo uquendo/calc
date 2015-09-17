@@ -10,7 +10,9 @@
 using std::string;
 
 namespace Calc {
-   class SysUtil {
+
+class SysUtil {
+public:
     static string getCurrentDirectory();
     static string getOSVersion();
     static string getCpuSpec();
@@ -20,7 +22,8 @@ namespace Calc {
     static bool getFreeDiskMB(double *SizeMB, string Name);
     static bool isEnoughDiskSpace(string fileName, double minMB, double * curMB = 0);
     static void throwOnOutOfDiskSpace(TFileType fileType, string fileName, double minMB);
-   };
+};
+
 }
 
 #endif /* _UTIL_HPP */
