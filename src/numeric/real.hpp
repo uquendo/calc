@@ -17,6 +17,13 @@ typedef __int64 int64_t;
 #include <cstdint>
 #endif
 
+#ifdef BUILD_QUAD
+#include <boost/multiprecision/float128.hpp>
+#endif
+#ifdef HAVE_MPREAL
+#include <mpreal.h>
+#endif
+
 namespace numeric {
 
 enum TPrecision {
@@ -26,6 +33,13 @@ enum TPrecision {
 	P_MPFR,
 	P_Undefined
 };
+
+#ifdef BUILD_QUAD
+typedef boost::multiprecision::float128 quad;
+#endif
+#ifdef HAVE_MPREAL
+typedef mpfr::mpreal mpreal;
+#endif
 
 }
 

@@ -9,8 +9,19 @@
 
 #include "calcapp/progress.hpp"
 #include "calcapp/app.hpp"
+#include "calcapp/options.hpp"
 
 namespace Calc {
+
+class CliApp : public App {
+public:
+    CliApp();
+    CliApp(ProgressCtrl*);
+    virtual ~CliApp();
+    virtual void setOptions(const AppOptions&);
+    virtual void readInput();
+    virtual void run();
+};
 
 class CliAppOptions : public AppOptions {
 public:

@@ -20,4 +20,4 @@ set(calcapp_HEADERS
     )
 
 add_library(calcapp ${calcapp_SOURCES} ${calcapp_HEADERS})
-target_link_libraries(calcapp numeric ${calcapp_LIBS})
+target_link_libraries(calcapp "${calcapp_LIBS}")

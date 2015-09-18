@@ -1,4 +1,4 @@
-# - Locate tcmalloc library
+# - Locate tcmalloc library 
 # Defines:
 #
 #  TCMALLOC_FOUND
@@ -8,7 +8,7 @@
 #  TCMALLOC_LIBRARIES (not cached)
 #  TCMALLOC_LIBRARY_DIRS (not cached)
 
-find_path(TCMALLOC_INCLUDE_DIR google/tcmalloc.h)
+find_path(TCMALLOC_INCLUDE_DIR gperftools/tcmalloc.h)
 foreach(component tcmalloc)
   find_library(TCMALLOC_${component}_LIBRARY NAMES ${component})
   mark_as_advanced(TCMALLOC_${component}_LIBRARY)

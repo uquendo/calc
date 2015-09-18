@@ -21,7 +21,7 @@ enum TFileType {
 
 static const char TFileExt[FT_Count][5] =
 {
-    ".mat",
+    ".dat",
     ".csv"
 };
 

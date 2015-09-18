@@ -5,15 +5,13 @@
 #include <string>
 #include <ctime>
 
-using namespace std;
-
 int main(int argc, char** argv){
 	try {
         Calc::QuestAppOptions calcOpt;
 		if ( ! calcOpt.processOptions(argc, argv) )
 			return 0;
 
-        //cout.precision(calcOpt.getPrecOpts().precision);
+        //std::cout.precision(calcOpt.getPrecOpts().precision);
         Calc::CliProgress pc(calcOpt.getLogOpts());
 
         std::string cmdLine("Command line: ");
@@ -30,10 +28,10 @@ int main(int argc, char** argv){
         calc.readInput();
         calc.run();
 
-	} catch(exception& e) {
-		cerr << "Exception in : " << e.what() << endl;
+	} catch(std::exception& e) {
+        std::cerr << "Exception in : " << e.what() << std::endl;
 	} catch (...) {
-		cerr << "Exception in " << endl;
+        std::cerr << "Exception in " << std::endl;
 	}
     return 0;
 }

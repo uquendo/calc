@@ -40,10 +40,14 @@ protected:
     virtual bool parseAlgoOptions();
 }
 
-class QuestApp : public App {
+class QuestApp : public CliApp {
 public:
     QuestApp();
+    QuestApp(ProgressCtrl*);
     virtual ~QuestApp();
+    virtual void setOptions(const QuestAppOptions&);
+    virtual void readInput();
+    virtual void run();
 }
 
 }

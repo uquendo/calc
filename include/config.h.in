@@ -1,5 +1,8 @@
 //general options
 #cmakedefine CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+#cmakedefine HAVE_RESTRICT
+#cmakedefine RESTRICT_KEYWORD @RESTRICT_KEYWORD@
+//#cmakedefine common_LIBS "@common_LIBS@"
 
 //build options
 #cmakedefine BUILD_APPS
@@ -9,21 +12,38 @@
 #cmakedefine BUILD_VANILLA
 
 //third parties
+#cmakedefine HAVE_ACML
+#cmakedefine HAVE_ATLAS
+#cmakedefine HAVE_BOOST
+#cmakedefine HAVE_BOOST_UBLAS
+#cmakedefine HAVE_CILK
+#cmakedefine HAVE_CLBLAS
+#cmakedefine HAVE_CUBLAS
+#cmakedefine HAVE_MKL
+#cmakedefine HAVE_MPREAL
+#cmakedefine HAVE_MTL
+#cmakedefine HAVE_NVBLAS
+#cmakedefine HAVE_OPENBLAS
+#cmakedefine HAVE_OPENMP
+#cmakedefine HAVE_POSIX
+#cmakedefine HAVE_PTHREADS
+#cmakedefine HAVE_TBB
+#cmakedefine HAVE_TCMALLOC
 
-#cmakedefine USE_ACML
-#cmakedefine USE_ATLAS
-#cmakedefine USE_BOOST
-#cmakedefine USE_BOOST_UBLAS
-#cmakedefine USE_CILK
-#cmakedefine USE_CLBLAS
-#cmakedefine USE_CUBLAS
-#cmakedefine USE_MKL
-#cmakedefine USE_MPREAL
-#cmakedefine USE_MTL
-#cmakedefine USE_NVBLAS
-#cmakedefine USE_OPENBLAS
-#cmakedefine USE_OPENMP
-#cmakedefine USE_POSIX
-#cmakedefine USE_PTHREADS
-#cmakedefine USE_TBB
-#cmakedefine USE_TCMALLOC
+//generic defines and includes
+
+#ifdef HAVE_BOOST
+#define BOOST_ALL_DYN_LINK
+#endif
+
+#ifdef HAVE_BOOST_UBLAS
+#ifdef NDEBUG
+#define BOOST_UBLAS_NDEBUG
+#endif
+#endif
+
+#ifdef _WIN32
+#include "stdafx.h"
+#endif
+
+
