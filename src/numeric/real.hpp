@@ -35,7 +35,11 @@ enum TPrecision {
 };
 
 #ifdef BUILD_QUAD
+#ifdef HAVE_BOOST
 typedef boost::multiprecision::float128 quad;
+#else
+#error "manual detection of quad type is not available yet.\n enable boost to autodetect and correctly wrap compiler-specific quad precision floats and corresponding math functions"
+#endif
 #endif
 #ifdef HAVE_MPREAL
 typedef mpfr::mpreal mpreal;

@@ -1,6 +1,6 @@
 # - Try to check if nonstandard for C++ keyword "restrict" is available.
-# Keyword "restrict" is defined in C99 but not yet present in any C++ standard.
-# Most compiler have nonstandard replacement like "__restrict" though.
+# Keyword "restrict" is defined in C99 but not present in any C++ standard yet.
+# Most compilers have nonstandard replacement like "__restrict" though.
 #
 # Once done this will define
 #

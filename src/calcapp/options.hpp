@@ -8,6 +8,7 @@
 
 #include "numeric/parallel.hpp"
 #include "numeric/real.hpp"
+#include "calcapp/log.hpp"
 
 using namespace numeric;
 using std::string;
@@ -16,6 +17,7 @@ using std::ptrdiff_t;
 //common long options
 #define HELP_OPT "help"
 #define VERBOSE_OPT "verbose"
+#define LOGFILE_OPT "logfile"
 #define THREADS_OPT "threads"
 #define ALGO_OPT "algorithm"
 #define PRECISION_OPT "precision"
@@ -24,10 +26,10 @@ using std::ptrdiff_t;
 namespace Calc {
     struct LoggingOptions {
         bool verbose;
-        int loglevel;
+        Logger::LogLevel level;
         bool profile;
         bool progress;
-        string logfile;
+        string filename;
     };
 
     struct ThreadingOptions {

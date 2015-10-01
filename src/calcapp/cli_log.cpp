@@ -55,6 +55,13 @@ CliProgress::CliProgress(Logger::LogLevel severity, const string& logName)
 }
 
 
+CliProgress::CliProgress(const LoggingOptions& opts) 
+	: m_pLogger(opts.level != Logger::L_NONE ? (Logger *) new DumbLogger(opts.level, opts.filename) : (Logger *) new QuietLogger())
+        , m_StopNow(false)
+{
+	Logger::setSystem(m_pLogger.get());
+}
+
 CliProgress::CliProgressBar::CliProgressBar(Logger& log, const char * title) 
 	: m_log(log), m_title(title)
 	, m_lower(0), m_upper(0), m_pos(0), m_step(1), m_reportedPercentage(-1) 

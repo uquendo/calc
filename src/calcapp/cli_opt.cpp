@@ -10,7 +10,50 @@ namespace bpo=boost::program_options;
 
 namespace Calc {
 
-bool CliAppOptions::processOptions(int argc, char* argv[]){ 
+//TODO: STUBS!
+CliApp::CliApp(){
+}
+
+CliApp::CliApp(ProgressCtrl*){
+}
+
+CliApp::~CliApp(){
+}
+
+void CliApp::setOptions(const AppOptions&){
+}
+
+void CliApp::readInput(){
+}
+
+void CliApp::run(){
+}
+
+CliAppOptions::CliAppOptions(){
+}
+
+CliAppOptions::~CliAppOptions(){
+}
+
+//prepare cli options
+void CliAppOptions::prepareOptions(){}
+void CliAppOptions::prepareLoggingOptions(){}
+void CliAppOptions::prepareThreadingOptions(){}
+void CliAppOptions::preparePrecisionOptions(){}
+void CliAppOptions::prepareInputOptions(){}
+void CliAppOptions::prepareOutputOptions(){}
+void CliAppOptions::prepareAlgoOptions(){}
+//parse cli options
+bool CliAppOptions::parseOptions(){ return false;}
+bool CliAppOptions::parseLoggingOptions(){ return false;}
+bool CliAppOptions::parseThreadingOptions(){ return false;}
+bool CliAppOptions::parsePrecisionOptions(){ return false;}
+bool CliAppOptions::parseInputOptions(){ return false;}
+bool CliAppOptions::parseOutputOptions(){ return false;}
+bool CliAppOptions::parseAlgoOptions(){ return false;}
+
+
+bool CliAppOptions::CliAppOptions::processOptions(int argc, char* argv[]){ 
     bpo::variables_map argMap;
     //prepareOptions()
     //prepareAlgoOptions()
@@ -48,7 +91,8 @@ bool CliAppOptions::processOptions(int argc, char* argv[]){
 	bpo::options_description allOpt("Allowed options");
 	allOpt.add_options()
 		(HELP_OPT ",h", "print help message")
-		(VERBOSE_OPT ",v", "verbose messages")
+        (VERBOSE_OPT ",v", bpo::value<int>()->default_value(4), "log verbosity level, 0..6")
+        (LOGFILE_OPT ",L", bpo::value<string>()->default_value(""), "specify name of the log file")
 		(THREADS_OPT ",t", bpo::value<unsigned>()->default_value(0), "number of threads to use. 0=auto")
 //		(ALGO_OPT ",s", bpo::value<string>()->default_value(solvers[0].opt), solversHelp.c_str())
 		(PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())

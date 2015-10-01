@@ -19,6 +19,13 @@ PrecisionOptName _precision_opt_names[] = {
     { NULL, 0, P_Undefined }
 };
 
+//TODO: STUBS!
+AppOptions::AppOptions(){
+}
+
+AppOptions::~AppOptions(){
+}
+
 bool AppOptions::processOptions(int argc, char* argv[]){ 
     return false;
 }

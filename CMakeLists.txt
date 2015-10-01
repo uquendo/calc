@@ -79,7 +79,7 @@ endif()
 
 find_package(StandardMathLibrary REQUIRED)
 if(StandardMathLibrary_FOUND)
-    set(common_LIBS "${common_LIBS} ${STANDARD_MATH_LIBRARY}")
+    set(common_LIBS ${common_LIBS} ${STANDARD_MATH_LIBRARY})
 else()
     message("Can't link to the standard math library.")
 endif()
@@ -152,6 +152,7 @@ if (USE_BOOST)
    find_package(Boost COMPONENTS program_options date_time filesystem system thread regex iostreams)
    if(Boost_FOUND)
      include_directories(${Boost_INCLUDE_DIRS})
+     set(calcapp_LIBS ${Boost_LIBRARIES} ${calcapp_LIBS})
      set(app_LIBS ${Boost_LIBRARIES} ${app_LIBS})
      set(HAVE_BOOST YES)
    else()
@@ -213,7 +214,7 @@ feature_summary(WHAT ALL)
 # final compiler setup
 
 set (numeric_LIBS ${common_LIBS})
-set (calcapp_LIBS ${common_LIBS})
+set (calcapp_LIBS ${common_LIBS} ${calcapp_LIBS})
 set (app_LIBS ${common_LIBS} ${app_LIBS})
 
 #prepare general includes

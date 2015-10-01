@@ -29,6 +29,7 @@ public:
         virtual ~CliAppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]);
+protected:
         //prepare cli options
         virtual void prepareOptions();
         virtual void prepareLoggingOptions();
@@ -69,6 +70,7 @@ public:
 	};
 
 	CliProgress(Logger::LogLevel severity, const std::string& logName);
+    CliProgress(const LoggingOptions& opts);
 	CliProgress(){}
 
 	virtual void onStartCalc();
