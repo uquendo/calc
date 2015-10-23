@@ -20,14 +20,14 @@ PrecisionOptName _precision_opt_names[] = {
 };
 
 //TODO: STUBS!
-AppOptions::AppOptions(){
+AppOptions::AppOptions():m_AppName("SomeApp"),
+  m_logging({false, Logger::L_NONE, false, false, ""}),
+  m_threading({T_Undefined,0}),
+  m_precision({P_Undefined,0,0})
+{
 }
 
 AppOptions::~AppOptions(){
-}
-
-bool AppOptions::processOptions(int argc, char* argv[]){ 
-    return false;
 }
 
 }

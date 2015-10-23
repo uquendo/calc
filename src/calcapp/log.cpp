@@ -22,20 +22,35 @@ const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT] = {
 
 Logger * Logger::m_pSystem = NULL;
 
-LogMessage::LogMessage(Logger& log, LogLevel level, std::ostringstream& oss):m_log(log),m_level(level),m_oss(oss)
+Logger::LogMessage::LogMessage(Logger& log, LogLevel level, std::ostringstream& oss, std::atomic_bool& oss_in_use):m_log(log),m_level(level),m_oss(oss),m_oss_in_use(oss_in_use)
 {
+  // acquire m_oss_in_use
+  bool acquired=false;
+  while(!m_oss_in_use.compare_exchange_strong(acquired,true,std::memory_order_acq_rel)){
+    acquired=false;
+  }
 }
 
-LogMessage::~LogMessage(){
+Logger::LogMessage::~LogMessage(){
+  // release m_oss_in_use
+  m_oss_in_use.store(false, std::memory_order_release);
+  // log actial message
   m_log.log(m_level,m_buf.c_str());
 }
 
-inline LogMessage LogMessage::slog(Logger& log, LogLevel level, std::ostringstream& oss)
+inline Logger::LogMessage Logger::LogMessage::slog(Logger& log, LogLevel level, std::ostringstream& oss, std::atomic_bool& oss_in_use)
 {
-  return LogMessage(log,level,oss);
+  return LogMessage(log,level,oss,oss_in_use);
 }
 
-template<class T> LogMessage& LogMessage::operator<<(const T& obj){
+template<> Logger::LogMessage& Logger::LogMessage::operator<<(const std::string& obj){
+  if(!m_buf.empty())
+    m_buf += " ";
+  m_buf += obj;
+  return *this;
+}
+
+template<class T> Logger::LogMessage& Logger::LogMessage::operator<<(const T& obj){
   m_oss.str(std::string());
   m_oss << obj;
   if(!m_buf.empty())
@@ -44,15 +59,15 @@ template<class T> LogMessage& LogMessage::operator<<(const T& obj){
   return *this;
 }
 
-LogMessage Logger::slog(LogLevel level) {
-  return LogMessage::slog(*this,level,m_oss);
+Logger::LogMessage Logger::slog(LogLevel level) {
+  return LogMessage::slog(*this,level,m_oss,m_oss_in_use);
 }
 
 // syntax sugar for streams logging
-inline LogMessage Logger::slog() { return slog(m_level); }
-inline LogMessage Logger::serror() { return slog(L_ERROR); }
-inline LogMessage Logger::swarning() { return slog(L_WARNING); }
-inline LogMessage Logger::sdebug() { return slog(L_DEBUG); }
+inline Logger::LogMessage Logger::slog() { return slog(m_level); }
+inline Logger::LogMessage Logger::serror() { return slog(L_ERROR); }
+inline Logger::LogMessage Logger::swarning() { return slog(L_WARNING); }
+inline Logger::LogMessage Logger::sdebug() { return slog(L_DEBUG); }
 
 void Logger::vflog(LogLevel level, const char * format, va_list va) {
 	static const int BUF_SIZE=1024;

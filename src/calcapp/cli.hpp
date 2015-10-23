@@ -69,7 +69,7 @@ public:
 		void advancePos(bool reset);
 	};
 
-	CliProgress(LogLevel severity, const std::string& logName);
+	CliProgress(Logger::LogLevel severity, const std::string& logName);
   CliProgress(const LoggingOptions& opts);
 	CliProgress(){}
 

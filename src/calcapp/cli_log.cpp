@@ -10,18 +10,18 @@ namespace Calc {
 
 class QuietLogger : public Logger {
 public:
-	virtual void log(LogLevel level, const char * msg) {};
+	virtual void log(Logger::LogLevel level, const char * msg) {};
 };
 
 
 class DumbLogger : public Logger {
 private:
 	ios_guard<std::ofstream> m_logFile;
-	LogLevel m_level;
+	Logger::LogLevel m_level;
 	double m_startTime;
 
 public:
-	DumbLogger(LogLevel severity, const string& logName) {
+	DumbLogger(Logger::LogLevel severity, const string& logName) {
 		if ( ! logName.empty() )
 			m_logFile = new std::ofstream(logName.c_str());
 
@@ -29,7 +29,7 @@ public:
 		m_startTime = SysUtil::getCurTimeSec();
 	};
 
-	virtual void log(LogLevel level, const char * msg) {
+	virtual void log(Logger::LogLevel level, const char * msg) {
 		if ( level > m_level )
 			return;
 
@@ -47,8 +47,8 @@ public:
 };
 
 
-CliProgress::CliProgress(LogLevel severity, const string& logName) 
-	: m_pLogger(severity != L_NONE ? (Logger *) new DumbLogger(severity, logName) : (Logger *) new QuietLogger())
+CliProgress::CliProgress(Logger::LogLevel severity, const string& logName) 
+	: m_pLogger(severity != Logger::Logger::L_NONE ? (Logger *) new DumbLogger(severity, logName) : (Logger *) new QuietLogger())
         , m_StopNow(false)
 {
 	Logger::setSystem(m_pLogger.get());
@@ -56,7 +56,7 @@ CliProgress::CliProgress(LogLevel severity, const string& logName)
 
 
 CliProgress::CliProgress(const LoggingOptions& opts) 
-	: m_pLogger(opts.level != L_NONE ? (Logger *) new DumbLogger(opts.level, opts.filename) : (Logger *) new QuietLogger())
+	: m_pLogger(opts.level != Logger::Logger::L_NONE ? (Logger *) new DumbLogger(opts.level, opts.filename) : (Logger *) new QuietLogger())
         , m_StopNow(false)
 {
 	Logger::setSystem(m_pLogger.get());

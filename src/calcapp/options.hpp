@@ -21,6 +21,7 @@ using std::ptrdiff_t;
 #define THREADS_OPT "threads"
 #define ALGO_OPT "algorithm"
 #define PRECISION_OPT "precision"
+#define DIGITS_OPT "digits"
 #define THREADING_OPT "threading"
 
 namespace Calc {
@@ -40,7 +41,7 @@ namespace Calc {
     struct PrecisionOptions {
         TPrecision type;
         unsigned decimal_digits;
-        ptrdiff_t precision;
+        ptrdiff_t print_precision; //for output i.e. via ios_base::precision(streamsize)
     };
 
     struct ThreadingOptName {
@@ -61,6 +62,7 @@ namespace Calc {
 
 class AppOptions {
 protected:
+        std::string m_AppName;
         LoggingOptions m_logging;
         ThreadingOptions m_threading;
         PrecisionOptions m_precision;
@@ -72,7 +74,7 @@ public:
         AppOptions();
         virtual ~AppOptions();
         //set options from command line arguments
-        virtual bool processOptions(int argc, char* argv[]);
+        virtual bool processOptions(int argc, char* argv[]) = 0;
         //const access functions
         const LoggingOptions& getLogOpts() const { return m_logging; };
         const ThreadingOptions& getThreadOpts() const { return m_threading; };

@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <atomic>
 
 #include <boost/format.hpp>
 
@@ -22,32 +23,30 @@ static const int LOG_LEVEL_NAME_COUNT=7;
 extern const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT];
 
 class BaseException;
-class Logger;
-enum LogLevel { L_TRACE = 6, L_DEBUG = 5, L_NOTE = 4, L_WARNING = 3, L_ERROR = 2, L_FATAL = 1, L_NONE = 0 };
-
-//serialize message to log via Logger::log()
-class LogMessage {
-public:
-    ~LogMessage();
-    inline static LogMessage slog(Logger& , LogLevel , std::ostringstream& );
-    template<class T> LogMessage& operator<<(const T& );
-private:
-    LogMessage(Logger& , LogLevel , std::ostringstream& );
-    Logger& m_log;
-    LogLevel m_level;
-    std::ostringstream& m_oss;
-    std::string m_buf;
-};
 
 class Logger {
 public:
+  enum LogLevel { L_TRACE = 6, L_DEBUG = 5, L_NOTE = 4, L_WARNING = 3, L_ERROR = 2, L_FATAL = 1, L_NONE = 0 };
 
 	virtual void log(LogLevel level, const char * msg) = 0;
 
-  //default loglevel management
-  void setLogLevel(LogLevel level) { m_level = level; }
-  LogLevel getLogLevel() { return m_level; }
+protected: 
+  // serialize message to log via Logger::log()
+  class LogMessage {
+  public:
+      ~LogMessage();
+      inline static LogMessage slog(Logger& , LogLevel , std::ostringstream& , std::atomic_bool& );
+      template<class T> LogMessage& operator<<(const T& );
+  private:
+      LogMessage(Logger& , LogLevel , std::ostringstream& , std::atomic_bool& );
+      Logger& m_log;
+      LogLevel m_level;
+      std::ostringstream& m_oss;
+      std::atomic_bool& m_oss_in_use;
+      std::string m_buf;
+  };
 
+public:
   // logging via c++ streams
   LogMessage slog(LogLevel level);
 
@@ -74,7 +73,11 @@ public:
 	inline void fdebug(const char * format, ...)					{ va_list ap; va_start(ap, format); vflog(L_DEBUG, format, ap); va_end(ap); }
 	inline void debug(const char * msg)								{ log(L_DEBUG, msg);	}
 
-	// Default system logger
+  // default loglevel management
+  void setLogLevel(LogLevel level) { m_level = level; }
+  LogLevel getLogLevel() { return m_level; }
+
+	// default system logger
 	inline static Logger& system()									{ return *m_pSystem; }
 	inline static void setSystem(Logger * sysLog)					{ m_pSystem = sysLog; }
 	Logger():m_level(L_NONE){}
@@ -83,6 +86,7 @@ protected:
 	static Logger * m_pSystem;
   LogLevel m_level;
   std::ostringstream m_oss;
+  std::atomic_bool m_oss_in_use;
 };
 
 
