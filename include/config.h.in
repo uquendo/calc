@@ -1,3 +1,7 @@
+#pragma once
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
 //general options
 #cmakedefine CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
 #cmakedefine HAVE_RESTRICT
@@ -12,23 +16,24 @@
 #cmakedefine BUILD_VANILLA
 
 //third parties
-#cmakedefine HAVE_ACML
-#cmakedefine HAVE_ATLAS
+#cmakedefine HAVE_BLAS
 #cmakedefine HAVE_BOOST
 #cmakedefine HAVE_BOOST_UBLAS
 #cmakedefine HAVE_CILK
-#cmakedefine HAVE_CLBLAS
-#cmakedefine HAVE_CUBLAS
-#cmakedefine HAVE_MKL
+//#cmakedefine HAVE_CLBLAS
+//#cmakedefine HAVE_CUBLAS
+#cmakedefine HAVE_EIGEN
 #cmakedefine HAVE_MPREAL
 #cmakedefine HAVE_MTL
-#cmakedefine HAVE_NVBLAS
-#cmakedefine HAVE_OPENBLAS
+//#cmakedefine HAVE_NVBLAS
 #cmakedefine HAVE_OPENMP
 #cmakedefine HAVE_POSIX
 #cmakedefine HAVE_PTHREADS
 #cmakedefine HAVE_TBB
-#cmakedefine HAVE_TCMALLOC
+
+#ifdef HAVE_BLAS
+#cmakedefine BLAS_VENDOR "@BLAS_VENDOR@"
+#endif
 
 //generic defines and includes
 
@@ -46,4 +51,5 @@
 #include "stdafx.h"
 #endif
 
+#endif /* _CONFIG_H */
 

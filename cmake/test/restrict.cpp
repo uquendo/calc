@@ -1,6 +1,6 @@
 extern void link_error();
 
-void test(int* __restrict a, int* __restrict b)
+void test(int* RESTRICT a, int* RESTRICT b)
 {
     *a=1;
     *b=2;
