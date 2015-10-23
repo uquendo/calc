@@ -47,8 +47,8 @@ public:
 };
 
 
-CliProgress::CliProgress(Logger::LogLevel severity, const string& logName) 
-	: m_pLogger(severity != Logger::L_NONE ? (Logger *) new DumbLogger(severity, logName) : (Logger *) new QuietLogger())
+CliProgress::CliProgress(LogLevel severity, const string& logName) 
+	: m_pLogger(severity != L_NONE ? (Logger *) new DumbLogger(severity, logName) : (Logger *) new QuietLogger())
         , m_StopNow(false)
 {
 	Logger::setSystem(m_pLogger.get());
@@ -56,7 +56,7 @@ CliProgress::CliProgress(Logger::LogLevel severity, const string& logName)
 
 
 CliProgress::CliProgress(const LoggingOptions& opts) 
-	: m_pLogger(opts.level != Logger::L_NONE ? (Logger *) new DumbLogger(opts.level, opts.filename) : (Logger *) new QuietLogger())
+	: m_pLogger(opts.level != L_NONE ? (Logger *) new DumbLogger(opts.level, opts.filename) : (Logger *) new QuietLogger())
         , m_StopNow(false)
 {
 	Logger::setSystem(m_pLogger.get());

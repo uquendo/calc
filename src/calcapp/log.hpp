@@ -5,6 +5,8 @@
 
 #include <cstdarg>
 #include <string>
+#include <iostream>
+#include <sstream>
 
 #include <boost/format.hpp>
 
@@ -20,14 +22,42 @@ static const int LOG_LEVEL_NAME_COUNT=7;
 extern const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT];
 
 class BaseException;
+class Logger;
+enum LogLevel { L_TRACE = 6, L_DEBUG = 5, L_NOTE = 4, L_WARNING = 3, L_ERROR = 2, L_FATAL = 1, L_NONE = 0 };
+
+//serialize message to log via Logger::log()
+class LogMessage {
+public:
+    ~LogMessage();
+    inline static LogMessage slog(Logger& , LogLevel , std::ostringstream& );
+    template<class T> LogMessage& operator<<(const T& );
+private:
+    LogMessage(Logger& , LogLevel , std::ostringstream& );
+    Logger& m_log;
+    LogLevel m_level;
+    std::ostringstream& m_oss;
+    std::string m_buf;
+};
 
 class Logger {
 public:
-	enum LogLevel { L_TRACE = 6, L_DEBUG = 5, L_NOTE = 4, L_WARNING = 3, L_ERROR = 2, L_FATAL = 1, L_NONE = 0 };
 
 	virtual void log(LogLevel level, const char * msg) = 0;
 
-	// Syntax sugar
+  //default loglevel management
+  void setLogLevel(LogLevel level) { m_level = level; }
+  LogLevel getLogLevel() { return m_level; }
+
+  // logging via c++ streams
+  LogMessage slog(LogLevel level);
+
+	// syntax sugar for streams logging
+  inline LogMessage slog(); 
+  inline LogMessage serror(); 
+  inline LogMessage swarning(); 
+  inline LogMessage sdebug(); 
+
+	// syntax sugar for c-style logging
 	inline void log(LogLevel level, const std::string& msg)         { log(level, msg.c_str()); }
 	inline void flog(LogLevel  level, const char * format, ...)		{ va_list va; va_start(va, format); vflog(level, format, va); va_end(va); }
 	void vflog(LogLevel  level, const char * format, va_list va);
@@ -44,15 +74,17 @@ public:
 	inline void fdebug(const char * format, ...)					{ va_list ap; va_start(ap, format); vflog(L_DEBUG, format, ap); va_end(ap); }
 	inline void debug(const char * msg)								{ log(L_DEBUG, msg);	}
 
-
 	// Default system logger
 	inline static Logger& system()									{ return *m_pSystem; }
 	inline static void setSystem(Logger * sysLog)					{ m_pSystem = sysLog; }
-	Logger(){}
+	Logger():m_level(L_NONE){}
 
 protected:
 	static Logger * m_pSystem;
+  LogLevel m_level;
+  std::ostringstream m_oss;
 };
+
 
 class ExecTimeMeter {
 public: 

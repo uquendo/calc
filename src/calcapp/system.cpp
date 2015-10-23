@@ -10,10 +10,10 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <thread>
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/filesystem/operations.hpp"
-#include "boost/thread/thread.hpp"
 #include "boost/format.hpp"
 
 #ifdef _WIN32
@@ -58,7 +58,7 @@ void SysUtil::throwOnOutOfDiskSpace(TFileType fileType, const std::string fileNa
 }
 
 unsigned SysUtil::getCpuCoresCount() {
-	return (int) boost::thread::hardware_concurrency();
+	return (int) std::thread::hardware_concurrency();
 }
 
 double SysUtil::getCurTimeSec()
@@ -72,7 +72,7 @@ double SysUtil::getCurTimeSec()
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 
-BOOL IsWow64()
+inline BOOL IsWow64()
 {
     BOOL bIsWow64 = FALSE;
 
@@ -183,7 +183,7 @@ string SysUtil::getOSVersion() {
 
 string SysUtil::getCpuSpec() {
 #if __linux
-	return IOUtil::fileGrep("/proc/cpuinfo", boost::regex("^model name\\S*:\\S*(.*)$"), true);
+	return IOUtil::fileGrep("/proc/cpuinfo", std::regex("^model name\\S*:\\S*(.*)$"), true);
 #elif _MSC_VER
 	int cpuInfo[4] = {-1};
 	__cpuid(cpuInfo, 0);

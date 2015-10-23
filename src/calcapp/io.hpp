@@ -7,8 +7,7 @@
 #include <cctype>
 #include <cstring>
 #include <fstream>
-
-#include "boost/regex.hpp"
+#include <regex>
 
 namespace Calc {
 
@@ -32,7 +31,7 @@ public:
     static bool readLine(std::ifstream& in, std::string& str);
     static bool readLine(std::ifstream& in, char * buf, int bufSize);
     static bool tryOpenFile(const char * name, const char * mode);
-    static std::string fileGrep(const char * fileName, const boost::regex& rx, bool firstOnly = true);
+    static std::string fileGrep(const char * fileName, const std::regex& rx, bool firstOnly = true);
 
     template <typename T>
     static int scan(const char * str, int nElem, T * dest, T (*f)(const char *)){

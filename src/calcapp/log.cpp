@@ -22,6 +22,38 @@ const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT] = {
 
 Logger * Logger::m_pSystem = NULL;
 
+LogMessage::LogMessage(Logger& log, LogLevel level, std::ostringstream& oss):m_log(log),m_level(level),m_oss(oss)
+{
+}
+
+LogMessage::~LogMessage(){
+  m_log.log(m_level,m_buf.c_str());
+}
+
+inline LogMessage LogMessage::slog(Logger& log, LogLevel level, std::ostringstream& oss)
+{
+  return LogMessage(log,level,oss);
+}
+
+template<class T> LogMessage& LogMessage::operator<<(const T& obj){
+  m_oss.str(std::string());
+  m_oss << obj;
+  if(!m_buf.empty())
+    m_buf += " ";
+  m_buf += m_oss.str();
+  return *this;
+}
+
+LogMessage Logger::slog(LogLevel level) {
+  return LogMessage::slog(*this,level,m_oss);
+}
+
+// syntax sugar for streams logging
+inline LogMessage Logger::slog() { return slog(m_level); }
+inline LogMessage Logger::serror() { return slog(L_ERROR); }
+inline LogMessage Logger::swarning() { return slog(L_WARNING); }
+inline LogMessage Logger::sdebug() { return slog(L_DEBUG); }
+
 void Logger::vflog(LogLevel level, const char * format, va_list va) {
 	static const int BUF_SIZE=1024;
 	char * buf = new char[1024];

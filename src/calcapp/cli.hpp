@@ -69,8 +69,8 @@ public:
 		void advancePos(bool reset);
 	};
 
-	CliProgress(Logger::LogLevel severity, const std::string& logName);
-    CliProgress(const LoggingOptions& opts);
+	CliProgress(LogLevel severity, const std::string& logName);
+  CliProgress(const LoggingOptions& opts);
 	CliProgress(){}
 
 	virtual void onStartCalc();
@@ -88,9 +88,10 @@ public:
 	
 private:
 	std::auto_ptr<Logger> m_pLogger;
-    std::atomic<bool> m_StopNow;
+  std::atomic<bool> m_StopNow;
 };
 
 }
+
 
 #endif /* _CLI_HPP */

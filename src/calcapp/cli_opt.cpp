@@ -14,7 +14,7 @@ namespace Calc {
 CliApp::CliApp(){
 }
 
-CliApp::CliApp(ProgressCtrl*){
+CliApp::CliApp(ProgressCtrl* p):App(p){
 }
 
 CliApp::~CliApp(){
@@ -98,10 +98,12 @@ bool CliAppOptions::CliAppOptions::processOptions(int argc, char* argv[]){
 		(PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())
 		(THREADING_OPT ",l", bpo::value<string>()->default_value(_threading_opt_names[0].opt), threadingHelp.c_str())
 	;
+    /*
 	if ( argc <= 1 ) {
         std::cout << allOpt << "\n";
 		return false;
 	}
+    */
 	bpo::store(bpo::parse_command_line(argc, argv, allOpt), argMap);
 	bpo::notify(argMap);
 	if ( argMap.count(HELP_OPT) ) {

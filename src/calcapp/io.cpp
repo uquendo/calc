@@ -46,15 +46,15 @@ bool IOUtil::tryOpenFile(const char * name, const char * mode) {
     return false;
 }
 
-string IOUtil::fileGrep(const char * fileName, const boost::regex& rx, const bool firstOnly) {
+string IOUtil::fileGrep(const char * fileName, const std::regex& rx, const bool firstOnly) {
     string out;
 
     ifstream f(fileName);
     while ( ! f.fail() && ! f.eof() ) {
         string line;
         getline(f, line);
-        boost::smatch m;
-        if ( boost::regex_match(line, m, rx) ) {
+        std::smatch m;
+        if ( std::regex_match(line, m, rx) ) {
             if ( m.size() > 0 && m[1].matched ) {
                 out += string(m[1].first, m[1].second);
             } else {
