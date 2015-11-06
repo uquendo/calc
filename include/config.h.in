@@ -16,6 +16,7 @@
 #cmakedefine BUILD_VANILLA
 
 //third parties
+#cmakedefine HAVE_ARMADILLO
 #cmakedefine HAVE_BLAS
 #cmakedefine HAVE_BOOST
 #cmakedefine HAVE_BOOST_UBLAS

@@ -50,6 +50,7 @@ set_property(CACHE BLAS_VENDOR PROPERTY STRINGS "All" "Generic" "Open" "Goto" "A
 cmake_dependent_option(USE_MTL            "enable MTL4 library support" OFF "NOT BUILD_VANILLA" OFF)
 cmake_dependent_option(USE_BOOST_UBLAS    "enable Boost uBLAS library support" OFF "NOT BUILD_VANILLA" OFF)
 cmake_dependent_option(USE_EIGEN          "enable Eigen library support" OFF "NOT BUILD_VANILLA" OFF)
+cmake_dependent_option(USE_ARMADILLO      "enable Armadillo library support" OFF "NOT BUILD_VANILLA" OFF)
 
 #gpgpu blas variants
 #cmake_dependent_option(USE_CUBLAS      "enable NVIDIA cuBLAS CUDA library support" OFF "NOT BUILD_VANILLA" OFF)
@@ -270,6 +271,17 @@ if(USE_EIGEN)
     set(HAVE_EIGEN YES)
   else()
     message("Can't find Eigen headers")
+  endif()
+endif()
+
+if(USE_ARMADILLO)
+  find_package(Armadillo)
+  if(ARMADILLO_FOUND)
+    include_directories(${ARMADILLO_INCLUDE_DIRS})
+    set(common_LIBS ${common_LIBS} ${ARMADILLO_LIBRARIES})
+    set(HAVE_ARMADILLO YES)
+  else()
+    message("Can't find Armadillo library")
   endif()
 endif()
 
