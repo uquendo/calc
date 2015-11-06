@@ -9,7 +9,9 @@
 #include <sstream>
 #include <atomic>
 
+#ifdef HAVE_BOOST
 #include <boost/format.hpp>
+#endif
 
 #if _DEBUG
 #define PERF_METER(log, name) Calc::ExecTimeMeter __etm(log, name);
@@ -130,7 +132,11 @@ public:
     inline T min_val() const { return m_min; }
 
     std::string toString() const {
-        return (boost::format("average=%1%; min=%2%; max=%3%; samples=%4%") % avg() % min_val() % max_val() % count()).str();
+      std::string r = "";
+#ifdef HAVE_BOOST
+      r = (boost::format("average=%1%; min=%2%; max=%3%; samples=%4%") % avg() % min_val() % max_val() % count()).str();
+#endif
+      return r;
     }
 };
 

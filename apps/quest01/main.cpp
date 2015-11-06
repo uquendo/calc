@@ -29,9 +29,9 @@ int main(int argc, char** argv){
         calc.run();
 
 	} catch(std::exception& e) {
-        std::cerr << "Exception in : " << e.what() << std::endl;
+        std::cerr << "Exception in " << argv[0] << " : " << e.what() << std::endl;
 	} catch (...) {
-        std::cerr << "Exception in " << std::endl;
+        std::cerr << "Exception in " << argv[0] << " : " << std::endl;
 	}
     return 0;
 }

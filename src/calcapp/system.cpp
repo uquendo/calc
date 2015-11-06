@@ -12,9 +12,11 @@
 #include <vector>
 #include <thread>
 
+#ifdef HAVE_BOOST
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "boost/format.hpp"
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -26,18 +28,18 @@
 #include <gnu/libc-version.h>
 #endif
 
-using namespace std;
-
 namespace Calc {
 
-bool SysUtil::getFreeDiskMB(double *SizeMB, string Name)
+bool SysUtil::getFreeDiskMB(double *SizeMB, std::string Name)
 {
+#ifdef HAVE_BOOST
 	boost::filesystem::path p(Name);
 	p = boost::filesystem::absolute(p);
 	if ( p.has_parent_path() )
 		p = p.parent_path();
 	boost::filesystem::space_info s = boost::filesystem::space(p);
 	*SizeMB = (double) s.free / 1024.0 / 1024.0;
+#endif
 	return true;
 }
 
@@ -63,9 +65,13 @@ unsigned SysUtil::getCpuCoresCount() {
 
 double SysUtil::getCurTimeSec()
 {
-	return (boost::posix_time::microsec_clock::local_time() 
+	double r = 0.0;
+#ifdef HAVE_BOOST
+  r = (boost::posix_time::microsec_clock::local_time() 
 				- boost::posix_time::ptime(boost::gregorian::date(1970,1,1))
 			).total_milliseconds() / 1000.0;
+#endif
+  return r;
 }
 
 #ifdef _WIN32
@@ -91,12 +97,12 @@ inline BOOL IsWow64()
 
 #endif
 
-string SysUtil::getOSVersion() {
+std::string SysUtil::getOSVersion() {
 #ifdef _WIN32
    OSVERSIONINFOEX osvi;
    BOOL bOsVersionInfoEx;
 
-   string bit=IsWow64()?" 64bit":" 32bit";
+   std::string bit=IsWow64()?" 64bit":" 32bit";
    
    // Try calling GetVersionEx using the OSVERSIONINFOEX structure.
    // If that fails, try using the OSVERSIONINFO structure.
@@ -175,27 +181,35 @@ string SysUtil::getOSVersion() {
 		return "Unknown";
 	}
 	
-	return string(u.sysname) + " " + u.release + " " + u.version + " " + u.machine + "; libc version: " + gnu_get_libc_version();
+	return std::string(u.sysname) + " " + u.release + " " + u.version + " " + u.machine + "; libc version: " + gnu_get_libc_version();
 #else
    return "Unknown OS";
 #endif
 }
 
-string SysUtil::getCpuSpec() {
+std::string SysUtil::getCpuSpec() {
 #if __linux
 	return IOUtil::fileGrep("/proc/cpuinfo", std::regex("^model name\\S*:\\S*(.*)$"), true);
 #elif _MSC_VER
 	int cpuInfo[4] = {-1};
 	__cpuid(cpuInfo, 0);
-	return str(boost::format("cpuid: %08x %08x %08x %08x") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3]);
+  std::string r="";
+#ifdef HAVE_BOOST
+  r = str(boost::format("cpuid: %08x %08x %08x %08x") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3]);
+#endif
+  return r;
 #else
 	return "Unknown OS";
 #endif
 }
 
-string SysUtil::getCurrentDirectory() 
+std::string SysUtil::getCurrentDirectory() 
 {
-	return boost::filesystem::absolute(boost::filesystem::path(".")).string();
+  std::string r = "";
+#ifdef HAVE_BOOST
+	r = boost::filesystem::absolute(boost::filesystem::path(".")).string();
+#endif
+  return r;
 }
 
 }

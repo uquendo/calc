@@ -6,7 +6,9 @@
 #include <cstddef>
 #include <string>
 
+#ifdef HAVE_BOOST
 #include <boost/format.hpp>
+#endif
 
 #include "calcapp/io.hpp"
 
@@ -55,8 +57,10 @@ public:
 	IOError(int code, const char * errStr, TFileType fileType, const char * fileName, std::size_t line) 
 		: BaseException(code, errStr), m_fileType(fileType), m_fileName(fileName), m_lineNum(line)
 	{
+#ifdef HAVE_BOOST
 		m_fullStr = (boost::format("File %s (type %s), line %li: %s") % fileName % TFileExt[fileType] % line % errStr).str();
-	}
+#endif
+  }
 
 	IOError(int code, const char * errStr, TFileType fileType, const char * fileName) 
 		: BaseException(code, errStr), m_fileType(fileType), m_fileName(fileName), m_lineNum(0)

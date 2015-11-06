@@ -1,6 +1,8 @@
 #include <fstream>
 
+#ifdef HAVE_BOOST
 #include <boost/format.hpp>
+#endif
 
 #include "calcapp/cli.hpp"
 #include "calcapp/io.hpp"
@@ -33,11 +35,14 @@ public:
 		if ( level > m_level )
 			return;
 
-		std::string m = (boost::format("%.3f %s: %s") 
+		std::string m = "";
+#ifdef HAVE_BOOST
+    m = (boost::format("%.3f %s: %s") 
 			% (SysUtil::getCurTimeSec() - m_startTime) 
 			% ((level >= 0 && level < LOG_LEVEL_NAME_COUNT) ? LOG_LEVEL_NAME[level] : "") 
 			% msg
 		).str();
+#endif
 
 		if ( m_logFile.get() )
 			*m_logFile << m << std::endl;
@@ -112,7 +117,10 @@ void CliProgress::CliProgressBar::advancePos(bool reset) {
 
 	int curPercentage = 10 * (m_pos - m_lower) / (m_upper - m_lower);
 	if ( curPercentage != m_reportedPercentage || reset ) {
-		string perc = str(boost::format("%02i%%...") % (curPercentage * 10));
+		string perc = "";
+#ifdef HAVE_BOOST
+    perc = str(boost::format("%02i%%...") % (curPercentage * 10));
+#endif
 		m_log.fdebug("%s: %s", m_title.c_str(), perc.c_str());
 		m_reportedPercentage = curPercentage;
 	}

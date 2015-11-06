@@ -1,24 +1,16 @@
+#include <iostream>
 #include "calcapp/app.hpp"
 
 namespace Calc {
 
 //TODO: STUBS!
-App::App(){
+App::App():m_pProgress(NULL){
 }
 
-App::App(ProgressCtrl*){
+App::App(ProgressCtrl* p):m_pProgress(p){
 }
 
 App::~App(){
 }
-
-void App::setOptions(const AppOptions&){
-}
-    
-void App::readInput(){
-}   
-    
-void App::run(){
-}   
 
 }

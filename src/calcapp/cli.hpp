@@ -5,7 +5,15 @@
 
 #include <cstring>
 #include <string>
+#include <memory>
 #include <atomic>
+
+#ifdef HAVE_BOOST
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/parsers.hpp>
+namespace bpo=boost::program_options;
+#endif
 
 #include "calcapp/progress.hpp"
 #include "calcapp/app.hpp"
@@ -18,14 +26,14 @@ public:
     CliApp();
     CliApp(ProgressCtrl*);
     virtual ~CliApp();
-    virtual void setOptions(const AppOptions&);
-    virtual void readInput();
-    virtual void run();
+    virtual void setDefaultOptions() = 0;
+    virtual void readInput() = 0;
+    virtual void run() = 0;
 };
 
 class CliAppOptions : public AppOptions {
 public:
-        CliAppOptions();
+        CliAppOptions(std::string AppName = std::string("SomeCliApp"));
         virtual ~CliAppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]);
@@ -39,13 +47,20 @@ protected:
         virtual void prepareOutputOptions();
         virtual void prepareAlgoOptions(); 
         //parse cli options
-        virtual bool parseOptions();
+        virtual bool parseOptions(int argc, char* argv[]);
         virtual bool parseLoggingOptions();
         virtual bool parseThreadingOptions();
         virtual bool parsePrecisionOptions();
         virtual bool parseInputOptions();
         virtual bool parseOutputOptions();
         virtual bool parseAlgoOptions();
+private:
+#ifdef HAVE_BOOST
+        bpo::variables_map argMap;
+        bpo::options_description allOpt;
+#endif
+        std::string threadingHelp;
+        std::string precisionHelp;
 };
 
 class CliProgress : public ProgressCtrl {
@@ -87,7 +102,7 @@ public:
 	virtual Logger& log();
 	
 private:
-	std::auto_ptr<Logger> m_pLogger;
+	std::unique_ptr<Logger> m_pLogger;
   std::atomic<bool> m_StopNow;
 };
 

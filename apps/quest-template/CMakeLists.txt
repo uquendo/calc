@@ -1,4 +1,4 @@
-set(APP_NAME quest01)
+set(APP_NAME quest-template)
 set(APP_SRCNAME quest)
 
 configure_file("appconfig.h.in" "appconfig.h")

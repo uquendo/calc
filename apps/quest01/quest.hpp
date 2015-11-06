@@ -4,6 +4,8 @@
 
 #include "calcapp/cli.hpp"
 
+#include "appconfig.h"
+
 namespace Calc {
 
 enum TAlgo {
@@ -24,7 +26,7 @@ static const AlgoOptName _algo_opt_names[] = {
 
 class QuestAppOptions : public CliAppOptions {
 public:
-    QuestAppOptions() {};
+    QuestAppOptions():CliAppOptions(std::string("APP_NAME")) {};
     virtual ~QuestAppOptions() {};
     virtual bool processOptions(int argc, char* argv[]) {return CliAppOptions::processOptions(argc,argv);};
 protected:
@@ -45,6 +47,7 @@ public:
     QuestApp(){};
     QuestApp(ProgressCtrl* pc):CliApp(pc){};
     virtual ~QuestApp(){};
+    virtual void setDefaultOptions() {};
     virtual void setOptions(const QuestAppOptions&){};
     virtual void readInput(){};
     virtual void run(){};

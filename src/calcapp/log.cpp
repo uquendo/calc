@@ -90,12 +90,16 @@ public:
 
 void Logger::error(BaseException * e)
 { 
-	std::string r = (boost::format("%6x: %s") % e->code() % e->what()).str();
+  std::string r="";
+#ifdef HAVE_BOOST
+  r = (boost::format("%6x: %s") % e->code() % e->what()).str();
+#endif
 	IOError * ioe = dynamic_cast<IOError *>(e);
-	if ( ioe ) {
+	if ( ioe ) { 	
+#ifdef HAVE_BOOST
 		r += (boost::format(": FORMAT=%i FILE='%s' LINE=%i") % ioe->fileType() % ioe->fileName() % ioe->fileType()).str();
+#endif
 	}
-
 	error(r.c_str()); 
 }
 

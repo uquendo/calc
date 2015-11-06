@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _BLAS_IMPL_HPP
 #define _BLAS_IMPL_HPP
 #include "config.h"

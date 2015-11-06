@@ -20,7 +20,7 @@ PrecisionOptName _precision_opt_names[] = {
 };
 
 //TODO: STUBS!
-AppOptions::AppOptions():m_AppName("SomeApp"),
+AppOptions::AppOptions(std::string AppName):m_AppName(AppName),
   m_logging({false, Logger::L_NONE, false, false, ""}),
   m_threading({T_Undefined,0}),
   m_precision({P_Undefined,0,0})

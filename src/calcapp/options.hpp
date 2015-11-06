@@ -71,7 +71,7 @@ protected:
         //OutputOptions m_output;
         //AlgoOptions m_algorithm; 
 public:
-        AppOptions();
+        AppOptions(std::string AppName = std::string("SomeApp"));
         virtual ~AppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]) = 0;
