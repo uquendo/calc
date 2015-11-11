@@ -188,12 +188,19 @@ std::string SysUtil::getOSVersion() {
 }
 
 std::string SysUtil::getCpuSpec() {
+  std::string r="";
 #if __linux
-	return IOUtil::fileGrep("/proc/cpuinfo", std::regex("^model name\\S*:\\S*(.*)$"), true);
+  try{
+    std::regex rg("model name[[:space:]]*:[[:space:]]*(.*)");
+    r= IOUtil::fileGrep("/proc/cpuinfo", rg, true, 1);
+  }catch(std::regex_error& e){
+    //beware of pre-4.9 gcc! see for example https://stackoverflow.com/a/12665408
+//    std::cerr << e.what() << e.code() << std::endl;
+  }
+  return r;
 #elif _MSC_VER
 	int cpuInfo[4] = {-1};
 	__cpuid(cpuInfo, 0);
-  std::string r="";
 #ifdef HAVE_BOOST
   r = str(boost::format("cpuid: %08x %08x %08x %08x") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3]);
 #endif
@@ -206,13 +213,14 @@ std::string SysUtil::getCpuSpec() {
 std::string SysUtil::getBuildOptions() {
   //here goes macro frenzy
   std::string r = "";
+  r+="build toolchain : " CMAKE_CXX_COMPILER_ID " " CMAKE_CXX_COMPILER_VERSION "\n";
   r+="build type : " CMAKE_BUILD_TYPE "\n";
   //git revision
 #ifdef INFO_GIT_SHA1
-  r="git sha1 : " INFO_GIT_SHA1 "\n";
+  r+="git sha1 : " INFO_GIT_SHA1 "\n";
 #endif
 #ifdef INFO_GIT_REFSPEC
-  r+="git refspec : " INFO_GIT_REFSPEC "\n";
+//  r+="git refspec : " INFO_GIT_REFSPEC "\n";
 #endif
   //BUILD_* options
   r+="build options : ";

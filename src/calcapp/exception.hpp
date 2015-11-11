@@ -59,6 +59,10 @@ public:
 	{
 #ifdef HAVE_BOOST
 		m_fullStr = (boost::format("File %s (type %s), line %li: %s") % fileName % TFileExt[fileType] % line % errStr).str();
+#else
+    m_fullStr = "";
+    m_fullStr.append("File ").append(fileName).append(" (type ").append(TFileExt[fileType]).append("), line ");
+    m_fullStr.append(std::to_string(line)).append(": ").append(errStr);
 #endif
   }
 

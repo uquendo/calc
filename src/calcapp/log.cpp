@@ -93,11 +93,16 @@ void Logger::error(BaseException * e)
   std::string r="";
 #ifdef HAVE_BOOST
   r = (boost::format("%6x: %s") % e->code() % e->what()).str();
+#else
+  r.append(std::to_string(e->code())).append(": ").append(e->what());
 #endif
 	IOError * ioe = dynamic_cast<IOError *>(e);
 	if ( ioe ) { 	
 #ifdef HAVE_BOOST
-		r += (boost::format(": FORMAT=%i FILE='%s' LINE=%i") % ioe->fileType() % ioe->fileName() % ioe->fileType()).str();
+		r += (boost::format(": FORMAT=%i FILE='%s' LINE=%i") % ioe->fileType() % ioe->fileName() % ioe->fileLine()).str();
+#else
+    r.append(": FORMAT=").append(std::to_string(ioe->fileType())).append(" FILE='").append(ioe->fileName()).append("' LINE=");
+    r.append(std::to_string(ioe->fileLine()));
 #endif
 	}
 	error(r.c_str()); 

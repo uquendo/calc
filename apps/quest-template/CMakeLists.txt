@@ -1,4 +1,5 @@
 set(APP_NAME quest-template)
+set(APP_VERSION 0.0)
 set(APP_SRCNAME quest)
 
 configure_file("appconfig.h.in" "appconfig.h")

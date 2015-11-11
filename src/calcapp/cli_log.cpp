@@ -42,10 +42,13 @@ public:
 			% ((level >= 0 && level < LOG_LEVEL_NAME_COUNT) ? LOG_LEVEL_NAME[level] : "") 
 			% msg
 		).str();
+#else
+    m = std::to_string((double)(SysUtil::getCurTimeSec() - m_startTime));
+    m.append(((level >= 0 && level < LOG_LEVEL_NAME_COUNT) ? LOG_LEVEL_NAME[level] : ""));
+    m.append(": ").append(msg);
 #endif
-
 		if ( m_logFile.get() )
-			*m_logFile << m << std::endl;
+			*m_logFile << m << "\n";
 
 		puts(m.c_str());
 	};
@@ -120,6 +123,8 @@ void CliProgress::CliProgressBar::advancePos(bool reset) {
 		string perc = "";
 #ifdef HAVE_BOOST
     perc = str(boost::format("%02i%%...") % (curPercentage * 10));
+#else
+    perc = to_string((int)(curPercentage * 10)).append("%...");
 #endif
 		m_log.fdebug("%s: %s", m_title.c_str(), perc.c_str());
 		m_reportedPercentage = curPercentage;

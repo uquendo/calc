@@ -16,6 +16,7 @@ using std::ptrdiff_t;
 
 //common long options
 #define HELP_OPT "help"
+#define ABOUT_OPT "version"
 #define VERBOSE_OPT "verbose"
 #define LOGFILE_OPT "logfile"
 #define THREADS_OPT "threads"
@@ -63,6 +64,7 @@ namespace Calc {
 class AppOptions {
 protected:
         std::string m_AppName;
+        std::string m_AppVersion;
         LoggingOptions m_logging;
         ThreadingOptions m_threading;
         PrecisionOptions m_precision;
@@ -71,7 +73,7 @@ protected:
         //OutputOptions m_output;
         //AlgoOptions m_algorithm; 
 public:
-        AppOptions(std::string AppName = std::string("SomeApp"));
+        AppOptions(std::string AppName = std::string("SomeApp"), std::string AppVersion = std::string("0.1"));
         virtual ~AppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]) = 0;

@@ -64,16 +64,18 @@ public:
 	void vflog(LogLevel  level, const char * format, va_list va);
 
 	inline void error(const char * msg)								{ log(L_ERROR, msg); }
-	inline void ferror(const char * format, ...)					{ va_list va; va_start(va, format); vflog(L_ERROR, format, va); va_end(va); }
+	inline void ferror(const char * format, ...)			{ va_list va; va_start(va, format); vflog(L_ERROR, format, va); va_end(va); }
 	inline void error(const std::exception& e, const char * msg)	{ ferror("%s: %s", msg, e.what()); }
-	inline void error(const std::string& e)							{ error(e.c_str()); }
+	inline void error(const std::string& e)						{ error(e.c_str()); }
 	void error(BaseException * e);
 
+	inline void fwarning(const char * format, ...)		{ va_list va; va_start(va, format); vflog(L_WARNING, format, va); va_end(va); }
 	inline void warning(const char * msg)							{ log(L_WARNING, msg); }
-	inline void fwarning(const char * format, ...)					{ va_list va; va_start(va, format); vflog(L_WARNING, format, va); va_end(va); }
+	inline void warning(const std::string& msg)				{ log(L_WARNING, msg); }
 
-	inline void fdebug(const char * format, ...)					{ va_list ap; va_start(ap, format); vflog(L_DEBUG, format, ap); va_end(ap); }
+	inline void fdebug(const char * format, ...)			{ va_list ap; va_start(ap, format); vflog(L_DEBUG, format, ap); va_end(ap); }
 	inline void debug(const char * msg)								{ log(L_DEBUG, msg);	}
+	inline void debug(const std::string& msg)					{ log(L_DEBUG, msg);	}
 
   // default loglevel management
   void setLogLevel(LogLevel level) { m_level = level; }
@@ -134,7 +136,12 @@ public:
     std::string toString() const {
       std::string r = "";
 #ifdef HAVE_BOOST
-      r = (boost::format("average=%1%; min=%2%; max=%3%; samples=%4%") % avg() % min_val() % max_val() % count()).str();
+      r = (boost::format("average=%1%; min=%2%; max=%3%; samples=%4%; ") % avg() % min_val() % max_val() % count()).str();
+#else
+      r.append("average=").append(std::to_string(avg()).append("; ");
+      r.append("min=").append(std::to_string(min_val()).append("; ");
+      r.append("max=").append(std::to_string(max_val()).append("; ");
+      r.append("samples=").append(std::to_string(count()).append("; ");
 #endif
       return r;
     }

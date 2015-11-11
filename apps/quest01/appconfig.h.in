@@ -2,6 +2,7 @@
 #ifndef _APPCONFIG_H
 #define _APPCONFIG_H
 
-#cmakedefine APP_NAME @APP_NAME@
+#cmakedefine APP_NAME     "@APP_NAME@"
+#cmakedefine APP_VERSION  "@APP_VERSION@"
 
 #endif /* _APPCONFIG_H */

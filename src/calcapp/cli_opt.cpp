@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cassert>
+#include <sstream>
 #include "calcapp/cli.hpp"
+#include "calcapp/system.hpp"
 
 
 namespace Calc {
@@ -15,8 +17,8 @@ CliApp::CliApp(ProgressCtrl* p):App(p){
 CliApp::~CliApp(){
 }
 
-CliAppOptions::CliAppOptions(std::string AppName):
-  AppOptions(AppName),
+CliAppOptions::CliAppOptions(std::string AppName, std::string AppVersion):
+  AppOptions(AppName,AppVersion),
 #ifdef HAVE_BOOST
   allOpt("Allowed options"),
 #endif
@@ -37,11 +39,15 @@ void CliAppOptions::prepareOptions(){
 #ifdef HAVE_BOOST
 	allOpt.add_options()
 		(HELP_OPT ",h", "print help message")
+		(ABOUT_OPT ",V", "print build and version information")
     (VERBOSE_OPT ",v", bpo::value<int>()->default_value(4), "log verbosity level, 0..6")
     (LOGFILE_OPT ",L", bpo::value<string>()->default_value(""), "specify name of the log file")
 		(THREADING_OPT ",l", bpo::value<string>()->default_value(_threading_opt_names[0].opt), threadingHelp.c_str())
 		(THREADS_OPT ",t", bpo::value<unsigned>()->default_value(0), "number of threads to use. 0=auto")
 		(PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())
+#ifdef HAVE_MPREAL
+		(DIGITS_OPT ",d", bpo::value<unsigned>()->default_value(10), "MPFR number of decimal digits to use")
+#endif
 //    (ALGO_OPT ",s", bpo::value<string>()->default_value(solvers[0].opt), solversHelp.c_str())
 	;
 #endif
@@ -96,7 +102,7 @@ void CliAppOptions::prepareAlgoOptions(){
 bool CliAppOptions::parseOptions(int argc, char* argv[]){
 #ifdef CLIAPP_OPT_DEFAULT_HELP
 	if ( argc <= 1 ) {
-        std::cout << allOpt << "\n";
+    printHelp();
 		return false;
 	}
 #endif
@@ -104,10 +110,14 @@ bool CliAppOptions::parseOptions(int argc, char* argv[]){
 	bpo::store(bpo::parse_command_line(argc, argv, allOpt), argMap);
 	bpo::notify(argMap);
 	if ( argMap.count(HELP_OPT) ) {
-        std::cout << allOpt << "\n";
+    printHelp();
     bpo::notify(argMap);
     return false;
-	}
+	} else if ( argMap.count(ABOUT_OPT) ) {
+    printAbout();
+    bpo::notify(argMap);
+    return false;
+  }
 #endif
   bool parsing_succeded = (
     parseLoggingOptions() ||
@@ -151,6 +161,7 @@ bool CliAppOptions::parseThreadingOptions(){
 
 bool CliAppOptions::parsePrecisionOptions(){
   TPrecision prec = P_Undefined;
+  unsigned digits = 10;
 #ifdef HAVE_BOOST
   if ( argMap.count(PRECISION_OPT) > 0 ) {
       const string& s = argMap[PRECISION_OPT].as<string>();
@@ -161,8 +172,12 @@ bool CliAppOptions::parsePrecisionOptions(){
           }
       }
   }
+#ifdef HAVE_MPREAL
+  digits=argMap[DIGITS_OPT].as<unsigned>();
+#endif
 #endif
   m_precision.type=prec;
+  m_precision.decimal_digits=digits;
   return true;
 }
 
@@ -190,7 +205,35 @@ bool CliAppOptions::parseAlgoOptions(){
   return true; 
 }
 
-bool CliAppOptions::CliAppOptions::processOptions(int argc, char* argv[]){ 
+const std::string CliAppOptions::About() const {
+  std::string about = m_AppName;
+  about.append(" version ").append(m_AppVersion).append("\n");
+  about.append("\nSystem information:\n");
+  about.append("running on ").append(SysUtil::getOSVersion()).append("\n");
+  about.append("detected cpu : ").append(SysUtil::getCpuSpec()).append("\n");
+#ifdef BUILD_THREADING
+  about.append("detected ").append(std::to_string(SysUtil::getCpuCoresCount())).append(" cpu cores\n");
+#endif
+  about.append("\nBuild information:\n");
+  about.append(SysUtil::getBuildOptions()).append("\n");
+  return about;
+}
+
+const std::string CliAppOptions::Help() const {
+  std::ostringstream oss;
+  oss << allOpt;
+  return oss.str();
+}
+
+void CliAppOptions::printAbout(){
+  std::cout << About() << std::endl;
+}
+
+void CliAppOptions::printHelp(){
+  std::cout << Help() << std::endl;
+}
+
+bool CliAppOptions::processOptions(int argc, char* argv[]){ 
   prepareOptions();
  	return parseOptions(argc, argv);
 }

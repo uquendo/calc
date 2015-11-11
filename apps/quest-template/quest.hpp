@@ -26,12 +26,12 @@ static const AlgoOptName _algo_opt_names[] = {
 
 class QuestAppOptions : public CliAppOptions {
 public:
-    QuestAppOptions():CliAppOptions(std::string("APP_NAME")) {};
+    QuestAppOptions():CliAppOptions(std::string(APP_NAME),std::string(APP_VERSION)) {};
     virtual ~QuestAppOptions() {};
     virtual bool processOptions(int argc, char* argv[]) {return CliAppOptions::processOptions(argc,argv);};
 protected:
     //prepare cli options
-    virtual void prepareOptions(){};
+/*    virtual void prepareOptions(){};
     virtual void prepareInputOptions(){};
     virtual void prepareOutputOptions(){};
     virtual void prepareAlgoOptions(){};
@@ -39,7 +39,7 @@ protected:
     virtual bool parseOptions(){return false;};
     virtual bool parseInputOptions(){return false;};
     virtual bool parseOutputOptions(){return false;};
-    virtual bool parseAlgoOptions(){return false;};
+    virtual bool parseAlgoOptions(){return false;};*/
 };
 
 class QuestApp : public CliApp {

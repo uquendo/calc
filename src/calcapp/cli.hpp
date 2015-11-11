@@ -33,10 +33,12 @@ public:
 
 class CliAppOptions : public AppOptions {
 public:
-        CliAppOptions(std::string AppName = std::string("SomeCliApp"));
+        CliAppOptions(std::string AppName = std::string("SomeCliApp"), std::string AppVersion = std::string("0.1"));
         virtual ~CliAppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]);
+        virtual const std::string About() const;
+        virtual const std::string Help() const;
 protected:
         //prepare cli options
         virtual void prepareOptions();
@@ -54,6 +56,9 @@ protected:
         virtual bool parseInputOptions();
         virtual bool parseOutputOptions();
         virtual bool parseAlgoOptions();
+        //generic information options
+        virtual void printAbout();
+        virtual void printHelp();
 private:
 #ifdef HAVE_BOOST
         bpo::variables_map argMap;

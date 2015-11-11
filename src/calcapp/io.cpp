@@ -46,7 +46,7 @@ bool IOUtil::tryOpenFile(const char * name, const char * mode) {
     return false;
 }
 
-string IOUtil::fileGrep(const char * fileName, const std::regex& rx, const bool firstOnly) {
+string IOUtil::fileGrep(const char * fileName, const std::regex& rx, const bool firstOnly, const unsigned submatchNumber) {
     string out;
 
     ifstream f(fileName);
@@ -55,8 +55,8 @@ string IOUtil::fileGrep(const char * fileName, const std::regex& rx, const bool 
         getline(f, line);
         std::smatch m;
         if ( std::regex_match(line, m, rx) ) {
-            if ( m.size() > 0 && m[1].matched ) {
-                out += string(m[1].first, m[1].second);
+            if ( m.size() > submatchNumber ) {
+                out += m[submatchNumber].str();
             } else {
                 out += line;
             }
