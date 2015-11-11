@@ -6,14 +6,23 @@
 #cmakedefine CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
 #cmakedefine HAVE_RESTRICT
 #cmakedefine RESTRICT_KEYWORD @RESTRICT_KEYWORD@
-//#cmakedefine common_LIBS "@common_LIBS@"
+
+//build info strings
+#cmakedefine INFO_COMMON_LIBS "@common_LIBS@"
+#cmakedefine INFO_APP_LIBS "@app_LIBS@"
+#cmakedefine INFO_CALCAPP_LIBS "@calcapp_LIBS@"
+#cmakedefine INFO_GIT_REFSPEC "@INFO_GIT_REFSPEC@"
+#cmakedefine INFO_GIT_SHA1 "@INFO_GIT_SHA1@"
+#cmakedefine INFO_BUILD_OPTIONS "@INFO_BUILD_OPTIONS@"
+#cmakedefine INFO_HAVE_OPTIONS "@INFO_HAVE_OPTIONS@"
+/* #cmakedefine INFO_CMAKE_FEATURE_SUMMARY "@INFO_CMAKE_FEATURE_SUMMARY@" */
 
 //build options
 #cmakedefine BUILD_APPS
 #cmakedefine BUILD_FASTMATH
-#cmakedefine BUILD_QUAD
-#cmakedefine BUILD_THREADING
-#cmakedefine BUILD_VANILLA
+#cmakedefine BUILD_QUAD 
+#cmakedefine BUILD_THREADING 
+#cmakedefine BUILD_VANILLA 
 
 //third parties
 #cmakedefine HAVE_ARMADILLO

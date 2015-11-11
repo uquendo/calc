@@ -203,6 +203,36 @@ std::string SysUtil::getCpuSpec() {
 #endif
 }
 
+std::string SysUtil::getBuildOptions() {
+  //here goes macro frenzy
+  std::string r = "";
+  r+="build type : " CMAKE_BUILD_TYPE "\n";
+  //git revision
+#ifdef INFO_GIT_SHA1
+  r="git sha1 : " INFO_GIT_SHA1 "\n";
+#endif
+#ifdef INFO_GIT_REFSPEC
+  r+="git refspec : " INFO_GIT_REFSPEC "\n";
+#endif
+  //BUILD_* options
+  r+="build options : ";
+#ifdef INFO_BUILD_OPTIONS
+  r+=INFO_BUILD_OPTIONS;
+#endif
+  r+="\n";
+  //HAVE_* options
+  r+="third parties options : ";
+#ifdef INFO_HAVE_OPTIONS
+  r+=INFO_HAVE_OPTIONS;
+#endif
+  r+="\n";
+  //build string
+#ifdef INFO_COMMON_LIBS
+  r+="common libs: " INFO_COMMON_LIBS "\n";
+#endif
+  return r;
+}
+
 std::string SysUtil::getCurrentDirectory() 
 {
   std::string r = "";
