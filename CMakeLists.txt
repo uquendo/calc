@@ -246,6 +246,7 @@ endif()
 #blas variants(for benchmarks, comparsion and reference)
 if (USE_BLAS)
   if(BLAS_VENDOR STREQUAL "Open")
+    #FindBLAS do not support OpenBLAS
     find_package(OpenBlas)
     if(OPENBLAS_FOUND)
       set(common_LIBS ${common_LIBS} ${OPENBLAS_LIBRARY})

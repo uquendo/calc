@@ -2,7 +2,7 @@
 
 namespace Calc {
 
-ThreadingOptName _threading_opt_names[] = {
+OptName<TThreading> _threading_opt_names[] = {
     { "Serial", "s", T_Serial },
     { "C++11 standard library threads", "std", T_Std },
     { "POSIX threads", "posix", T_Posix },
@@ -11,7 +11,7 @@ ThreadingOptName _threading_opt_names[] = {
     { NULL, 0, T_Undefined }
 };  
 
-PrecisionOptName _precision_opt_names[] = {
+OptName<TPrecision> _precision_opt_names[] = {
     { "32-bit float", "32", P_Float },
     { "64-bit double", "64", P_Double },
     { "128-bit quad", "128", P_Quad },

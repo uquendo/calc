@@ -20,6 +20,8 @@ using std::ptrdiff_t;
 #define VERBOSE_OPT "verbose"
 #define LOGFILE_OPT "logfile"
 #define THREADS_OPT "threads"
+#define INPUT_OPT "in"
+#define OUTPUT_OPT "out"
 #define ALGO_OPT "algorithm"
 #define PRECISION_OPT "precision"
 #define DIGITS_OPT "digits"
@@ -45,21 +47,14 @@ namespace Calc {
         ptrdiff_t print_precision; //for output i.e. via ios_base::precision(streamsize)
     };
 
-    struct ThreadingOptName {
+    template<class T> struct OptName {
         const char * name;
         const char * opt;
-        TThreading type;
+        T type;
     };
 
-    extern ThreadingOptName _threading_opt_names[];
-
-    struct PrecisionOptName {
-        const char * name;
-        const char * opt; 
-        TPrecision type;
-    };
-
-    extern PrecisionOptName _precision_opt_names[];
+    extern OptName<TThreading> _threading_opt_names[];
+    extern OptName<TPrecision> _precision_opt_names[];
 
 class AppOptions {
 protected:

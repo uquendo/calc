@@ -22,8 +22,8 @@ CliAppOptions::CliAppOptions(std::string AppName, std::string AppVersion):
 #ifdef HAVE_BOOST
   allOpt("Allowed options"),
 #endif
-  threadingHelp("Threading model to use: "),
-  precisionHelp("Floating point number precision to use: ")
+  threadingHelp(""),
+  precisionHelp("")
 {
 }
 
@@ -42,13 +42,15 @@ void CliAppOptions::prepareOptions(){
 		(ABOUT_OPT ",V", "print build and version information")
     (VERBOSE_OPT ",v", bpo::value<int>()->default_value(4), "log verbosity level, 0..6")
     (LOGFILE_OPT ",L", bpo::value<string>()->default_value(""), "specify name of the log file")
+#ifdef BUILD_THREADING
 		(THREADING_OPT ",l", bpo::value<string>()->default_value(_threading_opt_names[0].opt), threadingHelp.c_str())
 		(THREADS_OPT ",t", bpo::value<unsigned>()->default_value(0), "number of threads to use. 0=auto")
+#endif
 		(PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())
 #ifdef HAVE_MPREAL
 		(DIGITS_OPT ",d", bpo::value<unsigned>()->default_value(10), "MPFR number of decimal digits to use")
 #endif
-//    (ALGO_OPT ",s", bpo::value<string>()->default_value(solvers[0].opt), solversHelp.c_str())
+//    (ALGO_OPT ",s", bpo::value<string>()->default_value(_algo_opt_names[0].opt), solversHelp.c_str())
 	;
 #endif
 }
@@ -58,6 +60,7 @@ void CliAppOptions::prepareLoggingOptions(){
 
 void CliAppOptions::prepareThreadingOptions(){
   assert(_threading_opt_names[0].opt && _threading_opt_names[0].name && _threading_opt_names[0].type != -1 );
+  threadingHelp += "Threading model to use: ";
 	for ( int i = 0; _threading_opt_names[i].name; ++i ) {
 		threadingHelp += _threading_opt_names[i].opt;
 		threadingHelp += '=';
@@ -69,6 +72,7 @@ void CliAppOptions::prepareThreadingOptions(){
 
 void CliAppOptions::preparePrecisionOptions(){
   assert(_precision_opt_names[0].opt && _precision_opt_names[0].name && _precision_opt_names[0].type != -1 );
+  precisionHelp += "Floating point number precision to use: ";
 	for ( int i = 0; _precision_opt_names[i].name; ++i ) {
 		precisionHelp += _precision_opt_names[i].opt;
 		precisionHelp += '=';
@@ -86,26 +90,29 @@ void CliAppOptions::prepareOutputOptions(){
 
 void CliAppOptions::prepareAlgoOptions(){
 /*	
-	assert(solvers[0].opt && solvers[0].name && solvers[0].type != -1 );
-	string solversHelp("Computation algorithm to use: ");
-	for ( int i = 0; solvers[i].name; ++i ) {
-		solversHelp += solvers[i].opt;
-		solversHelp += '=';
-		solversHelp += solvers[i].name;
-		solversHelp += ", ";
+	assert(_algo_opt_names[0].opt && _algo_opt_names[0].name && _algo_opt_names[0].type != -1 );
+	string _algo_opt_namesHelp("Computation algorithm to use: ");
+	for ( int i = 0; _algo_opt_names[i].name; ++i ) {
+		_algo_opt_namesHelp += _algo_opt_names[i].opt;
+		_algo_opt_namesHelp += '=';
+		_algo_opt_namesHelp += _algo_opt_names[i].name;
+		_algo_opt_namesHelp += ", ";
 	}
-	solversHelp.resize(solversHelp.size() - 2);
+	_algo_opt_namesHelp.resize(_algo_opt_namesHelp.size() - 2);
 */
 }
 
 //parse cli options
 bool CliAppOptions::parseOptions(int argc, char* argv[]){
-#ifdef CLIAPP_OPT_DEFAULT_HELP
 	if ( argc <= 1 ) {
+#ifdef CLIAPP_OPT_DEFAULT_HELP
     printHelp();
 		return false;
-	}
+#elseif CLIAPP_OPT_DEFAULT_ABOUT
+    printAbout();
+    return false;
 #endif
+	}
 #ifdef HAVE_BOOST
 	bpo::store(bpo::parse_command_line(argc, argv, allOpt), argMap);
 	bpo::notify(argMap);
@@ -118,6 +125,8 @@ bool CliAppOptions::parseOptions(int argc, char* argv[]){
     bpo::notify(argMap);
     return false;
   }
+#else
+  //TODO: invent some cli options parsing wheel there to make boost haters happy enough
 #endif
   bool parsing_succeded = (
     parseLoggingOptions() ||
@@ -194,13 +203,14 @@ bool CliAppOptions::parseAlgoOptions(){
   TAlgo algo = A_Undefined;
   if ( argMap.count(SOLVER_OPT) > 0 ) {
     const string& s = argMap[SOLVER_OPT].as<string>();
-    for ( int i = 0; solvers[i].name; ++i ) {
-      if ( solvers[i].opt == s ) {
-        algo = solvers[i].type;
+    for ( int i = 0; _algo_opt_names[i].name; ++i ) {
+      if ( _algo_opt_names[i].opt == s ) {
+        algo = _algo_opt_names[i].type;
         break;
       }
     }
   }
+  m_algo = algo;
 */
   return true; 
 }
@@ -221,7 +231,12 @@ const std::string CliAppOptions::About() const {
 
 const std::string CliAppOptions::Help() const {
   std::ostringstream oss;
+#ifdef HAVE_BOOST
   oss << allOpt;
+#else
+  //TODO: invent some cli options parsing wheel there to make boost haters happy enough
+  oss << "App was compiled without boost.program_options, so no fancy cli options yet. sorry."
+#endif
   return oss.str();
 }
 

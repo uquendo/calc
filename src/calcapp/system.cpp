@@ -39,14 +39,16 @@ bool SysUtil::getFreeDiskMB(double *SizeMB, std::string Name)
 		p = p.parent_path();
 	boost::filesystem::space_info s = boost::filesystem::space(p);
 	*SizeMB = (double) s.free / 1024.0 / 1024.0;
-#endif
 	return true;
+#endif
+  return false;
 }
 
 bool SysUtil::isEnoughDiskSpace(const std::string  fileName, double minMB, double * curMB)
 {
-	double mb;
-	SysUtil::getFreeDiskMB(&mb, fileName);
+	double mb=0.0;
+	if(!getFreeDiskMB(&mb, fileName))
+    return true;
 	if ( curMB )
 		*curMB = mb;
 	return ( mb >= minMB );

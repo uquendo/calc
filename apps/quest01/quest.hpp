@@ -2,44 +2,96 @@
 #ifndef _QUEST_HPP
 #define _QUEST_HPP
 
+#include <string>
+#include <unordered_set>
+
 #include "calcapp/cli.hpp"
+#include "calcapp/io.hpp"
 
 #include "appconfig.h"
 
 namespace Calc {
 
 enum TAlgo {
-    A_Cached,
-    A_Undefined
+  A_NumCpp=0,
+  A_NumC,
+  A_NumFortran,
+  A_NumCppSimple,
+  A_NumCSimple,
+  A_NumFortranSimple,
+  A_NumCppSimpleTranspose,
+  A_NumCSimpleTranspose,
+  A_NumFortranSimpleTranspose,
+  A_NumCppStrassen,
+  A_NumCStrassen,
+  A_NumFortranStrassen,
+  A_NumFortranInternal,
+  A_ExtCppBoost,
+  A_ExtCppEigen,
+  A_ExtCppMTL,
+  A_ExtCppArmadillo,
+  A_ExtCBLAS,
+  A_Undefined
 };
 
-struct AlgoOptName {
-	const char * name;
-	const char * opt;
-	TAlgo type;
-};
-
-static const AlgoOptName _algo_opt_names[] = {
-	{ "Cached", "c", A_Cached },
+static const OptName<TAlgo> _algo_opt_names[] = {
+	{ "numeric-cpp", "num-cpp", A_NumCpp },
+	{ "numeric-c", "num-c", A_NumC },
+	{ "numeric-fortran", "num-f", A_NumFortran },
+	{ "numeric-cpp-simple", "num-cpp-s", A_NumCppSimple },
+	{ "numeric-c-simple", "num-c-s", A_NumCSimple },
+	{ "numeric-fortran-simple", "num-f-s", A_NumFortranSimple },
+	{ "numeric-cpp-simple-transpose", "num-cpp-st", A_NumCppSimpleTranspose },
+	{ "numeric-c-simple-transpose", "num-c-st", A_NumCSimpleTranspose },
+	{ "numeric-fortran-simple-transpose", "num-f-st", A_NumFortranSimpleTranspose },
+	{ "numeric-cpp-strassen", "num-cpp-sn", A_NumCppStrassen },
+	{ "numeric-c-strassen", "num-c-sn", A_NumCStrassen },
+	{ "numeric-fortran-strassen", "num-f-sn", A_NumFortranStrassen },
+	{ "numeric-fortran-internal", "num-f-int", A_NumFortranInternal },
+	{ "contrib-cpp-boost.ublas", "ext-cpp-boost", A_ExtCppBoost },
+	{ "contrib-cpp-eigen", "ext-cpp-eigen", A_ExtCppEigen },
+	{ "contrib-cpp-mtl", "ext-cpp-mtl", A_ExtCppMTL },
+	{ "contrib-cpp-armadillo", "ext-cpp-arm", A_ExtCppArmadillo },
+	{ "contrib-c-blas", "ext-c-blas", A_ExtCBLAS },
 	{ NULL, 0, A_Undefined }
+};
+
+static const OptName<TFileType> _input_opt_names[] = {
+  { "Read matrices in .dat format", "dat", FT_Matrix },
+  { "Read matrices in .csv format", "csv", FT_Csv },
+	{ NULL, 0, FT_None }
+};
+
+static const OptName<TFileType> _output_opt_names[] = {
+  { "Write matrices in .dat format", "dat", FT_Matrix },
+  { "Write matrices in .csv format", "csv", FT_Csv },
+	{ NULL, 0, FT_None }
 };
 
 class QuestAppOptions : public CliAppOptions {
 public:
-    QuestAppOptions():CliAppOptions(std::string(APP_NAME),std::string(APP_VERSION)) {};
+    QuestAppOptions();
     virtual ~QuestAppOptions() {};
     virtual bool processOptions(int argc, char* argv[]) {return CliAppOptions::processOptions(argc,argv);};
+    virtual const std::string About() const;
 protected:
     //prepare cli options
-/*    virtual void prepareOptions(){};
-    virtual void prepareInputOptions(){};
-    virtual void prepareOutputOptions(){};
-    virtual void prepareAlgoOptions(){};
+    virtual void prepareOptions();
+    virtual void prepareInputOptions();
+    virtual void prepareOutputOptions();
+    virtual void prepareAlgoOptions();
     //parse cli options
-    virtual bool parseOptions(){return false;};
-    virtual bool parseInputOptions(){return false;};
-    virtual bool parseOutputOptions(){return false;};
-    virtual bool parseAlgoOptions(){return false;};*/
+    virtual bool parseOptions(int argc, char* argv[]);
+    virtual bool parseInputOptions();
+    virtual bool parseOutputOptions();
+    virtual bool parseAlgoOptions();
+    std::string inputHelp;
+    std::string outputHelp;
+    std::string algoHelp;
+    TFileType m_input;
+    TFileType m_output;
+    TAlgo m_algo;
+    std::unordered_set<int> disabledAlgo;
 };
 
 class QuestApp : public CliApp {
