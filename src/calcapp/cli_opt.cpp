@@ -21,6 +21,10 @@ CliAppOptions::CliAppOptions(std::string AppName, std::string AppVersion):
   AppOptions(AppName,AppVersion),
 #ifdef HAVE_BOOST
   allOpt("Allowed options"),
+  commonOpt("Common options"),
+  inputOpt("Input options"),
+  outputOpt("Output options"),
+  algoOpt("Algorithm options"),
 #endif
   threadingHelp(""),
   precisionHelp("")
@@ -35,9 +39,11 @@ void CliAppOptions::prepareOptions(){
   prepareLoggingOptions();
   prepareThreadingOptions();
   preparePrecisionOptions();
+  prepareInputOptions();
+  prepareOutputOptions();
   prepareAlgoOptions();
 #ifdef HAVE_BOOST
-	allOpt.add_options()
+	commonOpt.add_options()
 		(HELP_OPT ",h", "print help message")
 		(ABOUT_OPT ",V", "print build and version information")
     (VERBOSE_OPT ",v", bpo::value<int>()->default_value(4), "log verbosity level, 0..6")
@@ -50,8 +56,8 @@ void CliAppOptions::prepareOptions(){
 #ifdef HAVE_MPREAL
 		(DIGITS_OPT ",d", bpo::value<unsigned>()->default_value(10), "MPFR number of decimal digits to use")
 #endif
-//    (ALGO_OPT ",s", bpo::value<string>()->default_value(_algo_opt_names[0].opt), solversHelp.c_str())
 	;
+  allOpt.add(commonOpt).add(inputOpt).add(outputOpt).add(algoOpt);
 #endif
 }
 
@@ -83,9 +89,11 @@ void CliAppOptions::preparePrecisionOptions(){
 }
 
 void CliAppOptions::prepareInputOptions(){
+  //TODO: write generic i/o options handling
 }
 
 void CliAppOptions::prepareOutputOptions(){
+  //TODO: write generic i/o options handling
 }
 
 void CliAppOptions::prepareAlgoOptions(){
@@ -149,7 +157,7 @@ bool CliAppOptions::parseLoggingOptions(){
 }
 
 bool CliAppOptions::parseThreadingOptions(){
-  TThreading thr = T_Undefined;
+  TThreading thr = _threading_opt_names[0].type;
   unsigned thread_count = 0;
 #ifdef HAVE_BOOST
   if ( argMap.count(THREADING_OPT) > 0 ) {
@@ -169,7 +177,7 @@ bool CliAppOptions::parseThreadingOptions(){
 }
 
 bool CliAppOptions::parsePrecisionOptions(){
-  TPrecision prec = P_Undefined;
+  TPrecision prec = _precision_opt_names[0].type;
   unsigned digits = 10;
 #ifdef HAVE_BOOST
   if ( argMap.count(PRECISION_OPT) > 0 ) {
@@ -191,27 +199,17 @@ bool CliAppOptions::parsePrecisionOptions(){
 }
 
 bool CliAppOptions::parseInputOptions(){
+  //TODO: write generic i/o options handling
   return true;
 }
 
 bool CliAppOptions::parseOutputOptions(){
+  //TODO: write generic i/o options handling
   return true;
 }
 
 bool CliAppOptions::parseAlgoOptions(){
-/*
-  TAlgo algo = A_Undefined;
-  if ( argMap.count(SOLVER_OPT) > 0 ) {
-    const string& s = argMap[SOLVER_OPT].as<string>();
-    for ( int i = 0; _algo_opt_names[i].name; ++i ) {
-      if ( _algo_opt_names[i].opt == s ) {
-        algo = _algo_opt_names[i].type;
-        break;
-      }
-    }
-  }
-  m_algo = algo;
-*/
+  //implement in derived classes
   return true; 
 }
 
@@ -226,6 +224,7 @@ const std::string CliAppOptions::About() const {
 #endif
   about.append("\nBuild information:\n");
   about.append(SysUtil::getBuildOptions()).append("\n");
+  about.append("run with -h or --help to see available options\n");
   return about;
 }
 
@@ -235,7 +234,7 @@ const std::string CliAppOptions::Help() const {
   oss << allOpt;
 #else
   //TODO: invent some cli options parsing wheel there to make boost haters happy enough
-  oss << "App was compiled without boost.program_options, so no fancy cli options yet. sorry."
+  oss << "App was compiled without boost.program_options, so no fancy cli options yet. sorry.";
 #endif
   return oss.str();
 }

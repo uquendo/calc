@@ -45,6 +45,8 @@
 
 #ifdef HAVE_BLAS
 #cmakedefine BLAS_VENDOR "@BLAS_VENDOR@"
+#else
+#define BLAS_VENDOR "None"
 #endif
 
 //generic defines and includes

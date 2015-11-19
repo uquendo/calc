@@ -48,11 +48,22 @@ static const OptName<TAlgo> _algo_opt_names[] = {
 	{ "numeric-c-strassen", "num-c-sn", A_NumCStrassen },
 	{ "numeric-fortran-strassen", "num-f-sn", A_NumFortranStrassen },
 	{ "numeric-fortran-internal", "num-f-int", A_NumFortranInternal },
+  //TODO: clean up macro hell 
+#ifdef HAVE_BOOST_UBLAS
 	{ "contrib-cpp-boost.ublas", "ext-cpp-boost", A_ExtCppBoost },
+#endif
+#ifdef HAVE_EIGEN
 	{ "contrib-cpp-eigen", "ext-cpp-eigen", A_ExtCppEigen },
+#endif
+#ifdef HAVE_MTL
 	{ "contrib-cpp-mtl", "ext-cpp-mtl", A_ExtCppMTL },
+#endif
+#ifdef HAVE_ARMADILLO
 	{ "contrib-cpp-armadillo", "ext-cpp-arm", A_ExtCppArmadillo },
+#endif
+#ifdef HAVE_BLAS
 	{ "contrib-c-blas", "ext-c-blas", A_ExtCBLAS },
+#endif
 	{ NULL, 0, A_Undefined }
 };
 

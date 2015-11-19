@@ -29,6 +29,7 @@ namespace numeric {
 enum TPrecision {
 	P_Float,
 	P_Double,
+  P_LongDouble,
 	P_Quad,
 	P_MPFR,
 	P_Undefined

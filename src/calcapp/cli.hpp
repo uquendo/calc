@@ -62,6 +62,10 @@ protected:
 #ifdef HAVE_BOOST
         bpo::variables_map argMap;
         bpo::options_description allOpt;
+        bpo::options_description commonOpt;
+        bpo::options_description inputOpt;
+        bpo::options_description outputOpt;
+        bpo::options_description algoOpt;
 #endif
         std::string threadingHelp;
         std::string precisionHelp;

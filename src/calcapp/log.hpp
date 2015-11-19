@@ -138,10 +138,10 @@ public:
 #ifdef HAVE_BOOST
       r = (boost::format("average=%1%; min=%2%; max=%3%; samples=%4%; ") % avg() % min_val() % max_val() % count()).str();
 #else
-      r.append("average=").append(std::to_string(avg()).append("; ");
-      r.append("min=").append(std::to_string(min_val()).append("; ");
-      r.append("max=").append(std::to_string(max_val()).append("; ");
-      r.append("samples=").append(std::to_string(count()).append("; ");
+      r.append("average=").append(std::to_string(avg())).append("; ");
+      r.append("min=").append(std::to_string(min_val())).append("; ");
+      r.append("max=").append(std::to_string(max_val())).append("; ");
+      r.append("samples=").append(std::to_string(count())).append("; ");
 #endif
       return r;
     }

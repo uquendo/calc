@@ -124,7 +124,7 @@ void CliProgress::CliProgressBar::advancePos(bool reset) {
 #ifdef HAVE_BOOST
     perc = str(boost::format("%02i%%...") % (curPercentage * 10));
 #else
-    perc = to_string((int)(curPercentage * 10)).append("%...");
+    perc = std::to_string(curPercentage * 10).append("%...");
 #endif
 		m_log.fdebug("%s: %s", m_title.c_str(), perc.c_str());
 		m_reportedPercentage = curPercentage;
