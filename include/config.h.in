@@ -30,6 +30,7 @@
 #cmakedefine HAVE_ARMADILLO
 #cmakedefine HAVE_BLAS
 #cmakedefine HAVE_BOOST
+#cmakedefine HAVE_BOOST_MPREAL
 #cmakedefine HAVE_BOOST_UBLAS
 #cmakedefine HAVE_CILK
 //#cmakedefine HAVE_CLBLAS
@@ -41,6 +42,7 @@
 #cmakedefine HAVE_OPENMP
 #cmakedefine HAVE_POSIX
 #cmakedefine HAVE_PTHREADS
+#cmakedefine HAVE_QUADMATH
 #cmakedefine HAVE_TBB
 
 #ifdef HAVE_BLAS
