@@ -10,8 +10,9 @@
 #include "numeric/real.hpp"
 #include "calcapp/log.hpp"
 
-using namespace numeric;
-using std::string;
+//using namespace numeric;
+using numeric::TPrecision;
+using numeric::TThreading;
 using std::ptrdiff_t;
 
 //common long options
@@ -33,7 +34,7 @@ namespace Calc {
         Logger::LogLevel level;
         bool profile;
         bool progress;
-        string filename;
+        std::string filename;
     };
 
     struct ThreadingOptions {
@@ -53,8 +54,8 @@ namespace Calc {
         T type;
     };
 
-    extern OptName<TThreading> _threading_opt_names[];
-    extern OptName<TPrecision> _precision_opt_names[];
+    extern const OptName<TThreading> _threading_opt_names[];
+    extern const OptName<TPrecision> _precision_opt_names[];
 
 class AppOptions {
 protected:
@@ -63,22 +64,14 @@ protected:
         LoggingOptions m_logging;
         ThreadingOptions m_threading;
         PrecisionOptions m_precision;
-        //define for derived class for example:
-        //InputOptions m_input;
-        //OutputOptions m_output;
-        //AlgoOptions m_algorithm; 
 public:
         AppOptions(std::string AppName = std::string("SomeApp"), std::string AppVersion = std::string("0.1"));
-        virtual ~AppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]) = 0;
         //const access functions
-        const LoggingOptions& getLogOpts() const { return m_logging; };
-        const ThreadingOptions& getThreadOpts() const { return m_threading; };
-        const PrecisionOptions& getPrecOpts() const { return m_precision; };
-        //const InputOptions& getInOpts() const { return m_input; };
-        //const OutputOptions& getOutOpts() const { return m_output; };
-        //const AlgoOptions& getAlgoOpts() const { return m_algorithm; };
+        inline const LoggingOptions& getLogOpts() const { return m_logging; };
+        inline const ThreadingOptions& getThreadOpts() const { return m_threading; };
+        inline const PrecisionOptions& getPrecOpts() const { return m_precision; };
 };
 
 }

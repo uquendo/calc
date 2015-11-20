@@ -22,10 +22,10 @@ namespace bpo=boost::program_options;
 namespace Calc {
 
 class CliApp : public App {
-public:
+private:
     CliApp();
+public:
     CliApp(ProgressCtrl*);
-    virtual ~CliApp();
     virtual void setDefaultOptions() = 0;
     virtual void readInput() = 0;
     virtual void run() = 0;
@@ -34,7 +34,6 @@ public:
 class CliAppOptions : public AppOptions {
 public:
         CliAppOptions(std::string AppName = std::string("SomeCliApp"), std::string AppVersion = std::string("0.0"));
-        virtual ~CliAppOptions();
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]);
         //generic information options
@@ -59,6 +58,7 @@ protected:
         virtual bool parseInputOptions();
         virtual bool parseOutputOptions();
         virtual bool parseAlgoOptions();
+protected:
 #ifdef HAVE_BOOST
         bpo::variables_map argMap;
         bpo::options_description allOpt;
@@ -83,31 +83,31 @@ public:
 	public:
 		CliProgressBar(Logger& log, const char * title);
 		virtual ~CliProgressBar();
-		virtual void setProgressRange(int lower, int upper);
-		virtual void setProgress(int pos);
-		virtual void setProgressStep(int step);
-		virtual void setTitle(const char * title);
-		virtual void clearTitle();
-		virtual void stepIt();
+		virtual void setProgressRange(int lower, int upper) override;
+		virtual void setProgress(int pos) override;
+		virtual void setProgressStep(int step) override;
+		virtual void setTitle(const char * title) override;
+		virtual void clearTitle() override;
+		virtual void stepIt() override;
 		void advancePos(bool reset);
 	};
 
 	CliProgress(Logger::LogLevel severity, const std::string& logName);
   CliProgress(const LoggingOptions& opts);
-	CliProgress(){}
+	CliProgress();
 
-	virtual void onStartCalc();
-	virtual void onFinishCalc();
-	virtual void onAbortCalc();
-	virtual bool stopNow();
-	virtual void setStopNow();
+	virtual void onStartCalc() override;
+	virtual void onFinishCalc() override;
+	virtual void onAbortCalc() override;
+	virtual bool stopNow() override;
+	virtual void setStopNow() override;
 
 	// Progress bar
-	virtual ProgressBar * createProgressBar(const char * title);
-	virtual void setStatusText(const char * text);
-	virtual void clearStatusText();
+	virtual ProgressBar * createProgressBar(const char * title) override;
+	virtual void setStatusText(const char * text) override;
+	virtual void clearStatusText() override;
 
-	virtual Logger& log();
+	virtual Logger& log() override;
 	
 private:
 	std::unique_ptr<Logger> m_pLogger;

@@ -10,11 +10,10 @@ namespace Calc {
 
 class App {
 private:
-    ProgressCtrl* m_pProgress;
-public:
+    ProgressCtrl * const m_pProgress;
     App();
+public:
     App(ProgressCtrl*);
-    virtual ~App();
     virtual void setDefaultOptions() = 0;
     virtual void readInput() = 0;
     virtual void run() = 0;

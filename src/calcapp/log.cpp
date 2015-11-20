@@ -1,12 +1,10 @@
-#include "config.h"
+#include "calcapp/log.hpp"
+#include "calcapp/exception.hpp"
+#include "calcapp/system.hpp"
 
 #include <cstdarg>
 #include <cstdio>
 #include <memory>
-
-#include "calcapp/log.hpp"
-#include "calcapp/exception.hpp"
-#include "calcapp/system.hpp"
 
 namespace Calc {
 

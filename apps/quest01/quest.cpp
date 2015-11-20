@@ -2,26 +2,33 @@
 
 #include "quest.hpp"
 
+using std::string;
+
 namespace Calc {
 
-  QuestAppOptions::QuestAppOptions():CliAppOptions(std::string(APP_NAME),std::string(APP_VERSION)),
+  QuestAppOptions::QuestAppOptions():CliAppOptions(string(APP_NAME),string(APP_VERSION)),
     inputHelp(""),
     outputHelp(""),
     algoHelp(""),
-    m_input(FT_Matrix),
-    m_output(FT_Matrix),
-    m_algo(A_Undefined)
+    m_input({FT_MatrixText,""}),
+    m_output({FT_MatrixText,""}),
+    m_algo({A_Undefined})
   {
   }
 
-  const std::string QuestAppOptions::About() const
+  const string QuestAppOptions::About() const
   {
-    std::string about=CliAppOptions::About();
+    string about=CliAppOptions::About();
 #ifdef BUILD_THREADING
     about.append("\nSupported threaded variants per algo:\n");
     //TODO: print'em all!
 #endif
     return about;
+  }
+    
+  bool QuestAppOptions::processOptions(int argc, char* argv[])
+  {
+    return CliAppOptions::processOptions(argc,argv);
   }
 
   void QuestAppOptions::prepareOptions()
@@ -111,7 +118,7 @@ namespace Calc {
       }
     }
 #endif
-    m_input = input;
+    m_input.filetype = input;
     //parse filenames for A and B
     //
     return true;   
@@ -131,7 +138,7 @@ namespace Calc {
       }
     }
 #endif
-    m_output = output;
+    m_output.filetype = output;
     //parse filename for C
     //
     return true;   
@@ -152,7 +159,24 @@ namespace Calc {
       }
     }
 #endif
-    m_algo = algo;
+    m_algo.type = algo;
     return true;   
   }
+
+  void QuestApp::setDefaultOptions()
+  {
+  }
+
+  void QuestApp::setOptions(const QuestAppOptions&)
+  {
+  }
+
+  void QuestApp::readInput()
+  {
+  }
+
+  void QuestApp::run()
+  {
+  }
+
 }

@@ -68,52 +68,70 @@ static const OptName<TAlgo> _algo_opt_names[] = {
 };
 
 static const OptName<TFileType> _input_opt_names[] = {
-  { "Read matrices in .dat format", "dat", FT_Matrix },
+  { "Read matrices in .dat format", "dat", FT_MatrixText },
   { "Read matrices in .csv format", "csv", FT_Csv },
 	{ NULL, 0, FT_None }
 };
 
 static const OptName<TFileType> _output_opt_names[] = {
-  { "Write matrices in .dat format", "dat", FT_Matrix },
+  { "Write matrices in .dat format", "dat", FT_MatrixText },
   { "Write matrices in .csv format", "csv", FT_Csv },
 	{ NULL, 0, FT_None }
+};
+
+struct InputOptions {
+  TFileType filetype;
+  std::string filename;
+};
+
+struct OutputOptions {
+  TFileType filetype;
+  std::string filename;
+};
+
+struct AlgoOptions {
+  TAlgo type;
 };
 
 class QuestAppOptions : public CliAppOptions {
 public:
     QuestAppOptions();
     virtual ~QuestAppOptions() {};
-    virtual bool processOptions(int argc, char* argv[]) {return CliAppOptions::processOptions(argc,argv);};
-    virtual const std::string About() const;
+    virtual bool processOptions(int argc, char* argv[]) override;
+    virtual const std::string About() const override;
+    inline const InputOptions& getInOpts() const { return m_input; };
+    inline const OutputOptions& getOutOpts() const { return m_output; };
+    inline const AlgoOptions& getAlgoOpts() const { return m_algo; };
 protected:
     //prepare cli options
-    virtual void prepareOptions();
-    virtual void prepareInputOptions();
-    virtual void prepareOutputOptions();
-    virtual void prepareAlgoOptions();
+    virtual void prepareOptions() override;
+    virtual void prepareInputOptions() override;
+    virtual void prepareOutputOptions() override;
+    virtual void prepareAlgoOptions() override;
     //parse cli options
-    virtual bool parseOptions(int argc, char* argv[]);
-    virtual bool parseInputOptions();
-    virtual bool parseOutputOptions();
-    virtual bool parseAlgoOptions();
+    virtual bool parseOptions(int argc, char* argv[]) override;
+    virtual bool parseInputOptions() override;
+    virtual bool parseOutputOptions() override;
+    virtual bool parseAlgoOptions() override;
+protected:
     std::string inputHelp;
     std::string outputHelp;
     std::string algoHelp;
-    TFileType m_input;
-    TFileType m_output;
-    TAlgo m_algo;
-    std::unordered_set<int> disabledAlgo;
+    InputOptions m_input;
+    OutputOptions m_output;
+    AlgoOptions m_algo; 
 };
 
 class QuestApp : public CliApp {
+private:
+    QuestApp():QuestApp(nullptr){};
 public:
-    QuestApp(){};
     QuestApp(ProgressCtrl* pc):CliApp(pc){};
     virtual ~QuestApp(){};
-    virtual void setDefaultOptions() {};
-    virtual void setOptions(const QuestAppOptions&){};
-    virtual void readInput(){};
-    virtual void run(){};
+    virtual void setDefaultOptions() override;
+    void setOptions(const QuestAppOptions&);
+    virtual void readInput() override;
+    virtual void run() override;
 };
 
 }

@@ -1,12 +1,15 @@
+#include "calcapp/cli.hpp"
+#include "calcapp/io.hpp"
+#include "calcapp/system.hpp"
+
 #include <fstream>
+#include <string>
 
 #ifdef HAVE_BOOST
 #include <boost/format.hpp>
 #endif
 
-#include "calcapp/cli.hpp"
-#include "calcapp/io.hpp"
-#include "calcapp/system.hpp"
+using std::string;
 
 namespace Calc {
 
@@ -35,7 +38,7 @@ public:
 		if ( level > m_level )
 			return;
 
-		std::string m = "";
+		string m = "";
 #ifdef HAVE_BOOST
     m = (boost::format("%.3f %s: %s") 
 			% (SysUtil::getCurTimeSec() - m_startTime) 
@@ -54,7 +57,6 @@ public:
 	};
 };
 
-
 CliProgress::CliProgress(Logger::LogLevel severity, const string& logName) 
 	: m_pLogger(severity != Logger::Logger::L_NONE ? (Logger *) new DumbLogger(severity, logName) : (Logger *) new QuietLogger())
         , m_StopNow(false)
@@ -68,6 +70,10 @@ CliProgress::CliProgress(const LoggingOptions& opts)
         , m_StopNow(false)
 {
 	Logger::setSystem(m_pLogger.get());
+}
+
+CliProgress::CliProgress():CliProgress(Logger::Logger::L_NONE, string(""))
+{
 }
 
 CliProgress::CliProgressBar::CliProgressBar(Logger& log, const char * title) 

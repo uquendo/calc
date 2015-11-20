@@ -1,23 +1,23 @@
-#include <iostream>
-#include <cassert>
-#include <sstream>
 #include "calcapp/cli.hpp"
 #include "calcapp/system.hpp"
 
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <sstream>
+
+using std::string;
 
 namespace Calc {
 
 //TODO: STUBS!
-CliApp::CliApp(){
+CliApp::CliApp():CliApp(nullptr){
 }
 
 CliApp::CliApp(ProgressCtrl* p):App(p){
 }
 
-CliApp::~CliApp(){
-}
-
-CliAppOptions::CliAppOptions(std::string AppName, std::string AppVersion):
+CliAppOptions::CliAppOptions(string AppName, string AppVersion):
   AppOptions(AppName,AppVersion),
 #ifdef HAVE_BOOST
   allOpt("Allowed options"),
@@ -29,9 +29,6 @@ CliAppOptions::CliAppOptions(std::string AppName, std::string AppVersion):
   threadingHelp(""),
   precisionHelp("")
 {
-}
-
-CliAppOptions::~CliAppOptions(){
 }
 
 //prepare cli options
@@ -213,8 +210,8 @@ bool CliAppOptions::parseAlgoOptions(){
   return true; 
 }
 
-const std::string CliAppOptions::About() const {
-  std::string about = m_AppName;
+const string CliAppOptions::About() const {
+  string about = m_AppName;
   about.append(" version ").append(m_AppVersion).append("\n");
   about.append("\nSystem information:\n");
   about.append("running on ").append(SysUtil::getOSVersion()).append("\n");
@@ -228,7 +225,7 @@ const std::string CliAppOptions::About() const {
   return about;
 }
 
-const std::string CliAppOptions::Help() const {
+const string CliAppOptions::Help() const {
   std::ostringstream oss;
 #ifdef HAVE_BOOST
   oss << allOpt;

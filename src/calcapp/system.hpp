@@ -7,22 +7,19 @@
 
 #include "calcapp/io.hpp"
 
-using std::string;
-
 namespace Calc {
 
-class SysUtil {
-public:
-    static string getCurrentDirectory();
-    static string getOSVersion();
-    static string getCpuSpec();
-    static string getBuildOptions();
-    static unsigned getCpuCoresCount();
-    static double getCurTimeSec();
-    static bool getFreeDiskMB(double *SizeMB, string Name);
-    static bool isEnoughDiskSpace(string fileName, double minMB, double * curMB = 0);
-    static void throwOnOutOfDiskSpace(TFileType fileType, string fileName, double minMB);
-};
+namespace SysUtil {
+    std::string getCurrentDirectory();
+    std::string getOSVersion();
+    std::string getCpuSpec();
+    std::string getBuildOptions();
+    unsigned getCpuCoresCount();
+    double getCurTimeSec();
+    bool getFreeDiskMB(double *SizeMB, std::string Name);
+    bool isEnoughDiskSpace(std::string fileName, double minMB, double * curMB = 0);
+    void throwOnOutOfDiskSpace(TFileType fileType, std::string fileName, double minMB);
+}
 
 }
 
