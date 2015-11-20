@@ -1,12 +1,13 @@
 +- AppOptions options processing implementation
-* App variants interfaces & implementation
-* Input/Output file processing interface & implementation
++- App variants interfaces & implementation
++- Input/Output file processing interface & implementation
 * working quest-example and quest01 from quest-template
 * write, run and compare some variants of quest01 algorithms
 +- BUILD_VANILLA review
 * BUILD_THREADING review
 + add missing checks for third parties to main CMakeLists.txt
-* add third parties for tests: GSL, FFTW, PETSc, Hypre/BoomerAMG, CGAL etc
+* add extra third parties for tests: GSL, FFTW, PETSc, Hypre/BoomerAMG, CGAL,
+  libFLAME/BLIS(https://www.cs.utexas.edu/~flame/web/) etc
 * progress bar and logger logic review
 * cli parsing review, further reduce copypasting
 * implement (some) standard cblas interfaces
@@ -14,3 +15,4 @@
 * write tests and scripts to automate running them
 * write build tests for at least 27 build variants:
   3(linux/os x/win) * 3(basic/full/vanilla) * 3(gnu/intel/clang/msvc compiler)
+* add support for gziped i/o via boost::iostreams

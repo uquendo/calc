@@ -1,3 +1,5 @@
+#include "calcapp/io.hpp"
+
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -5,14 +7,23 @@
 #include <sstream>
 #include <fstream>
 
-
-#include "calcapp/io.hpp"
-
 using namespace std;
 
 namespace Calc {
 
-bool IOUtil::readLine(ifstream& in, char * buf, int bufSize) 
+namespace IOUtil{
+
+float __atof__(const char * str) { return strtof(str,nullptr); }
+double __atod__(const char * str) { return atof(str); }
+long double __atold__(const char * str) { return strtold(str,nullptr); }
+#ifdef HAVE_QUADMATH
+numeric::quad __atoq__(const char * str) { return numeric::quad(str); }
+#endif
+#ifdef HAVE_MPREAL
+numeric::mpreal __atompfr__(const char * str) { return numeric::mpreal(str); }
+#endif
+
+bool readLine(istream& in, char * buf, int bufSize) 
 {
 	buf[0]=0;
 	in.getline(buf, bufSize, '\n');
@@ -29,7 +40,7 @@ bool IOUtil::readLine(ifstream& in, char * buf, int bufSize)
 	return ! in.fail();
 }
 
-bool IOUtil::readLine(ifstream& in, string& str)
+bool readLine(istream& in, string& str)
 {
 	char buf[LINE_BUF_SIZE];
 	bool r = readLine(in, buf, LINE_BUF_SIZE);
@@ -37,7 +48,7 @@ bool IOUtil::readLine(ifstream& in, string& str)
 	return r;
 }
 
-bool IOUtil::tryOpenFile(const char * name, const char * mode) {
+bool tryOpenFile(const char * name, const char * mode) {
 	FILE *pF;
 	if ( (pF=fopen(name, mode)) ) {		
 		fclose(pF);
@@ -46,7 +57,7 @@ bool IOUtil::tryOpenFile(const char * name, const char * mode) {
     return false;
 }
 
-string IOUtil::fileGrep(const char * fileName, const std::regex& rx, const bool firstOnly, const unsigned submatchNumber) {
+string fileGrep(const char * fileName, const std::regex& rx, const bool firstOnly, const unsigned submatchNumber) {
     string out;
 
     ifstream f(fileName);
@@ -67,6 +78,8 @@ string IOUtil::fileGrep(const char * fileName, const std::regex& rx, const bool 
     }
 
     return out;
+}
+
 }
 
 }

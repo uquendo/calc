@@ -2,6 +2,7 @@ set(calcapp_SOURCES
     app.cpp
     cli_log.cpp
     cli_opt.cpp
+    infile.cpp
     io.cpp
     log.cpp
     options.cpp
@@ -12,6 +13,7 @@ set(calcapp_HEADERS
     app.hpp
     cli.hpp
     exception.hpp
+    infile.hpp
     io.hpp
     log.hpp
     options.hpp
