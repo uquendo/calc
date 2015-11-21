@@ -10,8 +10,8 @@ namespace Calc {
     inputHelp(""),
     outputHelp(""),
     algoHelp(""),
-    m_input({FT_MatrixText,""}),
-    m_output({FT_MatrixText,""}),
+    m_input({FT_MatrixText,"data1","data2"}),
+    m_output({FT_MatrixText,"result"}),
     m_algo({A_Undefined})
   {
   }
@@ -120,7 +120,10 @@ namespace Calc {
 #endif
     m_input.filetype = input;
     //parse filenames for A and B
-    //
+#ifdef HAVE_BOOST
+    m_input.filename_A = argMap["in-A"].as<string>();
+    m_input.filename_B = argMap["in-B"].as<string>();
+#endif
     return true;   
   }
 
@@ -140,7 +143,9 @@ namespace Calc {
 #endif
     m_output.filetype = output;
     //parse filename for C
-    //
+#ifdef HAVE_BOOST
+    m_output.filename = argMap["out-C"].as<string>();
+#endif
     return true;   
   }
 

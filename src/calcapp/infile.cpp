@@ -26,7 +26,7 @@ using std::to_string;
 namespace Calc {
 
 InFileText::InFileText(const char * fileName, TFileType fileType /* = FT_Undefined */, bool seqAccess /* = false */) 
-	: m_f()
+	: m_f(nullptr)
 	, m_fileName(fileName)
 	, m_fileType(fileType)
 	, m_lineNum(0)
@@ -46,6 +46,8 @@ InFileText::InFileText(const char * fileName, TFileType fileType /* = FT_Undefin
   //TODO: on MSVC we can try to use winapi-ish CreateFile with FILE_FLAG_SEQUENTIAL_SCAN
   m_f.reset(new ifstream(fileName));
 #endif
+  if(m_f == nullptr)
+    throwIOError(FERR_IO_GENERAL_READ, "File open error");
 }
 
 bool InFileText::readNextLineOrEOF()
@@ -119,34 +121,26 @@ void InFileText::readNextLine_untilExcept(const char * str, const char * except)
 		throwFormatError(FERR_IO_FORMAT_ERROR, string("Expected section ").append(str).append(", but found ").append(except).c_str());
 }
 
-template <typename T> int InFileText::readNextLine_scanFloatArray(int minCount, int maxCount, T * dest) 
+template <typename T> int InFileText::readNextLine_scanNumArray(const int minCount, const int maxCount, T * const dest, const int stride /* = 1 */)
 {
-  static_assert(std::is_floating_point<T>::value, "Floating point number expected");
-	readNextLine();
+  static_assert(std::is_arithmetic<T>::value, "Arithmetical type expected");
+  const std::string s = ( std::is_integral<T>::value ? " integer values, got " : " floating point values, got " );
 
-	int n = IOUtil::scanArray<T>(m_line, maxCount, dest);
+  readNextLine();
+
+	int n = (stride > 1 ? IOUtil::scanArray<T>(m_line, maxCount, dest, stride) : IOUtil::scanArray<T>(m_line, maxCount, dest) );
 	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" floating point values, got ").append(to_string(n)).c_str());
+		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
 
 	return n;
 }
 
-template <typename T> int InFileText::readNextLine_scanIntArray(int minCount, int maxCount, T * dest) 
+template <typename T> int InFileText::readNextLine_scanNums(const int minCount, const int maxCount, /* (T *) */...) 
 {
-  static_assert(std::is_integral<T>::value, "Integer expected");
-	readNextLine();
+  static_assert(std::is_arithmetic<T>::value, "Arithmetical type expected");
+  const std::string s = ( std::is_integral<T>::value ? " integer values, got " : " floating point values, got " );
 
-	int n = IOUtil::scanArray<T>(m_line, maxCount, dest);
-	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" integer values, got ").append(to_string(n)).c_str());
-
-	return n;
-}
-
-template <typename T> int InFileText::readNextLine_scanFloats(int minCount, int maxCount, /* (T *) */...) 
-{
-  static_assert(std::is_floating_point<T>::value, "Floating point number expected");
-	readNextLine();
+  readNextLine();
 
   std::unique_ptr<T[]> v(new T[maxCount]);
 	int n = IOUtil::scanArray<T>(m_line, maxCount, &v[0]);
@@ -158,26 +152,7 @@ template <typename T> int InFileText::readNextLine_scanFloats(int minCount, int 
 	va_end(va);
 
 	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" floating point values, got ").append(to_string(n)).c_str());
-
-	return n;
-}
-
-template <typename T> int InFileText::readNextLine_scanInts(int minCount, int maxCount, /* (T *) */...) 
-{
-  static_assert(std::is_integral<T>::value, "Integer expected");
-	readNextLine();
-  std::unique_ptr<T[]> v(new T[maxCount]);
-	int n = IOUtil::scanArray<T>(m_line, maxCount, &v[0]);
-
-	va_list va;
-	va_start(va, maxCount);
-	for ( int i = 0; i < n; ++i )
-		*va_arg(va, T *) = v[i];
-	va_end(va);
-
-	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" integer values, got ").append(to_string(n)).c_str());
+		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
 
 	return n;
 }

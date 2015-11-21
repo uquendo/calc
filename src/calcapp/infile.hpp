@@ -7,6 +7,7 @@
 #include <istream>
 #include <fstream>
 #include <cstring>
+#include <memory>
 
 #include "calcapp/io.hpp"
 #include "calcapp/exception.hpp"
@@ -15,7 +16,7 @@ namespace Calc {
 
 class InFileText {
 protected:
-	ios_guard<std::istream> m_f;
+  std::unique_ptr<std::istream> m_f;
 	std::string m_fileName;
 	TFileType m_fileType;
 	unsigned long m_lineNum;
@@ -47,13 +48,12 @@ public:
 	void readNextLine_untilExcept(const char * str, const char * except);
 
 	int readNextLine_expectStr(int nStr, ...);
-
-  template<typename T> int readNextLine_scanFloatArray(int minCount, int maxCount, T * data);
-  template<typename T> int readNextLine_scanIntArray(int minCount, int maxCount, T * data);
+  
+  // for filling in array of numbers 
+  template<typename T> int readNextLine_scanNumArray(const int minCount, const int maxCount, T * const data, const int stride=1);
 
   // for lines with small number of individual parameters
-  template<typename T> int readNextLine_scanFloats(int minCount, int maxCount, /* T * dataN */ ...);
-  template<typename T> int readNextLine_scanInts(int minCount, int maxCount, /* T * dataN */ ...);
+  template<typename T> int readNextLine_scanNums(const int minCount, const int maxCount, /* T * dataN */ ...);
 	int readNextLine_scan(int minCount, const char * format, ...);
 
 	inline bool currentLineIs(const char * str) const { return strcmp(m_line, str) == 0; }

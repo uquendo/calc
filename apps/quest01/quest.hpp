@@ -81,7 +81,8 @@ static const OptName<TFileType> _output_opt_names[] = {
 
 struct InputOptions {
   TFileType filetype;
-  std::string filename;
+  std::string filename_A;
+  std::string filename_B;
 };
 
 struct OutputOptions {
