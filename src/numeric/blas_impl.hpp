@@ -5,12 +5,6 @@
 
 #include <cstddef>
 
-#ifdef HAVE_RESTRICT
-#define __RESTRICT RESTRICT_KEYWORD
-#else
-#define __RESTRICT
-#endif
-
 using std::size_t;
 
 namespace numeric {
@@ -29,7 +23,7 @@ template <typename T> inline void matmul_helper(const T* const  __RESTRICT a, co
 }
 
 //version for square matrices
-template <typename T> inline void matmul_square_helper(const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
+template <typename T> void matmul_square_helper(const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
         const size_t sz)
 {
     return matmul_helper<T>(a,b,c,sz,sz,sz);

@@ -1,8 +1,13 @@
 +- AppOptions options processing implementation
 +- App variants interfaces & implementation
 +- Input/Output file processing interface & implementation
-* working quest-example and quest01 from quest-template
-* write, run and compare some variants of quest01 algorithms
+* working quest-example and quest01 from quest-template:
+  * simple wrapper class/struct for matrices
+  * i/o for matrices
+  * algorithms dispatcher
+  * c/c++ variants of quest01 algorithms
+  * fortran variants of quest01 algorithms
+  * performance comparsion
 +- BUILD_VANILLA review
 * BUILD_THREADING review
 + add missing checks for third parties to main CMakeLists.txt

@@ -1,6 +1,6 @@
-#include <cassert>
-
 #include "quest.hpp"
+
+#include <cassert>
 
 using std::string;
 
@@ -10,10 +10,12 @@ namespace Calc {
     inputHelp(""),
     outputHelp(""),
     algoHelp(""),
-    m_input({FT_MatrixText,"data1","data2"}),
+//    m_input({FT_MatrixText,"data1","data2"}),
     m_output({FT_MatrixText,"result"}),
     m_algo({A_Undefined})
   {
+    //workaround for weird intel compiler error(internal error: assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 11651)
+    m_input.filetype = FT_MatrixText; m_input.filename_A = "data1";  m_input.filename_B = "data2";
   }
 
   const string QuestAppOptions::About() const

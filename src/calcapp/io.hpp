@@ -40,7 +40,7 @@ namespace IOUtil {
     std::string fileGrep(const char * fileName, const std::regex& rx, bool firstOnly = true, const unsigned submatchNumber = 0);
 
     template <typename T>
-    int scan(const char * str, const int nElem, __RESTRICT T * const dest, __RESTRICT T (*f)(const char *), const int stride=1){
+    inline int scan(const char * str, const int nElem,  T * const dest, T (*f)(const char *), const int stride=1){
         const char * start = str;
         const char * end = start + strlen(str);
         int nTok = 0;
@@ -65,30 +65,30 @@ namespace IOUtil {
     numeric::mpreal __atompfr__(const char * str);
 #endif
 
-    template <typename T> inline int scanArray(const char * str, int nElem , T * dest, int stride=1) {
+    template <typename T> int scanArray(const char * str, int nElem , T * const dest, int stride=1) {
       static_assert(std::is_arithmetic<T>::value, "Number required. No support for any other arrays yet.");
       return 0;
     }
 
-    template <> inline int scanArray<int>(const char * str, int nElem, int * dest, int stride)
+    template <> int scanArray<int>(const char * str, int nElem, int * dest, int stride)
       { return scan<int>(str, nElem, dest, atoi, stride); }
-    template <> inline int scanArray<long>(const char * str, int nElem, long * dest, int stride)
+    template <> int scanArray<long>(const char * str, int nElem, long * dest, int stride)
       { return scan<long>(str, nElem, dest, atol, stride); }
-    template <> inline int scanArray<long long>(const char * str, int nElem, long long * dest, int stride)
+    template <> int scanArray<long long>(const char * str, int nElem, long long * dest, int stride)
       { return scan<long long>(str, nElem, dest, atoll, stride); }
 
-    template <> inline int scanArray<float>(const char * str, int nElem, float * dest, int stride)
+    template <> int scanArray<float>(const char * str, int nElem, float * dest, int stride)
       { return scan<float>(str, nElem, dest, __atof__, stride); }
-    template <> inline int scanArray<double>(const char * str, int nElem, double * dest, int stride)
+    template <> int scanArray<double>(const char * str, int nElem, double * dest, int stride)
       { return scan<double>(str, nElem, dest, __atod__, stride); }
-    template <> inline int scanArray<long double>(const char * str, int nElem, long double * dest, int stride)
+    template <> int scanArray<long double>(const char * str, int nElem, long double * dest, int stride)
       { return scan<long double>(str, nElem, dest, __atold__, stride); }
 #ifdef HAVE_QUADMATH
-    template <> inline int scanArray<numeric::quad>(const char * str, int nElem, numeric::quad * dest, int stride)
+    template <> int scanArray<numeric::quad>(const char * str, int nElem, numeric::quad * dest, int stride)
       { return scan<numeric::quad>(str, nElem, dest, __atoq__, stride); }
 #endif
 #ifdef HAVE_MPREAL
-    template <> inline int scanArray<numeric::mpreal>(const char * str, int nElem, numeric::mpreal * dest, int stride)
+    template <> int scanArray<numeric::mpreal>(const char * str, int nElem, numeric::mpreal * dest, int stride)
       { return scan<numeric::mpreal>(str, nElem, dest, __atompfr__, stride); }
 #endif
 

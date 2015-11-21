@@ -4,7 +4,7 @@
 
 namespace numeric {
     //explicit instantiation
-#   define INSTANTIATE_matmul_square_helper(X) template <> inline void matmul_square_helper\
+#   define INSTANTIATE_matmul_square_helper(X) template <> void matmul_square_helper\
         (const X* const __RESTRICT a, const X* const __RESTRICT b, X* const __RESTRICT c, const size_t sz)
     INSTANTIATE_matmul_square_helper(float);
     INSTANTIATE_matmul_square_helper(double);
