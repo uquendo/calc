@@ -237,8 +237,10 @@ std::string SysUtil::getBuildOptions() {
 #endif
   r+="\n";
   //build string
-#ifdef INFO_COMMON_LIBS
-  r+="common libs: " INFO_COMMON_LIBS "\n";
+#if defined(INFO_C_FLAGS) && defined (INFO_CXX_FLAGS) && defined(INFO_COMPILE_OPTIONS)
+  r+="CMAKE_C_FLAGS: " INFO_C_FLAGS "\n";
+  r+="CMAKE_CXX_FLAGS: " INFO_CXX_FLAGS "\n";
+  r+="extra compilation options: " INFO_COMPILE_OPTIONS "\n";
 #endif
   return r;
 }

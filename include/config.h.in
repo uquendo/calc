@@ -10,9 +10,12 @@
 #cmakedefine RESTRICT_KEYWORD @RESTRICT_KEYWORD@
 
 //build info strings
-#cmakedefine INFO_COMMON_LIBS "@common_LIBS@"
-#cmakedefine INFO_APP_LIBS "@app_LIBS@"
-#cmakedefine INFO_CALCAPP_LIBS "@calcapp_LIBS@"
+#cmakedefine INFO_COMMON_LIBS "@INFO_COMMON_LIBS@"
+#cmakedefine INFO_APP_LIBS "@INFO_APP_LIBS@"
+#cmakedefine INFO_CALCAPP_LIBS "@INFO_CALCAPP_LIBS@"
+#cmakedefine INFO_COMPILE_OPTIONS "@INFO_COMPILE_OPTIONS@"
+#cmakedefine INFO_CXX_FLAGS "@INFO_CXX_FLAGS@"
+#cmakedefine INFO_C_FLAGS "@INFO_C_FLAGS@"
 #cmakedefine INFO_GIT_REFSPEC "@INFO_GIT_REFSPEC@"
 #cmakedefine INFO_GIT_SHA1 "@INFO_GIT_SHA1@"
 #cmakedefine INFO_BUILD_OPTIONS "@INFO_BUILD_OPTIONS@"
@@ -48,19 +51,25 @@
 #ifdef HAVE_BLAS
 #cmakedefine BLAS_VENDOR "@BLAS_VENDOR@"
 #else
-#define BLAS_VENDOR "None"
+# define BLAS_VENDOR "None"
 #endif
 
 //generic defines and includes
 
 #ifdef HAVE_BOOST
-#define BOOST_ALL_DYN_LINK
+# define BOOST_ALL_DYN_LINK
 #endif
 
 #ifdef HAVE_BOOST_UBLAS
-#ifdef NDEBUG
-#define BOOST_UBLAS_NDEBUG
+# ifdef NDEBUG
+#   define BOOST_UBLAS_NDEBUG
+# endif
 #endif
+
+#ifdef HAVE_RESTRICT
+# define __RESTRICT RESTRICT_KEYWORD
+#else
+# define __RESTRICT
 #endif
 
 #ifdef _WIN32
