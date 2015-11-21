@@ -1,0 +1,26 @@
+language: cpp
+compiler:
+  - clang
+  - gcc
+
+sudo: required
+dist: trusty
+
+cache:
+  apt: true
+
+addons:
+  apt:
+    packages:
+      - libboost1.55-dev
+      - libboost-date-time1.55-dev
+      - libboost-filesystem1.55-dev
+      - libboost-program-options1.55-dev
+      - libboost-system1.55-dev
+
+before_script:
+  - mkdir ../calc-build
+  - cd ../calc-build
+  - cmake -DCMAKE_BUILD_TYPE=Release ../calc/
+
+script: make
