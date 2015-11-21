@@ -9,6 +9,11 @@ set(QUADMATH_PATHS /usr/lib
                /lib/x86_64-linux-gnu
                /usr/lib/x86_64-linux-gnu
                /usr/lib/gcc/x86_64-linux-gnu/${CMAKE_CXX_COMPILER_VERSION}
+               /usr/lib/gcc/x86_64-linux-gnu/5
+               /usr/lib/gcc/x86_64-linux-gnu/4.9
+               /usr/lib/gcc/x86_64-linux-gnu/4.8
+               /usr/lib/gcc/x86_64-linux-gnu/4.7
+               /usr/lib/gcc/x86_64-linux-gnu/4.6
                )
 
 find_library(QUADMATH_LIB NAMES quadmath PATHS ${QUADMATH_PATHS})

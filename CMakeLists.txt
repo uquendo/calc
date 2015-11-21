@@ -23,19 +23,22 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Release" "Debug" "RelWithDebugInfo" "MinSizeRel")
 
+# setup tooling for LLVM
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #build options
 option(BUILD_APPS           "build quest apps"         ON )
 option(BUILD_THREADING      "build code that uses multithreading"  ON)
 option(BUILD_FASTMATH       "enable non-IEEE754 compliant fp compiler optimisations(in Release mode)"   ON)
 option(BUILD_QUAD           "enable quad precision(128 bit) support"    ON)
-option(BUILD_VANILLA   	    "build without any external dependencies"  		OFF )
+option(BUILD_VANILLA         "build without any external dependencies"      OFF )
 #option(BUILD_GPGPU         "build with GPGPU libraries"     OFF)
 
 #threading options
-cmake_dependent_option(USE_PTHREADS    	    "enable POSIX threads support"	    OFF "BUILD_THREADING" OFF)
-cmake_dependent_option(USE_OPENMP      	    "enable OpenMP threads support"  	OFF "BUILD_THREADING" OFF)
-cmake_dependent_option(USE_TBB      	    "enable Intel TBB threads support"	OFF "BUILD_THREADING; NOT BUILD_VANILLA" OFF)
-cmake_dependent_option(USE_CILK      	    "enable Cilk Plus language extension"	OFF "BUILD_THREADING; NOT BUILD_VANILLA" OFF)
+cmake_dependent_option(USE_PTHREADS          "enable POSIX threads support"      OFF "BUILD_THREADING" OFF)
+cmake_dependent_option(USE_OPENMP            "enable OpenMP threads support"    OFF "BUILD_THREADING" OFF)
+cmake_dependent_option(USE_TBB            "enable Intel TBB threads support"  OFF "BUILD_THREADING; NOT BUILD_VANILLA" OFF)
+cmake_dependent_option(USE_CILK            "enable Cilk Plus language extension"  OFF "BUILD_THREADING; NOT BUILD_VANILLA" OFF)
 
 #utility libs options
 cmake_dependent_option(USE_BOOST            "enable some utility libraries from Boost suite(filesystem, system, program_options, date_time)"  ON "NOT BUILD_VANILLA" OFF)
@@ -129,15 +132,20 @@ if(BUILD_THREADING)
 endif()
 
 if(BUILD_QUAD)
-  set(INFO_BUILD_OPTIONS "${INFO_BUILD_OPTIONS} QUAD")
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-      add_compile_options(-Qoption,cpp,--extended_float_type)
-  endif()
-  find_package(Quadmath)
-  if(QUADMATH_FOUND)
-    set(common_LIBS ${common_LIBS} ${QUADMATH_LIB})
-    set(HAVE_QUADMATH YES)
-    set(INFO_HAVE_OPTIONS "${INFO_HAVE_OPTIONS} QUADMATH")
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    message("Clang has no support for quad precision math")
+    unset(BUILD_QUAD)
+  else()
+    set(INFO_BUILD_OPTIONS "${INFO_BUILD_OPTIONS} QUAD")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+        add_compile_options(-Qoption,cpp,--extended_float_type)
+    endif()
+    find_package(Quadmath)
+    if(QUADMATH_FOUND)
+      set(common_LIBS ${common_LIBS} ${QUADMATH_LIB})
+      set(HAVE_QUADMATH YES)
+      set(INFO_HAVE_OPTIONS "${INFO_HAVE_OPTIONS} QUADMATH")
+    endif()
   endif()
 endif()
 
@@ -167,7 +175,7 @@ endif()
 #threading options
 
 if (USE_PTHREADS)
-	find_package(Threads)
+  find_package(Threads)
     if(Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
         set(common_LIBS ${common_LIBS} ${CMAKE_THREAD_LIBS_INIT})
         set(HAVE_PTHREADS YES)
@@ -364,7 +372,7 @@ include_directories("${CMAKE_BINARY_DIR}/include" "${CMAKE_SOURCE_DIR}/src")
 add_subdirectory(src)
 #build task-specific apps
 if (BUILD_APPS)
-	add_subdirectory(apps)
+  add_subdirectory(apps)
 endif()
 
 

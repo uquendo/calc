@@ -23,7 +23,7 @@ const OptName<TPrecision> _precision_opt_names[] = {
     { "32-bit float", "32", P_Float },
     { "64-bit double", "64", P_Double },
     { "80-bit long double", "80", P_LongDouble },
-#ifdef BUILD_QUAD
+#ifdef HAVE_QUADMATH
     { "128-bit quad", "128", P_Quad },
 #endif
 #ifdef HAVE_MPREAL

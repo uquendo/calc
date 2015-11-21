@@ -17,7 +17,7 @@ typedef __int64 int64_t;
 #include <cstdint>
 #endif
 
-#ifdef BUILD_QUAD
+#ifdef HAVE_QUADMATH
 #include <boost/multiprecision/float128.hpp>
 #endif
 #ifdef HAVE_MPREAL
@@ -39,7 +39,7 @@ enum TPrecision {
 	P_Undefined
 };
 
-#ifdef BUILD_QUAD
+#ifdef HAVE_QUADMATH
 #ifdef HAVE_BOOST
 typedef boost::multiprecision::float128 quad;
 #else

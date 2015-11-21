@@ -29,7 +29,7 @@ public:
 	void print(const char * str);
 	inline void print(const std::string& str) { print(str.c_str()); }
 
-	template <class T> std::ofstream operator << (T t) {
+	template <class T> std::ostream& operator << (T t) {
 		*m_f << t;
 		return *m_f;
 	}

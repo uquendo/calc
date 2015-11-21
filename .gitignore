@@ -1,3 +1,7 @@
+#supposed to be generated in compile-time
+config.h
+compile_commands.json
+
 #vim stuff
 .*.s[a-w][a-z]
 *.un~

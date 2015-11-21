@@ -9,7 +9,7 @@ namespace numeric {
     INSTANTIATE_matmul_square_helper(float);
     INSTANTIATE_matmul_square_helper(double);
     INSTANTIATE_matmul_square_helper(long double);
-#   ifdef BUILD_QUAD
+#   ifdef HAVE_QUADMATH
         INSTANTIATE_matmul_square_helper(quad);
 #   endif
 #   ifdef HAVE_MPREAL
