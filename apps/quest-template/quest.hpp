@@ -14,14 +14,14 @@ enum TAlgo {
 };
 
 struct AlgoOptName {
-	const char * name;
-	const char * opt;
-	TAlgo type;
+  const char * name;
+  const char * opt;
+  TAlgo type;
 };
 
 static const AlgoOptName _algo_opt_names[] = {
-	{ "Cached", "c", A_Cached },
-	{ NULL, 0, A_Undefined }
+  { "Cached", "c", A_Cached },
+  { NULL, 0, A_Undefined }
 };
 
 class QuestAppOptions : public CliAppOptions {

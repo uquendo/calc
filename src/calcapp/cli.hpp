@@ -74,43 +74,43 @@ protected:
 class CliProgress : public ProgressCtrl {
 public:
     class CliProgressBar : public ProgressBar {
-	private:
-		Logger& m_log;
-		std::string m_title;
-		int m_lower, m_upper, m_pos, m_step, m_reportedPercentage;
-		double m_startTime;
+  private:
+    Logger& m_log;
+    std::string m_title;
+    int m_lower, m_upper, m_pos, m_step, m_reportedPercentage;
+    double m_startTime;
 
-	public:
-		CliProgressBar(Logger& log, const char * title);
-		virtual ~CliProgressBar();
-		virtual void setProgressRange(int lower, int upper) override;
-		virtual void setProgress(int pos) override;
-		virtual void setProgressStep(int step) override;
-		virtual void setTitle(const char * title) override;
-		virtual void clearTitle() override;
-		virtual void stepIt() override;
-		void advancePos(bool reset);
-	};
+  public:
+    CliProgressBar(Logger& log, const char * title);
+    virtual ~CliProgressBar();
+    virtual void setProgressRange(int lower, int upper) override;
+    virtual void setProgress(int pos) override;
+    virtual void setProgressStep(int step) override;
+    virtual void setTitle(const char * title) override;
+    virtual void clearTitle() override;
+    virtual void stepIt() override;
+    void advancePos(bool reset);
+  };
 
-	CliProgress(Logger::LogLevel severity, const std::string& logName);
+  CliProgress(Logger::LogLevel severity, const std::string& logName);
   CliProgress(const LoggingOptions& opts);
-	CliProgress();
+  CliProgress();
 
-	virtual void onStartCalc() override;
-	virtual void onFinishCalc() override;
-	virtual void onAbortCalc() override;
-	virtual bool stopNow() override;
-	virtual void setStopNow() override;
+  virtual void onStartCalc() override;
+  virtual void onFinishCalc() override;
+  virtual void onAbortCalc() override;
+  virtual bool stopNow() override;
+  virtual void setStopNow() override;
 
-	// Progress bar
-	virtual ProgressBar * createProgressBar(const char * title) override;
-	virtual void setStatusText(const char * text) override;
-	virtual void clearStatusText() override;
+  // Progress bar
+  virtual ProgressBar * createProgressBar(const char * title) override;
+  virtual void setStatusText(const char * text) override;
+  virtual void clearStatusText() override;
 
-	virtual Logger& log() override;
-	
+  virtual Logger& log() override;
+  
 private:
-	std::unique_ptr<Logger> m_pLogger;
+  std::unique_ptr<Logger> m_pLogger;
   std::atomic<bool> m_StopNow;
 };
 

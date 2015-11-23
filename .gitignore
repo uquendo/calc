@@ -139,6 +139,7 @@ ClientBin/
 *.[Pp]ublish.xml
 *.pfx
 *.publishsettings
+*.bak
 
 # Windows image file caches
 Thumbs.db

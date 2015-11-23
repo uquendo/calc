@@ -30,7 +30,7 @@ class Logger {
 public:
   enum LogLevel { L_TRACE = 6, L_DEBUG = 5, L_NOTE = 4, L_WARNING = 3, L_ERROR = 2, L_FATAL = 1, L_NONE = 0 };
 
-	virtual void log(LogLevel level, const char * msg) = 0;
+  virtual void log(LogLevel level, const char * msg) = 0;
 
 protected: 
   // serialize message to log via Logger::log()
@@ -52,42 +52,42 @@ public:
   // logging via c++ streams
   LogMessage slog(LogLevel level);
 
-	// syntax sugar for streams logging
+  // syntax sugar for streams logging
   inline LogMessage slog(); 
   inline LogMessage serror(); 
   inline LogMessage swarning(); 
   inline LogMessage sdebug(); 
 
-	// syntax sugar for c-style logging
-	inline void log(LogLevel level, const std::string& msg)         { log(level, msg.c_str()); }
-	inline void flog(LogLevel  level, const char * format, ...)		{ va_list va; va_start(va, format); vflog(level, format, va); va_end(va); }
-	void vflog(LogLevel  level, const char * format, va_list va);
+  // syntax sugar for c-style logging
+  inline void log(LogLevel level, const std::string& msg)         { log(level, msg.c_str()); }
+  inline void flog(LogLevel  level, const char * format, ...)    { va_list va; va_start(va, format); vflog(level, format, va); va_end(va); }
+  void vflog(LogLevel  level, const char * format, va_list va);
 
-	inline void error(const char * msg)								{ log(L_ERROR, msg); }
-	inline void ferror(const char * format, ...)			{ va_list va; va_start(va, format); vflog(L_ERROR, format, va); va_end(va); }
-	inline void error(const std::exception& e, const char * msg)	{ ferror("%s: %s", msg, e.what()); }
-	inline void error(const std::string& e)						{ error(e.c_str()); }
-	void error(BaseException * e);
+  inline void error(const char * msg)                { log(L_ERROR, msg); }
+  inline void ferror(const char * format, ...)      { va_list va; va_start(va, format); vflog(L_ERROR, format, va); va_end(va); }
+  inline void error(const std::exception& e, const char * msg)  { ferror("%s: %s", msg, e.what()); }
+  inline void error(const std::string& e)            { error(e.c_str()); }
+  void error(BaseException * e);
 
-	inline void fwarning(const char * format, ...)		{ va_list va; va_start(va, format); vflog(L_WARNING, format, va); va_end(va); }
-	inline void warning(const char * msg)							{ log(L_WARNING, msg); }
-	inline void warning(const std::string& msg)				{ log(L_WARNING, msg); }
+  inline void fwarning(const char * format, ...)    { va_list va; va_start(va, format); vflog(L_WARNING, format, va); va_end(va); }
+  inline void warning(const char * msg)              { log(L_WARNING, msg); }
+  inline void warning(const std::string& msg)        { log(L_WARNING, msg); }
 
-	inline void fdebug(const char * format, ...)			{ va_list ap; va_start(ap, format); vflog(L_DEBUG, format, ap); va_end(ap); }
-	inline void debug(const char * msg)								{ log(L_DEBUG, msg);	}
-	inline void debug(const std::string& msg)					{ log(L_DEBUG, msg);	}
+  inline void fdebug(const char * format, ...)      { va_list ap; va_start(ap, format); vflog(L_DEBUG, format, ap); va_end(ap); }
+  inline void debug(const char * msg)                { log(L_DEBUG, msg);  }
+  inline void debug(const std::string& msg)          { log(L_DEBUG, msg);  }
 
   // default loglevel management
   void setLogLevel(LogLevel level) { m_level = level; }
   LogLevel getLogLevel() { return m_level; }
 
-	// default system logger
-	inline static Logger& system()									{ return *m_pSystem; }
-	inline static void setSystem(Logger * sysLog)					{ m_pSystem = sysLog; }
-	Logger():m_level(L_NONE){}
+  // default system logger
+  inline static Logger& system()                  { return *m_pSystem; }
+  inline static void setSystem(Logger * sysLog)          { m_pSystem = sysLog; }
+  Logger():m_level(L_NONE){}
 
 protected:
-	static Logger * m_pSystem;
+  static Logger * m_pSystem;
   LogLevel m_level;
   std::ostringstream m_oss;
   std::atomic_bool m_oss_in_use;

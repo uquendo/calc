@@ -35,48 +35,48 @@ enum TAlgo {
 };
 
 static const OptName<TAlgo> _algo_opt_names[] = {
-	{ "numeric-cpp", "num-cpp", A_NumCpp },
-	{ "numeric-c", "num-c", A_NumC },
-	{ "numeric-fortran", "num-f", A_NumFortran },
-	{ "numeric-cpp-simple", "num-cpp-s", A_NumCppSimple },
-	{ "numeric-c-simple", "num-c-s", A_NumCSimple },
-	{ "numeric-fortran-simple", "num-f-s", A_NumFortranSimple },
-	{ "numeric-cpp-simple-transpose", "num-cpp-st", A_NumCppSimpleTranspose },
-	{ "numeric-c-simple-transpose", "num-c-st", A_NumCSimpleTranspose },
-	{ "numeric-fortran-simple-transpose", "num-f-st", A_NumFortranSimpleTranspose },
-	{ "numeric-cpp-strassen", "num-cpp-sn", A_NumCppStrassen },
-	{ "numeric-c-strassen", "num-c-sn", A_NumCStrassen },
-	{ "numeric-fortran-strassen", "num-f-sn", A_NumFortranStrassen },
-	{ "numeric-fortran-internal", "num-f-int", A_NumFortranInternal },
+  { "numeric-cpp", "num-cpp", A_NumCpp },
+  { "numeric-c", "num-c", A_NumC },
+  { "numeric-fortran", "num-f", A_NumFortran },
+  { "numeric-cpp-simple", "num-cpp-s", A_NumCppSimple },
+  { "numeric-c-simple", "num-c-s", A_NumCSimple },
+  { "numeric-fortran-simple", "num-f-s", A_NumFortranSimple },
+  { "numeric-cpp-simple-transpose", "num-cpp-st", A_NumCppSimpleTranspose },
+  { "numeric-c-simple-transpose", "num-c-st", A_NumCSimpleTranspose },
+  { "numeric-fortran-simple-transpose", "num-f-st", A_NumFortranSimpleTranspose },
+  { "numeric-cpp-strassen", "num-cpp-sn", A_NumCppStrassen },
+  { "numeric-c-strassen", "num-c-sn", A_NumCStrassen },
+  { "numeric-fortran-strassen", "num-f-sn", A_NumFortranStrassen },
+  { "numeric-fortran-internal", "num-f-int", A_NumFortranInternal },
   //TODO: clean up macro hell 
 #ifdef HAVE_BOOST_UBLAS
-	{ "contrib-cpp-boost.ublas", "ext-cpp-boost", A_ExtCppBoost },
+  { "contrib-cpp-boost.ublas", "ext-cpp-boost", A_ExtCppBoost },
 #endif
 #ifdef HAVE_EIGEN
-	{ "contrib-cpp-eigen", "ext-cpp-eigen", A_ExtCppEigen },
+  { "contrib-cpp-eigen", "ext-cpp-eigen", A_ExtCppEigen },
 #endif
 #ifdef HAVE_MTL
-	{ "contrib-cpp-mtl", "ext-cpp-mtl", A_ExtCppMTL },
+  { "contrib-cpp-mtl", "ext-cpp-mtl", A_ExtCppMTL },
 #endif
 #ifdef HAVE_ARMADILLO
-	{ "contrib-cpp-armadillo", "ext-cpp-arm", A_ExtCppArmadillo },
+  { "contrib-cpp-armadillo", "ext-cpp-arm", A_ExtCppArmadillo },
 #endif
 #ifdef HAVE_BLAS
-	{ "contrib-c-blas", "ext-c-blas", A_ExtCBLAS },
+  { "contrib-c-blas", "ext-c-blas", A_ExtCBLAS },
 #endif
-	{ NULL, 0, A_Undefined }
+  { NULL, 0, A_Undefined }
 };
 
 static const OptName<TFileType> _input_opt_names[] = {
   { "Read matrices in .dat format", "dat", FT_MatrixText },
   { "Read matrices in .csv format", "csv", FT_Csv },
-	{ NULL, 0, FT_None }
+  { NULL, 0, FT_None }
 };
 
 static const OptName<TFileType> _output_opt_names[] = {
   { "Write matrices in .dat format", "dat", FT_MatrixText },
   { "Write matrices in .csv format", "csv", FT_Csv },
-	{ NULL, 0, FT_None }
+  { NULL, 0, FT_None }
 };
 
 struct InputOptions {

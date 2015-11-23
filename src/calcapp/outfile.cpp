@@ -18,10 +18,10 @@
 namespace Calc {
 
 OutFileText::OutFileText(const char * fileName, TFileType fileType, bool append) 
-	: m_f(nullptr) 
-	, m_fileName(fileName)
-	, m_fileType(fileType)
-	, m_curLine(0)
+  : m_f(nullptr) 
+  , m_fileName(fileName)
+  , m_fileType(fileType)
+  , m_curLine(0)
 {
 #ifdef __GLIBCXX__
   FILE* cfile = fopen(fileName, append ? "a" : "w" );
@@ -37,38 +37,38 @@ OutFileText::OutFileText(const char * fileName, TFileType fileType, bool append)
   m_f.reset(new ofstream(fileName, append ? ios_base::app : ios_base::out));
 #endif
   if(m_f == nullptr)
-		throw IOError(FERR_IO_GENERAL_WRITE, "Error while opening file for writing", m_fileType, m_fileName.c_str(), m_curLine);
+    throw IOError(FERR_IO_GENERAL_WRITE, "Error while opening file for writing", m_fileType, m_fileName.c_str(), m_curLine);
 }
 
 void OutFileText::printf(const char * fmt, ...) 
 {
-	va_list va;
-	va_start(va, fmt);
+  va_list va;
+  va_start(va, fmt);
 
-	char buf[LINE_BUF_SIZE];
-	vsnprintf(buf, LINE_BUF_SIZE, fmt, va);
-	va_end(va);
+  char buf[LINE_BUF_SIZE];
+  vsnprintf(buf, LINE_BUF_SIZE, fmt, va);
+  va_end(va);
 
-	print(buf);
+  print(buf);
 }
 
 void OutFileText::println(const char * str)
 {
-	*m_f << str << '\n';
-	if ( (*m_f).bad() )
-		throw IOError(FERR_IO_GENERAL_WRITE, "Error while writing a file", m_fileType, m_fileName.c_str(), m_curLine);
+  *m_f << str << '\n';
+  if ( (*m_f).bad() )
+    throw IOError(FERR_IO_GENERAL_WRITE, "Error while writing a file", m_fileType, m_fileName.c_str(), m_curLine);
 }
 
 void OutFileText::print(const char * str)
 {
-	*m_f << str;
-	if ( (*m_f).bad() )
-		throw IOError(FERR_IO_GENERAL_WRITE, "Error while writing a file", m_fileType, m_fileName.c_str(), m_curLine);
+  *m_f << str;
+  if ( (*m_f).bad() )
+    throw IOError(FERR_IO_GENERAL_WRITE, "Error while writing a file", m_fileType, m_fileName.c_str(), m_curLine);
 }
 
 void OutFileText::flush()
 {
-	(*m_f).flush();
+  (*m_f).flush();
 }
 
 }

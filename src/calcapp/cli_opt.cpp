@@ -40,20 +40,20 @@ void CliAppOptions::prepareOptions(){
   prepareOutputOptions();
   prepareAlgoOptions();
 #ifdef HAVE_BOOST
-	commonOpt.add_options()
-		(HELP_OPT ",h", "print help message")
-		(ABOUT_OPT ",V", "print build and version information")
+  commonOpt.add_options()
+    (HELP_OPT ",h", "print help message")
+    (ABOUT_OPT ",V", "print build and version information")
     (VERBOSE_OPT ",v", bpo::value<int>()->default_value(4), "log verbosity level, 0..6")
     (LOGFILE_OPT ",L", bpo::value<string>()->default_value(""), "specify name of the log file")
 #ifdef BUILD_THREADING
-		(THREADING_OPT ",l", bpo::value<string>()->default_value(_threading_opt_names[0].opt), threadingHelp.c_str())
-		(THREADS_OPT ",t", bpo::value<unsigned>()->default_value(0), "number of threads to use. 0=auto")
+    (THREADING_OPT ",l", bpo::value<string>()->default_value(_threading_opt_names[0].opt), threadingHelp.c_str())
+    (THREADS_OPT ",t", bpo::value<unsigned>()->default_value(0), "number of threads to use. 0=auto")
 #endif
-		(PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())
+    (PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())
 #ifdef HAVE_MPREAL
-		(DIGITS_OPT ",d", bpo::value<unsigned>()->default_value(10), "MPFR number of decimal digits to use")
+    (DIGITS_OPT ",d", bpo::value<unsigned>()->default_value(10), "MPFR number of decimal digits to use")
 #endif
-	;
+  ;
   allOpt.add(commonOpt).add(inputOpt).add(outputOpt).add(algoOpt);
 #endif
 }
@@ -64,25 +64,25 @@ void CliAppOptions::prepareLoggingOptions(){
 void CliAppOptions::prepareThreadingOptions(){
   assert(_threading_opt_names[0].opt && _threading_opt_names[0].name && _threading_opt_names[0].type != -1 );
   threadingHelp += "Threading model to use: ";
-	for ( int i = 0; _threading_opt_names[i].name; ++i ) {
-		threadingHelp += _threading_opt_names[i].opt;
-		threadingHelp += '=';
-		threadingHelp += _threading_opt_names[i].name;
-		threadingHelp += ", ";
-	}
-	threadingHelp.resize(threadingHelp.size() - 2);
+  for ( int i = 0; _threading_opt_names[i].name; ++i ) {
+    threadingHelp += _threading_opt_names[i].opt;
+    threadingHelp += '=';
+    threadingHelp += _threading_opt_names[i].name;
+    threadingHelp += ", ";
+  }
+  threadingHelp.resize(threadingHelp.size() - 2);
 }
 
 void CliAppOptions::preparePrecisionOptions(){
   assert(_precision_opt_names[0].opt && _precision_opt_names[0].name && _precision_opt_names[0].type != -1 );
   precisionHelp += "Floating point number precision to use: ";
-	for ( int i = 0; _precision_opt_names[i].name; ++i ) {
-		precisionHelp += _precision_opt_names[i].opt;
-		precisionHelp += '=';
-		precisionHelp += _precision_opt_names[i].name;
-		precisionHelp += ", ";
-	}
-	precisionHelp.resize(precisionHelp.size() - 2);
+  for ( int i = 0; _precision_opt_names[i].name; ++i ) {
+    precisionHelp += _precision_opt_names[i].opt;
+    precisionHelp += '=';
+    precisionHelp += _precision_opt_names[i].name;
+    precisionHelp += ", ";
+  }
+  precisionHelp.resize(precisionHelp.size() - 2);
 }
 
 void CliAppOptions::prepareInputOptions(){
@@ -94,38 +94,38 @@ void CliAppOptions::prepareOutputOptions(){
 }
 
 void CliAppOptions::prepareAlgoOptions(){
-/*	
-	assert(_algo_opt_names[0].opt && _algo_opt_names[0].name && _algo_opt_names[0].type != -1 );
-	string _algo_opt_namesHelp("Computation algorithm to use: ");
-	for ( int i = 0; _algo_opt_names[i].name; ++i ) {
-		_algo_opt_namesHelp += _algo_opt_names[i].opt;
-		_algo_opt_namesHelp += '=';
-		_algo_opt_namesHelp += _algo_opt_names[i].name;
-		_algo_opt_namesHelp += ", ";
-	}
-	_algo_opt_namesHelp.resize(_algo_opt_namesHelp.size() - 2);
+/*  
+  assert(_algo_opt_names[0].opt && _algo_opt_names[0].name && _algo_opt_names[0].type != -1 );
+  string _algo_opt_namesHelp("Computation algorithm to use: ");
+  for ( int i = 0; _algo_opt_names[i].name; ++i ) {
+    _algo_opt_namesHelp += _algo_opt_names[i].opt;
+    _algo_opt_namesHelp += '=';
+    _algo_opt_namesHelp += _algo_opt_names[i].name;
+    _algo_opt_namesHelp += ", ";
+  }
+  _algo_opt_namesHelp.resize(_algo_opt_namesHelp.size() - 2);
 */
 }
 
 //parse cli options
 bool CliAppOptions::parseOptions(int argc, char* argv[]){
-	if ( argc <= 1 ) {
+  if ( argc <= 1 ) {
 #ifdef CLIAPP_OPT_DEFAULT_HELP
     printHelp();
-		return false;
+    return false;
 #elseif CLIAPP_OPT_DEFAULT_ABOUT
     printAbout();
     return false;
 #endif
-	}
+  }
 #ifdef HAVE_BOOST
-	bpo::store(bpo::parse_command_line(argc, argv, allOpt), argMap);
-	bpo::notify(argMap);
-	if ( argMap.count(HELP_OPT) ) {
+  bpo::store(bpo::parse_command_line(argc, argv, allOpt), argMap);
+  bpo::notify(argMap);
+  if ( argMap.count(HELP_OPT) ) {
     printHelp();
     bpo::notify(argMap);
     return false;
-	} else if ( argMap.count(ABOUT_OPT) ) {
+  } else if ( argMap.count(ABOUT_OPT) ) {
     printAbout();
     bpo::notify(argMap);
     return false;
@@ -246,7 +246,7 @@ void CliAppOptions::printHelp(){
 
 bool CliAppOptions::processOptions(int argc, char* argv[]){ 
   prepareOptions();
- 	return parseOptions(argc, argv);
+   return parseOptions(argc, argv);
 }
 
 }

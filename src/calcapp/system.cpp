@@ -33,45 +33,45 @@ namespace Calc {
 bool SysUtil::getFreeDiskMB(double *SizeMB, std::string Name)
 {
 #ifdef HAVE_BOOST
-	boost::filesystem::path p(Name);
-	p = boost::filesystem::absolute(p);
-	if ( p.has_parent_path() )
-		p = p.parent_path();
-	boost::filesystem::space_info s = boost::filesystem::space(p);
-	*SizeMB = (double) s.free / 1024.0 / 1024.0;
-	return true;
+  boost::filesystem::path p(Name);
+  p = boost::filesystem::absolute(p);
+  if ( p.has_parent_path() )
+    p = p.parent_path();
+  boost::filesystem::space_info s = boost::filesystem::space(p);
+  *SizeMB = (double) s.free / 1024.0 / 1024.0;
+  return true;
 #endif
   return false;
 }
 
 bool SysUtil::isEnoughDiskSpace(const std::string  fileName, double minMB, double * curMB)
 {
-	double mb=0.0;
-	if(!getFreeDiskMB(&mb, fileName))
+  double mb=0.0;
+  if(!getFreeDiskMB(&mb, fileName))
     return true;
-	if ( curMB )
-		*curMB = mb;
-	return ( mb >= minMB );
+  if ( curMB )
+    *curMB = mb;
+  return ( mb >= minMB );
 }
 
 void SysUtil::throwOnOutOfDiskSpace(TFileType fileType, const std::string fileName, double minMB)
 {
-	double mb;
-	if ( ! isEnoughDiskSpace(fileName, minMB, &mb) )
-		throw OutOfDiskSpaceError("No enough free space to write file", fileType, fileName.c_str(), (unsigned long) mb, (unsigned long) minMB);
+  double mb;
+  if ( ! isEnoughDiskSpace(fileName, minMB, &mb) )
+    throw OutOfDiskSpaceError("No enough free space to write file", fileType, fileName.c_str(), (unsigned long) mb, (unsigned long) minMB);
 }
 
 unsigned SysUtil::getCpuCoresCount() {
-	return (int) std::thread::hardware_concurrency();
+  return (int) std::thread::hardware_concurrency();
 }
 
 double SysUtil::getCurTimeSec()
 {
-	double r = 0.0;
+  double r = 0.0;
 #ifdef HAVE_BOOST
   r = (boost::posix_time::microsec_clock::local_time() 
-				- boost::posix_time::ptime(boost::gregorian::date(1970,1,1))
-			).total_milliseconds() / 1000.0;
+        - boost::posix_time::ptime(boost::gregorian::date(1970,1,1))
+      ).total_milliseconds() / 1000.0;
 #endif
   return r;
 }
@@ -125,19 +125,19 @@ std::string SysUtil::getOSVersion() {
       case VER_PLATFORM_WIN32_NT:
 
       // Test for the specific product.
-	  if ( osvi.dwMajorVersion == 10 && osvi.dwMinorVersion == 0 )
+    if ( osvi.dwMajorVersion == 10 && osvi.dwMinorVersion == 0 )
          return "Microsoft Windows 10"+bit;
 
-	  if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 3 )
+    if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 3 )
          return "Microsoft Windows 8.1"+bit;
 
-	  if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2 )
+    if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2 )
          return "Microsoft Windows 8"+bit;
 
-	  if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1 )
+    if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1 )
          return "Microsoft Windows 7"+bit;
-	
-	  if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0 )
+  
+    if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0 )
          return "Microsoft Windows Vista"+bit;
 
       if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2 )
@@ -172,18 +172,18 @@ std::string SysUtil::getOSVersion() {
       break;
 
       case VER_PLATFORM_WIN32s:
-	      return "Microsoft Win32s";
+        return "Microsoft Win32s";
    }
 
   return "Microsoft Windows";
 #elif __linux
-	utsname u;
-	if ( uname(&u) != 0 ) {
-		Logger::system().warning("Error detecting linux version");
-		return "Unknown";
-	}
-	
-	return std::string(u.sysname) + " " + u.release + " " + u.version + " " + u.machine + "; libc version: " + gnu_get_libc_version();
+  utsname u;
+  if ( uname(&u) != 0 ) {
+    Logger::system().warning("Error detecting linux version");
+    return "Unknown";
+  }
+  
+  return std::string(u.sysname) + " " + u.release + " " + u.version + " " + u.machine + "; libc version: " + gnu_get_libc_version();
 #else
    return "Unknown OS";
 #endif
@@ -201,14 +201,14 @@ std::string SysUtil::getCpuSpec() {
   }
   return r;
 #elif _MSC_VER
-	int cpuInfo[4] = {-1};
-	__cpuid(cpuInfo, 0);
+  int cpuInfo[4] = {-1};
+  __cpuid(cpuInfo, 0);
 #ifdef HAVE_BOOST
   r = str(boost::format("cpuid: %08x %08x %08x %08x") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3]);
 #endif
   return r;
 #else
-	return "Unknown OS";
+  return "Unknown OS";
 #endif
 }
 
@@ -249,7 +249,7 @@ std::string SysUtil::getCurrentDirectory()
 {
   std::string r = "";
 #ifdef HAVE_BOOST
-	r = boost::filesystem::absolute(boost::filesystem::path(".")).string();
+  r = boost::filesystem::absolute(boost::filesystem::path(".")).string();
 #endif
   return r;
 }

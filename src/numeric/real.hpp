@@ -31,12 +31,12 @@ typedef __int64 int64_t;
 namespace numeric {
 
 enum TPrecision {
-	P_Float,
-	P_Double,
+  P_Float,
+  P_Double,
   P_LongDouble,
-	P_Quad,
-	P_MPFR,
-	P_Undefined
+  P_Quad,
+  P_MPFR,
+  P_Undefined
 };
 
 #ifdef HAVE_QUADMATH

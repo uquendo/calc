@@ -26,13 +26,13 @@ using std::to_string;
 namespace Calc {
 
 InFileText::InFileText(const char * fileName, TFileType fileType /* = FT_Undefined */, bool seqAccess /* = false */) 
-	: m_f(nullptr)
-	, m_fileName(fileName)
-	, m_fileType(fileType)
-	, m_lineNum(0)
+  : m_f(nullptr)
+  , m_fileName(fileName)
+  , m_fileType(fileType)
+  , m_lineNum(0)
   , m_seqAccess(seqAccess)
 {
-	m_line[0] = 0;
+  m_line[0] = 0;
 #ifdef __GLIBCXX__
   FILE* cfile = fopen(fileName, "r");
   int posix_fd = fileno(cfile);
@@ -52,73 +52,73 @@ InFileText::InFileText(const char * fileName, TFileType fileType /* = FT_Undefin
 
 bool InFileText::readNextLineOrEOF()
 {
-	if ( ! IOUtil::readLine(*m_f, m_line, LINE_BUF_SIZE) )
-		return false;
+  if ( ! IOUtil::readLine(*m_f, m_line, LINE_BUF_SIZE) )
+    return false;
 
-	if ( (*m_f).fail() )
-		throwIOError(FERR_IO_GENERAL_READ, "File read error");
+  if ( (*m_f).fail() )
+    throwIOError(FERR_IO_GENERAL_READ, "File read error");
 
-	++m_lineNum;
-	return true;
+  ++m_lineNum;
+  return true;
 }
 
 void InFileText::readNextLine()
 {
-	if ( ! readNextLineOrEOF() )
-		throw PreliminaryEofError("Premature EOF", m_fileType, m_fileName.c_str(), m_lineNum);
+  if ( ! readNextLineOrEOF() )
+    throw PreliminaryEofError("Premature EOF", m_fileType, m_fileName.c_str(), m_lineNum);
 }
 
 int InFileText::readNextLine_until(int nStr, ...) 
 {
-	std::vector<const char *> m;
+  std::vector<const char *> m;
 
-	va_list va;
-	va_start(va, nStr);
-	for ( int i = 0; i  < nStr; ++i )
-		m.push_back(va_arg(va, const char *));
-	va_end(va);
+  va_list va;
+  va_start(va, nStr);
+  for ( int i = 0; i  < nStr; ++i )
+    m.push_back(va_arg(va, const char *));
+  va_end(va);
 
-	while ( readNextLineOrEOF() ) {
-		for ( int i = 0; i  < nStr; ++i )
-			if ( strcmp(m_line, m[i]) == 0 )
-				return i;
-	}
+  while ( readNextLineOrEOF() ) {
+    for ( int i = 0; i  < nStr; ++i )
+      if ( strcmp(m_line, m[i]) == 0 )
+        return i;
+  }
 
-	string msg("Reached EOF looking for lines: ");
-	for ( int i = 0; i  < nStr; ++i ) {
-		msg += m[i];
-		msg += ", ";
-	}
-	
-	throw PreliminaryEofError(msg.c_str(), m_fileType, m_fileName.c_str(), m_lineNum);
+  string msg("Reached EOF looking for lines: ");
+  for ( int i = 0; i  < nStr; ++i ) {
+    msg += m[i];
+    msg += ", ";
+  }
+  
+  throw PreliminaryEofError(msg.c_str(), m_fileType, m_fileName.c_str(), m_lineNum);
 
 }
 
 int InFileText::readNextLine_expectStr(int nStr, ...)
 {
-	readNextLine();
+  readNextLine();
 
-	string err = "Expected one of the following lines: ";
+  string err = "Expected one of the following lines: ";
 
-	va_list va;
-	va_start(va, nStr);
-	for ( int i = 0; i  < nStr; ++i ) {
-		const char * arg = va_arg(va, const char *);
-		if ( strcmp(m_line, arg) == 0 )
-			return i;
-		err += arg;
-		err += ", ";
-	}
-	va_end(va);
+  va_list va;
+  va_start(va, nStr);
+  for ( int i = 0; i  < nStr; ++i ) {
+    const char * arg = va_arg(va, const char *);
+    if ( strcmp(m_line, arg) == 0 )
+      return i;
+    err += arg;
+    err += ", ";
+  }
+  va_end(va);
 
-	throwFormatError(FERR_IO_FORMAT_ERROR, err.c_str());
-	return 0; // For compiler
+  throwFormatError(FERR_IO_FORMAT_ERROR, err.c_str());
+  return 0; // For compiler
 }
 
 void InFileText::readNextLine_untilExcept(const char * str, const char * except) 
 {
-	if ( readNextLine_until(2, str, except) != 0 )
-		throwFormatError(FERR_IO_FORMAT_ERROR, string("Expected section ").append(str).append(", but found ").append(except).c_str());
+  if ( readNextLine_until(2, str, except) != 0 )
+    throwFormatError(FERR_IO_FORMAT_ERROR, string("Expected section ").append(str).append(", but found ").append(except).c_str());
 }
 
 template <typename T> int InFileText::readNextLine_scanNumArray(const int minCount, const int maxCount, T * const dest, const int stride /* = 1 */)
@@ -128,11 +128,11 @@ template <typename T> int InFileText::readNextLine_scanNumArray(const int minCou
 
   readNextLine();
 
-	int n = (stride > 1 ? IOUtil::scanArray<T>(m_line, maxCount, dest, stride) : IOUtil::scanArray<T>(m_line, maxCount, dest) );
-	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
+  int n = (stride > 1 ? IOUtil::scanArray<T>(m_line, maxCount, dest, stride) : IOUtil::scanArray<T>(m_line, maxCount, dest) );
+  if ( n < minCount )
+    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
 
-	return n;
+  return n;
 }
 
 template <typename T> int InFileText::readNextLine_scanNums(const int minCount, const int maxCount, /* (T *) */...) 
@@ -143,18 +143,18 @@ template <typename T> int InFileText::readNextLine_scanNums(const int minCount, 
   readNextLine();
 
   std::unique_ptr<T[]> v(new T[maxCount]);
-	int n = IOUtil::scanArray<T>(m_line, maxCount, &v[0]);
+  int n = IOUtil::scanArray<T>(m_line, maxCount, &v[0]);
 
-	va_list va;
-	va_start(va, maxCount);
-	for ( int i = 0; i < n; ++i )
-		*va_arg(va, T *) = v[i];
-	va_end(va);
+  va_list va;
+  va_start(va, maxCount);
+  for ( int i = 0; i < n; ++i )
+    *va_arg(va, T *) = v[i];
+  va_end(va);
 
-	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
+  if ( n < minCount )
+    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
 
-	return n;
+  return n;
 }
 
 #if _MSC_VER
@@ -168,27 +168,27 @@ int vsscanf(const char *s, const char *fmt, va_list ap)
 
 int InFileText::readNextLine_scan(int minCount, const char * format, ...)
 {
-	va_list va;
-	va_start(va, format);
-	readNextLine();
-	int n = vsscanf(m_line, format, va);
-	va_end(va);
+  va_list va;
+  va_start(va, format);
+  readNextLine();
+  int n = vsscanf(m_line, format, va);
+  va_end(va);
 
-	if ( n < minCount )
-		throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" values, got ").append(to_string(n)).c_str());
+  if ( n < minCount )
+    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" values, got ").append(to_string(n)).c_str());
 
-	return n;
+  return n;
 }
 
 
 void InFileText::throwIOError(int code, const char * msg) const
 {
-	throw IOError(code, msg, m_fileType, m_fileName.c_str(), m_lineNum);
+  throw IOError(code, msg, m_fileType, m_fileName.c_str(), m_lineNum);
 }
 
 void InFileText::throwFormatError(int code, const char * msg) const
 {
-	throw FileFormatError(code, msg, m_fileType, m_fileName.c_str(), m_lineNum);
+  throw FileFormatError(code, msg, m_fileType, m_fileName.c_str(), m_lineNum);
 }
 
 }
