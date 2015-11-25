@@ -1,7 +1,17 @@
 language: cpp
 compiler:
-  - clang
   - gcc
+env:
+  matrix:
+    - BUILD_WITH=gnu BUILD_VARIANT=basic
+    - BUILD_WITH=gnu BUILD_VARIANT=vanilla
+    - BUILD_WITH=gnu BUILD_VARIANT=full BLAS_VENDOR=All
+    - BUILD_WITH=clang BUILD_VARIANT=basic
+    - BUILD_WITH=clang BUILD_VARIANT=vanilla
+    - BUILD_WITH=clang BUILD_VARIANT=full BLAS_VENDOR=All
+#    - BUILD_WITH=intel BUILD_VARIANT=basic
+#    - BUILD_WITH=intel BUILD_VARIANT=vanilla
+#    - BUILD_WITH=intel BUILD_VARIANT=full BLAS_VENDOR=All
 
 sudo: required
 dist: trusty
@@ -17,10 +27,23 @@ addons:
       - libboost-filesystem1.55-dev
       - libboost-program-options1.55-dev
       - libboost-system1.55-dev
+      - libtbb-dev
+      - libtcmalloc-minimal4
+      - libmpfr-dev
+      - libopenblas-dev
+      - mtl
+      - libeigen3-dev
+      - libarmadillo-dev
+
+install:
+  - if [ "${BUILD_WITH}" = "gnu" ]; then export CXX="g++" CC="gcc"; fi
+  - if [ "${BUILD_WITH}" = "clang" ]; then export CXX="clang++" CC="clang"; fi
+#  - if [ "${BUILD_WITH}" = "intel" ]; then ./contrib/setup_intel_toolchain.sh; export CXX="icpc" CC="icc"; fi
 
 before_script:
-  - mkdir ../calc-build
-  - cd ../calc-build
-  - cmake -DCMAKE_BUILD_TYPE=Release ../calc/
+  - mkdir ../calc-build-${BUILD_VARIANT}-${BUILD_WITH}
+  - cd ../calc-build-${BUILD_VARIANT}-${BUILD_WITH}
+  - cmake --version
+  - cmake ../calc/
 
 script: make

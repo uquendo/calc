@@ -1,6 +1,7 @@
 # - Try to find GNU libquadmath 
 
-#search path collection linux-speciefic by now
+#search path collection linux-specific by now
+#TODO: test compilation of some simple examlpe
 #TODO: MSVC/MinGW and OS X 
 set(QUADMATH_PATHS /usr/lib
                /usr/lib64
@@ -16,9 +17,13 @@ set(QUADMATH_PATHS /usr/lib
                /usr/lib/gcc/x86_64-linux-gnu/4.6
                )
 
-find_library(QUADMATH_LIB NAMES quadmath PATHS ${QUADMATH_PATHS})
-if(QUADMATH_LIB)
-  set(QUADMATH_FOUND TRUE)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(QUADMATH_FOUND FALSE)
+else()
+  find_library(QUADMATH_LIB NAMES quadmath PATHS ${QUADMATH_PATHS})
+  if(QUADMATH_LIB)
+    set(QUADMATH_FOUND TRUE)
+  endif()
 endif()
 
 

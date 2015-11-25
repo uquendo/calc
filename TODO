@@ -11,8 +11,8 @@
 +- BUILD_VANILLA review
 * BUILD_THREADING review
 + add missing checks for third parties to main CMakeLists.txt
-* add extra third parties for tests: GSL, FFTW, PETSc, Hypre/BoomerAMG, CGAL,
-  libFLAME/BLIS(https://www.cs.utexas.edu/~flame/web/) etc
+* add extra third parties for tests: GSL, FFTW, PETSc, Hypre/BoomerAMG, SuiteSparse, 
+  CGAL, libFLAME/BLIS(https://www.cs.utexas.edu/~flame/web/) etc
 * progress bar and logger logic review
 * cli parsing review, further reduce copypasting
 * implement (some) standard cblas interfaces
@@ -20,4 +20,5 @@
 * write tests and scripts to automate running them
 * write build tests for at least 27 build variants:
   3(linux/os x/win) * 3(basic/full/vanilla) * 3(gnu/intel/clang/msvc compiler)
+* test compilation on pgi/ibm/pathscale compilers
 * add support for gziped i/o via boost::iostreams
