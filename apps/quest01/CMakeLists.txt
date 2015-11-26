@@ -7,11 +7,14 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 set(APP_SOURCES
     ${APP_SRCNAME}.cpp
+    matmul.cpp
     main.cpp
     )
 
 set(APP_HEADERS
     ${APP_SRCNAME}.hpp
+    matmul.hpp
+    matrix.hpp
     )
 
 add_executable(${APP_NAME} ${APP_SOURCES} ${APP_HEADERS})

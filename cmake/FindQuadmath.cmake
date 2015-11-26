@@ -1,7 +1,7 @@
 # - Try to find GNU libquadmath 
 
 #search path collection linux-specific by now
-#TODO: test compilation of some simple examlpe
+#TODO: test compilation of some simple example
 #TODO: MSVC/MinGW and OS X 
 set(QUADMATH_PATHS /usr/lib
                /usr/lib64

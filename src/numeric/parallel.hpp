@@ -7,9 +7,10 @@ namespace numeric {
 
 enum TThreading {
   T_Serial,
-    T_Std,
-    T_Posix,
+  T_Std,
+  T_Posix,
   T_OpenMP,
+  T_Cilk,
   T_TBB,
   T_Undefined
 };

@@ -10,6 +10,8 @@
 
 #include "appconfig.h"
 
+#include "matrix.hpp"
+
 namespace Calc {
 
 enum TAlgo {
@@ -94,6 +96,18 @@ struct AlgoOptions {
   TAlgo type;
 };
 
+namespace matmul{
+  struct AlgoParameters {
+    const Calc::AlgoOptions opt;
+    const numeric::TPrecision P;
+    const numeric::TThreading tm;
+    const void * const a;
+    const void * const b;
+    void * const c;
+    const std::size_t sz;
+  };
+}
+
 class QuestAppOptions : public CliAppOptions {
 public:
     QuestAppOptions();
@@ -125,14 +139,22 @@ protected:
 
 class QuestApp : public CliApp {
 private:
-    QuestApp():QuestApp(nullptr){};
+    QuestApp();
 public:
-    QuestApp(ProgressCtrl* pc):CliApp(pc){};
+    QuestApp(ProgressCtrl* pc);
     virtual ~QuestApp(){};
     virtual void setDefaultOptions() override;
     void setOptions(const QuestAppOptions&);
     virtual void readInput() override;
     virtual void run() override;
+private:
+    InputOptions m_input;
+    OutputOptions m_output;
+    AlgoOptions m_algo;
+    std::unique_ptr<MatrixBase> m_pA;
+    std::unique_ptr<MatrixBase> m_pB;
+    std::unique_ptr<MatrixBase> m_pC;
+    std::unique_ptr<matmul::AlgoParameters> m_pAlgoParameters;
 };
 
 }

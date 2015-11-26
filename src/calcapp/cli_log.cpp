@@ -41,9 +41,9 @@ public:
 
     string m = "";
 #ifdef HAVE_BOOST
-    m = (boost::format("%.3f %s: %s") 
-      % (SysUtil::getCurTimeSec() - m_startTime) 
-      % ((level >= 0 && level < LOG_LEVEL_NAME_COUNT) ? LOG_LEVEL_NAME[level] : "") 
+    m = (boost::format("%.3f %s: %s")
+      % (SysUtil::getCurTimeSec() - m_startTime)
+      % ((level >= 0 && level < LOG_LEVEL_NAME_COUNT) ? LOG_LEVEL_NAME[level] : "")
       % msg
     ).str();
 #else
@@ -58,7 +58,7 @@ public:
   };
 };
 
-CliProgress::CliProgress(Logger::LogLevel severity, const string& logName) 
+CliProgress::CliProgress(Logger::LogLevel severity, const string& logName)
   : m_pLogger(severity != Logger::Logger::L_NONE ?
       reinterpret_cast<Logger *>(new DumbLogger(severity, logName)) : reinterpret_cast<Logger *>(new QuietLogger()))
         , m_StopNow(false)
@@ -67,7 +67,7 @@ CliProgress::CliProgress(Logger::LogLevel severity, const string& logName)
 }
 
 
-CliProgress::CliProgress(const LoggingOptions& opts) 
+CliProgress::CliProgress(const LoggingOptions& opts)
   : m_pLogger(opts.level != Logger::Logger::L_NONE ?
       reinterpret_cast<Logger *>(new DumbLogger(opts.level, opts.filename)) : reinterpret_cast<Logger *>(new QuietLogger()))
         , m_StopNow(false)
@@ -79,9 +79,9 @@ CliProgress::CliProgress():CliProgress(Logger::Logger::L_NONE, string(""))
 {
 }
 
-CliProgress::CliProgressBar::CliProgressBar(Logger& log, const char * title) 
+CliProgress::CliProgressBar::CliProgressBar(Logger& log, const char * title)
   : m_log(log), m_title(title)
-  , m_lower(0), m_upper(0), m_pos(0), m_step(1), m_reportedPercentage(-1) 
+  , m_lower(0), m_upper(0), m_pos(0), m_step(1), m_reportedPercentage(-1)
   , m_startTime(SysUtil::getCurTimeSec())
 {}
 
@@ -111,7 +111,6 @@ void CliProgress::CliProgressBar::setTitle(const char * title) {
 void CliProgress::CliProgressBar::clearTitle() {
   m_title.clear();
 }
-
 
 void CliProgress::CliProgressBar::stepIt() {
   m_pos += m_step;
@@ -172,7 +171,7 @@ void CliProgress::setStatusText(const char * text) {
 void CliProgress::clearStatusText() {
 }
 
-Logger& CliProgress::log() { 
+Logger& CliProgress::log() {
   return *m_pLogger;
 }
 

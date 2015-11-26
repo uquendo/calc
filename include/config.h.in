@@ -8,6 +8,8 @@
 #cmakedefine CMAKE_CXX_COMPILER_VERSION "@CMAKE_CXX_COMPILER_VERSION@"
 #cmakedefine HAVE_RESTRICT
 #cmakedefine RESTRICT_KEYWORD @RESTRICT_KEYWORD@
+#cmakedefine HAVE_FORCEINLINE
+#cmakedefine FORCEINLINE_KEYWORD @FORCEINLINE_KEYWORD@
 
 //build info strings
 #cmakedefine INFO_COMMON_LIBS "@INFO_COMMON_LIBS@"
@@ -30,6 +32,7 @@
 #cmakedefine BUILD_VANILLA 
 
 //third parties
+#cmakedefine HAVE_TCMALLOC
 #cmakedefine HAVE_ARMADILLO
 #cmakedefine HAVE_BLAS
 #cmakedefine HAVE_BOOST
@@ -70,6 +73,12 @@
 # define __RESTRICT RESTRICT_KEYWORD
 #else
 # define __RESTRICT
+#endif
+
+#ifdef HAVE_FORCEINLINE
+# define __FORCEINLINE FORCEINLINE_KEYWORD
+#else
+# define __FORCEINLINE
 #endif
 
 #ifdef _WIN32

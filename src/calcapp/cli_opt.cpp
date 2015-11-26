@@ -6,6 +6,10 @@
 #include <string>
 #include <sstream>
 
+#ifdef HAVE_TCMALLOC
+#include <google/malloc_extension.h>
+#endif
+
 using std::string;
 
 namespace Calc {
@@ -15,6 +19,17 @@ CliApp::CliApp():CliApp(nullptr){
 }
 
 CliApp::CliApp(ProgressCtrl* p):App(p){
+#ifdef HAVE_TCMALLOC
+  MallocExtension::instance()->Initialize();
+#endif
+}
+
+void CliApp::printStats(){
+#ifdef HAVE_TCMALLOC
+  char buf[LINE_BUF_SIZE];
+  MallocExtension::instance()->GetStats(&buf[0],LINE_BUF_SIZE);
+  log().debug(&buf[0]);
+#endif
 }
 
 CliAppOptions::CliAppOptions(string AppName, string AppVersion):

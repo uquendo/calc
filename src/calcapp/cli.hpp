@@ -29,6 +29,7 @@ public:
     virtual void setDefaultOptions() = 0;
     virtual void readInput() = 0;
     virtual void run() = 0;
+    virtual void printStats();
 };
 
 class CliAppOptions : public AppOptions {
@@ -49,7 +50,7 @@ protected:
         virtual void preparePrecisionOptions();
         virtual void prepareInputOptions();
         virtual void prepareOutputOptions();
-        virtual void prepareAlgoOptions(); 
+        virtual void prepareAlgoOptions();
         //parse cli options
         virtual bool parseOptions(int argc, char* argv[]);
         virtual bool parseLoggingOptions();
@@ -108,7 +109,7 @@ public:
   virtual void clearStatusText() override;
 
   virtual Logger& log() override;
-  
+
 private:
   std::unique_ptr<Logger> m_pLogger;
   std::atomic<bool> m_StopNow;

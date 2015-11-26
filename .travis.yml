@@ -28,12 +28,13 @@ addons:
       - libboost-program-options1.55-dev
       - libboost-system1.55-dev
       - libtbb-dev
-      - libtcmalloc-minimal4
       - libmpfr-dev
       - libopenblas-dev
-      - mtl
+      - liblapacke-dev
       - libeigen3-dev
       - libarmadillo-dev
+#      - libtcmalloc-minimal4
+#      - mtl
 
 install:
   - if [ "${BUILD_WITH}" = "gnu" ]; then export CXX="g++" CC="gcc"; fi

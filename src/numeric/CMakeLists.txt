@@ -7,6 +7,8 @@ set(numeric_HEADERS
     cache.hpp
     parallel.hpp
     real.hpp
+    complex.hpp
+    expand_traits.hpp
     )
 
 add_library(numeric ${numeric_SOURCES} ${numeric_HEADERS})

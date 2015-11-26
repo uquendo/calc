@@ -14,7 +14,7 @@ namespace Calc {
     m_output({FT_MatrixText,"result"}),
     m_algo({A_Undefined})
   {
-    //workaround for weird intel compiler error(internal error: assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 11651)
+    //workaround for weird intel compiler bug(internal error: assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 11651)
     m_input.filetype = FT_MatrixText; m_input.filename_A = "data1";  m_input.filename_B = "data2";
   }
 
@@ -27,7 +27,7 @@ namespace Calc {
 #endif
     return about;
   }
-    
+
   bool QuestAppOptions::processOptions(int argc, char* argv[])
   {
     return CliAppOptions::processOptions(argc,argv);
@@ -126,7 +126,7 @@ namespace Calc {
     m_input.filename_A = argMap["in-A"].as<string>();
     m_input.filename_B = argMap["in-B"].as<string>();
 #endif
-    return true;   
+    return true;
   }
 
   bool QuestAppOptions::parseOutputOptions()
@@ -148,7 +148,7 @@ namespace Calc {
 #ifdef HAVE_BOOST
     m_output.filename = argMap["out-C"].as<string>();
 #endif
-    return true;   
+    return true;
   }
 
 
@@ -167,7 +167,25 @@ namespace Calc {
     }
 #endif
     m_algo.type = algo;
-    return true;   
+    return true;
+  }
+
+  QuestApp::QuestApp(ProgressCtrl* pc):
+    CliApp(pc)
+//    ,m_input({FT_MatrixText,"data1","data2"})
+    ,m_output({FT_MatrixText,"result"})
+    ,m_algo({A_NumCpp})
+    ,m_pA(nullptr)
+    ,m_pB(nullptr)
+    ,m_pC(nullptr)
+    ,m_pAlgoParameters(nullptr)
+  {
+    //workaround for weird intel compiler bug(internal error: assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 11651)
+    m_input.filetype = FT_MatrixText; m_input.filename_A = "data1";  m_input.filename_B = "data2";
+  }
+
+  QuestApp::QuestApp():QuestApp(nullptr)
+  {
   }
 
   void QuestApp::setDefaultOptions()

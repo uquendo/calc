@@ -13,7 +13,7 @@
 #include <boost/format.hpp>
 #endif
 
-#if ENABLE_PERFMETER
+#ifdef ENABLE_PERFMETER
 #define PERF_METER(log, name) Calc::ExecTimeMeter __etm(log, name);
 #else
 #define PERF_METER(log, name)

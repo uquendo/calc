@@ -14,6 +14,9 @@ const OptName<TThreading> _threading_opt_names[] = {
     { "OpenMP", "omp", T_OpenMP },
 #endif
 #ifdef HAVE_TBB
+    { "Intel CILK", "cilk", T_Cilk },
+#endif
+#ifdef HAVE_TBB
     { "Intel TBB", "tbb", T_TBB },
 #endif
     { NULL, 0, T_Undefined }

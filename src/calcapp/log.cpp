@@ -20,7 +20,8 @@ const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT] = {
 
 Logger * Logger::m_pSystem = NULL;
 
-Logger::LogMessage::LogMessage(Logger& log, LogLevel level, std::ostringstream& oss, std::atomic_bool& oss_in_use):m_log(log),m_level(level),m_oss(oss),m_oss_in_use(oss_in_use)
+Logger::LogMessage::LogMessage(Logger& log, LogLevel level, std::ostringstream& oss, std::atomic_bool& oss_in_use):
+  m_log(log),m_level(level),m_oss(oss),m_oss_in_use(oss_in_use)
 {
   // acquire m_oss_in_use
   bool acquired=false;
@@ -61,7 +62,7 @@ Logger::LogMessage Logger::slog(LogLevel level) {
   return LogMessage::slog(*this,level,m_oss,m_oss_in_use);
 }
 
-// syntax sugar for streams logging
+// syntactic sugar for streams logging
 inline Logger::LogMessage Logger::slog() { return slog(m_level); }
 inline Logger::LogMessage Logger::serror() { return slog(L_ERROR); }
 inline Logger::LogMessage Logger::swarning() { return slog(L_WARNING); }
@@ -82,7 +83,9 @@ public:
   }
 
   virtual void log(LogLevel level, const char * msg) {
+    fputs(LOG_LEVEL_NAME[level], stderr);
     fputs(msg, stderr);
+    fputs("\n", stderr);
   };
 } defLogger;
 
@@ -105,8 +108,6 @@ void Logger::error(BaseException * e)
   }
   error(r.c_str()); 
 }
-
-
 
 ExecTimeMeter::ExecTimeMeter(Logger& log, const char * name) 
   : m_log(log), m_name(name), m_startTime(SysUtil::getCurTimeSec())
