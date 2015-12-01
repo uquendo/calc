@@ -7,7 +7,7 @@
 
 #include "calcapp/cli.hpp"
 #include "calcapp/io.hpp"
-#include "matrix.hpp"
+#include "calcapp/math/matrix.hpp"
 
 #include "appconfig.h"
 

@@ -127,6 +127,6 @@ inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, co
 }
 
 //implementation
-#include "matrix_impl.hpp"
+#include "calcapp/math/matrix_impl.hpp"
 
 #endif /* _MATRIX_HPP */

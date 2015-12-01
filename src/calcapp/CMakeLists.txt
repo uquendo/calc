@@ -21,6 +21,8 @@ set(calcapp_HEADERS
     options.hpp
     progress.hpp
     system.hpp
+    math/matrix.hpp
+    math/matrix_impl.hpp
     )
 
 add_library(calcapp ${calcapp_SOURCES} ${calcapp_HEADERS})
