@@ -30,12 +30,17 @@ typedef __int64 int64_t;
 
 namespace numeric {
 
-enum TPrecision {
-  P_Float,
-  P_Double,
-  P_LongDouble,
+typedef int Precision_ID_t;
+enum TPrecision : int {
+  P_Float=0,
+  P_Double=1,
+  P_LongDouble=2,
+#ifdef HAVE_QUADMATH
   P_Quad,
+#endif
+#ifdef HAVE_MPREAL
   P_MPFR,
+#endif
   P_Undefined
 };
 

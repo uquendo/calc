@@ -11,9 +11,9 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <chrono>
 
 #ifdef HAVE_BOOST
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "boost/format.hpp"
 #endif
@@ -28,7 +28,21 @@
 #include <gnu/libc-version.h>
 #endif
 
+#ifdef HAVE_TCMALLOC
+#include <google/malloc_extension.h>
+#endif
+
 namespace Calc {
+
+std::string SysUtil::getMemStats(){
+  std::string r="";
+#ifdef HAVE_TCMALLOC
+  char buf[LINE_BUF_SIZE];
+  MallocExtension::instance()->GetStats(&buf[0],LINE_BUF_SIZE);
+  r.append(&buf[0]);
+#endif
+  return r;
+}
 
 bool SysUtil::getFreeDiskMB(double *SizeMB, std::string Name)
 {
@@ -68,11 +82,8 @@ unsigned SysUtil::getCpuCoresCount() {
 double SysUtil::getCurTimeSec()
 {
   double r = 0.0;
-#ifdef HAVE_BOOST
-  r = (boost::posix_time::microsec_clock::local_time() 
-        - boost::posix_time::ptime(boost::gregorian::date(1970,1,1))
-      ).total_milliseconds() / 1000.0;
-#endif
+  r = std::chrono::duration_cast< std::chrono::milliseconds > (
+        std::chrono::system_clock::now().time_since_epoch() ).count()/ 1000.0;
   return r;
 }
 
@@ -86,7 +97,7 @@ inline BOOL IsWow64()
 
     LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
             GetModuleHandle("kernel32"),"IsWow64Process");
- 
+
     if (fnIsWow64Process != NULL)
     {
         if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
@@ -203,9 +214,13 @@ std::string SysUtil::getCpuSpec() {
 #elif _MSC_VER
   int cpuInfo[4] = {-1};
   __cpuid(cpuInfo, 0);
-#ifdef HAVE_BOOST
+# ifdef HAVE_BOOST
   r = str(boost::format("cpuid: %08x %08x %08x %08x") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3]);
-#endif
+# else
+  r.append("cpuid: ");
+  r.append(IOUtil::to_string_hex(cpuInfo[0])).append(" ").append(IOUtil::to_string_hex(cpuInfo[1])).append(" ");
+  r.append(IOUtil::to_string_hex(cpuInfo[2])).append(" ").append(IOUtil::to_string_hex(cpuInfo[3]));
+# endif
   return r;
 #else
   return "Unknown OS";

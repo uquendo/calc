@@ -7,10 +7,9 @@
 
 #include "calcapp/cli.hpp"
 #include "calcapp/io.hpp"
+#include "matrix.hpp"
 
 #include "appconfig.h"
-
-#include "matrix.hpp"
 
 namespace Calc {
 
@@ -85,26 +84,45 @@ struct InputOptions {
   TFileType filetype;
   std::string filename_A;
   std::string filename_B;
+
+  InputOptions():
+    filetype(FT_Undefined)
+    ,filename_A("")
+    ,filename_B("")
+  {}
 };
 
 struct OutputOptions {
   TFileType filetype;
   std::string filename;
+
+  OutputOptions():
+    filetype(FT_Undefined)
+    ,filename("")
+  {}
 };
 
 struct AlgoOptions {
   TAlgo type;
+
+  AlgoOptions():
+    type(A_Undefined)
+  {}
 };
 
 namespace matmul{
   struct AlgoParameters {
-    const Calc::AlgoOptions opt;
-    const numeric::TPrecision P;
-    const numeric::TThreading tm;
-    const void * const a;
-    const void * const b;
-    void * const c;
-    const std::size_t sz;
+    const Calc::ThreadingOptions Topt;
+    const Calc::PrecisionOptions Popt;
+    const Calc::AlgoOptions Aopt;
+    std::unique_ptr<MatrixBase> a;
+    std::unique_ptr<MatrixBase> b;
+    std::unique_ptr<MatrixBase> c;
+    bool transposeA;
+    bool transposeB;
+    numeric::TMatrixStorage storage;
+    size_t nrows_C;
+    size_t ncolumns_C;
   };
 }
 
@@ -141,20 +159,21 @@ class QuestApp : public CliApp {
 private:
     QuestApp();
 public:
+    QuestApp(const QuestAppOptions&);
+    QuestApp(const QuestAppOptions&, ProgressCtrl* pc);
     QuestApp(ProgressCtrl* pc);
     virtual ~QuestApp(){};
     virtual void setDefaultOptions() override;
-    void setOptions(const QuestAppOptions&);
     virtual void readInput() override;
     virtual void run() override;
 private:
     InputOptions m_input;
     OutputOptions m_output;
     AlgoOptions m_algo;
-    std::unique_ptr<MatrixBase> m_pA;
-    std::unique_ptr<MatrixBase> m_pB;
-    std::unique_ptr<MatrixBase> m_pC;
     std::unique_ptr<matmul::AlgoParameters> m_pAlgoParameters;
+    std::unique_ptr<InFileText> m_pfA;
+    std::unique_ptr<InFileText> m_pfB;
+    std::unique_ptr<OutFileText> m_pfC;
 };
 
 }

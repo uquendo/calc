@@ -6,30 +6,28 @@
 #include <string>
 #include <sstream>
 
-#ifdef HAVE_TCMALLOC
-#include <google/malloc_extension.h>
-#endif
-
 using std::string;
 
 namespace Calc {
 
-//TODO: STUBS!
-CliApp::CliApp():CliApp(nullptr){
+
+CliApp::CliApp(const CliAppOptions& opt):
+  App(dynamic_cast<const AppOptions&>(opt),dynamic_cast<ProgressCtrl*>(new CliProgress(opt.getLogOpts()))),
+  m_CliProgress(dynamic_cast<CliProgress*>(ctrl()))
+{
 }
 
-CliApp::CliApp(ProgressCtrl* p):App(p){
-#ifdef HAVE_TCMALLOC
-  MallocExtension::instance()->Initialize();
-#endif
+CliApp::CliApp(const CliAppOptions& opt, ProgressCtrl* const p):
+  App(reinterpret_cast<const AppOptions&>(opt),p)
+{
 }
 
-void CliApp::printStats(){
-#ifdef HAVE_TCMALLOC
-  char buf[LINE_BUF_SIZE];
-  MallocExtension::instance()->GetStats(&buf[0],LINE_BUF_SIZE);
-  log().debug(&buf[0]);
-#endif
+CliApp::CliApp(ProgressCtrl* const p):App(p)
+{
+}
+
+CliApp::CliApp():CliApp(nullptr)
+{
 }
 
 CliAppOptions::CliAppOptions(string AppName, string AppVersion):

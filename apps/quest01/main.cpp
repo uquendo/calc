@@ -27,11 +27,8 @@ int main(int argc, char** argv)
     pc.log().fdebug("Launch time: %s", ctime(&t));
     pc.log().debug(calcOpt.About());
 
-    Calc::QuestApp calc(&pc);
-    calc.setOptions(calcOpt);
-    calc.readInput();
+    Calc::QuestApp calc(calcOpt,&pc);
     calc.run();
-
   }
   catch (std::exception& e)
   {

@@ -2,12 +2,21 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cctype>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
-using namespace std;
+#if defined(MSC_VER)
+#define HAVE_UNLINK
+#elif defined(__linux__) || defined(__APPLE__) || defined(_POSIX_C_SOURCE) || HAVE_POSIX_UNISTD_H
+#include "unistd.h"
+#define HAVE_UNLINK
+#endif
+
+using std::string;
 
 namespace Calc {
 
@@ -23,7 +32,7 @@ numeric::quad __atoq__(const char * str) { return numeric::quad(str); }
 numeric::mpreal __atompfr__(const char * str) { return numeric::mpreal(str); }
 #endif
 
-bool readLine(istream& in, char * buf, int bufSize) 
+bool readLine(std::istream& in, char * buf, int bufSize) 
 {
   buf[0]=0;
   in.getline(buf, bufSize, '\n');
@@ -40,7 +49,7 @@ bool readLine(istream& in, char * buf, int bufSize)
   return ! in.fail();
 }
 
-bool readLine(istream& in, string& str)
+bool readLine(std::istream& in, string& str)
 {
   char buf[LINE_BUF_SIZE];
   bool r = readLine(in, buf, LINE_BUF_SIZE);
@@ -50,17 +59,79 @@ bool readLine(istream& in, string& str)
 
 bool tryOpenFile(const char * name, const char * mode) {
   FILE *pF;
-  if ( (pF=fopen(name, mode)) ) {    
+  if ( ( pF = fopen(name, mode) ) ) {
     fclose(pF);
     return true;
   }
     return false;
 }
 
-string fileGrep(const char * fileName, const std::regex& rx, const bool firstOnly, const unsigned submatchNumber) {
+bool isOkToReadFile(const string& fileName)
+{
+  // check filename
+  if ( fileName.length() == 0 )
+    return false;
+
+  // check existense and access rights:
+  return tryOpenFile(fileName.c_str(), "r");
+}
+
+bool isOkToWriteFile(const string& fileName)
+{
+  // check filename
+  if ( fileName.length() == 0 )
+    return false;
+
+  // check existense and access rights:
+  const char * nm = fileName.c_str();
+  if ( tryOpenFile(nm, "r") )
+    return tryOpenFile(nm, "a");
+
+#ifdef HAVE_UNLINK
+  // check that we can open file for writing
+  if ( tryOpenFile(nm, "w") ) {
+    unlink(nm);
+    return true;
+  }
+#endif
+
+  return false;
+}
+
+//get filename extension converted to lower case
+string getFileExt(const string& fileName)
+{
+  if ( fileName.length() < 2 ) 
+    return "";
+
+  //finding last dot
+  string::size_type pp = fileName.find_last_of('.');
+  if ( pp == string::npos )
+    return "";
+
+  //getting extension string
+  string ext = fileName.substr(pp);
+  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  return ext;
+}
+
+TFileType guessFileTypeByExt(const string& fileName)
+{
+    string ext = getFileExt(fileName);
+
+    for ( int i = 0; i < FT_Count; ++i ) {
+      if ( ext == TFileExt[i] )
+        return (TFileType) i;
+    }
+
+    return FT_Undefined;
+}
+
+
+string fileGrep(const std::string& fileName, const std::regex& rx, const bool firstOnly, const unsigned submatchNumber) {
     string out;
 
-    ifstream f(fileName);
+    std::ifstream f(fileName.c_str());
     while ( ! f.fail() && ! f.eof() ) {
         string line;
         getline(f, line);

@@ -89,6 +89,16 @@ public:
   FileFormatError(int code, const char * errStr, TFileType fileType, const char * fileName, std::size_t line) : IOError(code, errStr, fileType, fileName, line) {}
 };
 
+class FileFormatUnsupportedError : public FileFormatError {
+public:
+  FileFormatUnsupportedError(const char * errStr, TFileType fileType, const char * fileName, std::size_t line) : FileFormatError(FERR_BAD_FILE_TYPE, errStr, fileType, fileName, line) {}
+};
+
+class FileFormatParsingError : public FileFormatError {
+public:
+  FileFormatParsingError(const char * errStr, TFileType fileType, const char * fileName, std::size_t line) : FileFormatError(FERR_IO_FORMAT_ERROR, errStr, fileType, fileName, line) {}
+};
+
 class FileFormatValueBoundsError : public FileFormatError {
 public:
   FileFormatValueBoundsError(const char * errStr, TFileType fileType, const char * fileName, std::size_t line) : FileFormatError(FERR_DATA_ERROR, errStr, fileType, fileName, line) {}

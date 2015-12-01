@@ -17,7 +17,8 @@ protected:
   TFileType m_fileType;
   unsigned long m_curLine;
 public:
-  OutFileText(const char * fileName, TFileType fileType, bool append = false);
+  OutFileText(const std::string& fileName, TFileType fileType = FT_Undefined, bool append = false);
+  OutFileText(const char * fileName, TFileType fileType = FT_Undefined, bool append = false);
   virtual ~OutFileText() {}
 
   void printf(const char * fmt, ...);

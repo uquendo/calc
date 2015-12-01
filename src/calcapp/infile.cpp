@@ -25,26 +25,41 @@ using std::to_string;
 
 namespace Calc {
 
-InFileText::InFileText(const char * fileName, TFileType fileType /* = FT_Undefined */, bool seqAccess /* = false */) 
+InFileText::InFileText(const char* fileName, TFileType fileType /* = FT_Undefined */, bool seqAccess /* = false */)
+  : InFileText(std::string(fileName),fileType,seqAccess)
+{}
+
+InFileText::InFileText(const std::string& fileName, TFileType fileType /* = FT_Undefined */, bool seqAccess /* = false */)
   : m_f(nullptr)
   , m_fileName(fileName)
   , m_fileType(fileType)
   , m_lineNum(0)
   , m_seqAccess(seqAccess)
 {
+  if(!IOUtil::isOkToReadFile(m_fileName))
+    throwIOError(FERR_IO_GENERAL_READ, "File open error");
+
+  //prepare filename and type
+  if(m_fileType == FT_Undefined) {
+    //try to guess type from file extension
+    m_fileType = IOUtil::guessFileTypeByExt(fileName);
+  } else {
+    //append extension if file format is known
+    m_fileName.append(TFileExt[fileType]);
+  }
   m_line[0] = 0;
 #ifdef __GLIBCXX__
-  FILE* cfile = fopen(fileName, "r");
+  FILE* cfile = fopen(m_fileName.c_str(), "r");
   int posix_fd = fileno(cfile);
-#if (_XOPEN_SOURCE >= 600 || _POSIX_C_SOURCE >= 200112L)
+# if _XOPEN_SOURCE >= 600 || _POSIX_C_SOURCE >= 200112L || HAVE_POSIX_FADVISE
   //hint os kernel about sequential access
   posix_fadvise(posix_fd, 0, 0, POSIX_FADV_SEQUENTIAL);
-#endif
+# endif
   __gnu_cxx::stdio_filebuf<char> filebuf(posix_fd, std::ios::in);
   m_f.reset(new std::istream(&filebuf));
 #else
   //TODO: on MSVC we can try to use winapi-ish CreateFile with FILE_FLAG_SEQUENTIAL_SCAN
-  m_f.reset(new ifstream(fileName));
+  m_f.reset(new ifstream(m_fileName.c_str()));
 #endif
   if(m_f == nullptr)
     throwIOError(FERR_IO_GENERAL_READ, "File open error");
@@ -89,7 +104,7 @@ int InFileText::readNextLine_until(int nStr, ...)
     msg += m[i];
     msg += ", ";
   }
-  
+
   throw PreliminaryEofError(msg.c_str(), m_fileType, m_fileName.c_str(), m_lineNum);
 
 }
@@ -121,42 +136,6 @@ void InFileText::readNextLine_untilExcept(const char * str, const char * except)
     throwFormatError(FERR_IO_FORMAT_ERROR, string("Expected section ").append(str).append(", but found ").append(except).c_str());
 }
 
-template <typename T> int InFileText::readNextLine_scanNumArray(const int minCount, const int maxCount, T * const dest, const int stride /* = 1 */)
-{
-  static_assert(std::is_arithmetic<T>::value, "Arithmetical type expected");
-  const std::string s = ( std::is_integral<T>::value ? " integer values, got " : " floating point values, got " );
-
-  readNextLine();
-
-  int n = (stride > 1 ? IOUtil::scanArray<T>(m_line, maxCount, dest, stride) : IOUtil::scanArray<T>(m_line, maxCount, dest) );
-  if ( n < minCount )
-    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
-
-  return n;
-}
-
-template <typename T> int InFileText::readNextLine_scanNums(const int minCount, const int maxCount, /* (T *) */...) 
-{
-  static_assert(std::is_arithmetic<T>::value, "Arithmetical type expected");
-  const std::string s = ( std::is_integral<T>::value ? " integer values, got " : " floating point values, got " );
-
-  readNextLine();
-
-  std::unique_ptr<T[]> v(new T[maxCount]);
-  int n = IOUtil::scanArray<T>(m_line, maxCount, &v[0]);
-
-  va_list va;
-  va_start(va, maxCount);
-  for ( int i = 0; i < n; ++i )
-    *va_arg(va, T *) = v[i];
-  va_end(va);
-
-  if ( n < minCount )
-    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(s).append(to_string(n)).c_str());
-
-  return n;
-}
-
 #if _MSC_VER
 int vsscanf(const char *s, const char *fmt, va_list ap)
 {
@@ -175,7 +154,7 @@ int InFileText::readNextLine_scan(int minCount, const char * format, ...)
   va_end(va);
 
   if ( n < minCount )
-    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected ").append(to_string(minCount)).append(" values, got ").append(to_string(n)).c_str());
+    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected at least ").append(to_string(minCount)).append(" values, got ").append(to_string(n)).c_str());
 
   return n;
 }

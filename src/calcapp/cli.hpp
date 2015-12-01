@@ -21,17 +21,6 @@ namespace bpo=boost::program_options;
 
 namespace Calc {
 
-class CliApp : public App {
-private:
-    CliApp();
-public:
-    CliApp(ProgressCtrl*);
-    virtual void setDefaultOptions() = 0;
-    virtual void readInput() = 0;
-    virtual void run() = 0;
-    virtual void printStats();
-};
-
 class CliAppOptions : public AppOptions {
 public:
         CliAppOptions(std::string AppName = std::string("SomeCliApp"), std::string AppVersion = std::string("0.0"));
@@ -70,6 +59,21 @@ protected:
 #endif
         std::string threadingHelp;
         std::string precisionHelp;
+};
+
+class CliProgress;
+
+class CliApp : public App {
+private:
+    std::unique_ptr<CliProgress> m_CliProgress;
+    CliApp();
+public:
+    CliApp(const CliAppOptions&); // init and maintain logger
+    CliApp(const CliAppOptions&, ProgressCtrl * const);
+    CliApp(ProgressCtrl* const);
+    virtual void setDefaultOptions() = 0;
+    virtual void readInput() = 0;
+    virtual void run() = 0;
 };
 
 class CliProgress : public ProgressCtrl {

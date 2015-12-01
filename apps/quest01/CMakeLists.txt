@@ -15,6 +15,7 @@ set(APP_HEADERS
     ${APP_SRCNAME}.hpp
     matmul.hpp
     matrix.hpp
+    matrix_impl.hpp
     )
 
 add_executable(${APP_NAME} ${APP_SOURCES} ${APP_HEADERS})

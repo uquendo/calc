@@ -1,23 +1,34 @@
 language: cpp
 compiler:
   - gcc
-env:
-  matrix:
-    - BUILD_WITH=gnu BUILD_VARIANT=basic
-    - BUILD_WITH=gnu BUILD_VARIANT=vanilla
-    - BUILD_WITH=gnu BUILD_VARIANT=full BLAS_VENDOR=All
-    - BUILD_WITH=clang BUILD_VARIANT=basic
-    - BUILD_WITH=clang BUILD_VARIANT=vanilla
-    - BUILD_WITH=clang BUILD_VARIANT=full BLAS_VENDOR=All
-#    - BUILD_WITH=intel BUILD_VARIANT=basic
-#    - BUILD_WITH=intel BUILD_VARIANT=vanilla
-#    - BUILD_WITH=intel BUILD_VARIANT=full BLAS_VENDOR=All
+  - clang
 
 sudo: required
 dist: trusty
 
 cache:
   apt: true
+  ccache: true
+  directories:
+    - $HOME/.ccache
+
+env:
+  global:
+    - USE_CCACHE=1
+    - CCACHE_COMPRESS=1
+    - CCACHE_MAXSIZE=100M
+    - CCACHE_CPP2=1
+  matrix:
+    - BUILD_VARIANT=basic
+    - BUILD_VARIANT=vanilla
+    - BUILD_VARIANT=full BLAS_VENDOR=All
+#    - BUILD_WITH=clang BUILD_VARIANT=basic
+#    - BUILD_WITH=clang BUILD_VARIANT=vanilla
+#    - BUILD_WITH=clang BUILD_VARIANT=full BLAS_VENDOR=All
+#    - BUILD_WITH=intel BUILD_VARIANT=basic
+#    - BUILD_WITH=intel BUILD_VARIANT=vanilla
+#    - BUILD_WITH=intel BUILD_VARIANT=full BLAS_VENDOR=All
+
 
 addons:
   apt:

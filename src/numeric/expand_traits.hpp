@@ -1,8 +1,69 @@
 #pragma once
 #ifndef _EXPAND_TRAITS_HPP
 #define _EXPAND_TRAITS_HPP
+#include "config.h"
+#include "numeric/real.hpp"
 
-//TODO: replace macro with functor-based expansion
+#include <functional>
+
+//parameter pack expansion
+
+namespace numeric
+{
+
+template<Precision_ID_t... Indices>
+struct indices {
+  typedef indices<Indices..., sizeof...(Indices)> next;
+};
+
+template<Precision_ID_t N>
+struct build_indices {
+  typedef typename build_indices<N - 1>::type::next type;
+};
+
+template<>
+struct build_indices<0> {
+  typedef indices<> type;
+};
+
+//typedef typename build_indices<Precision_ID_t(P_Undefined)>::type ForAllPrecision;
+
+//TODO: allow using variable number of arguments in functor via variadic templates
+template<class DerivedFunc, class TArg=void, class TReturnValue=void, TPrecision MaxPrecision=P_Undefined>
+class MPFuncBase
+{
+  template<Precision_ID_t Pid> TReturnValue perform(const TArg& p)
+  {
+    static constexpr TPrecision P = TPrecision(Pid);
+    typedef typename TraitBuiltin<P>::type T;
+    return static_cast<DerivedFunc&>(*this).template perform<T>(p);
+  }
+  template<Precision_ID_t... Indices> TReturnValue dispatch(const TPrecision prec, const TArg& p, indices<Indices...>)
+  {
+    typedef TReturnValue (MPFuncBase<DerivedFunc,TArg,TReturnValue,MaxPrecision>::* MPFuncBaseMemberFun) (const TArg&);
+    MPFuncBaseMemberFun lookup[] = { &MPFuncBase<DerivedFunc,TArg,TReturnValue,MaxPrecision>::perform<Indices>... };
+    return ((this)->*(lookup[Precision_ID_t(prec)]))(p);
+  }
+public:
+  virtual ~MPFuncBase(){};
+  TReturnValue operator()(const TPrecision prec, const TArg& p)  {
+    return dispatch(prec, p, typename build_indices<Precision_ID_t(MaxPrecision)>::type());
+  };
+};
+
+/*
+ *  //example usage
+ *  struct SomeFunc : MPFuncBase<SomeAlgoFunc,SomeArg,SomeReturnValue>
+ *  {
+ *    template<typename T> SomeReturnValue perform(SomeArg);
+ *  }
+ *  //specialize for some TPrecision precision
+ *  SomeAlgoFunc()(precision);
+ */
+
+}
+
+//fallback macros as an alternative to functor-based expansion
 
 #ifdef HAVE_QUADMATH
 # ifdef HAVE_BOOST
@@ -40,7 +101,5 @@
   case numeric::P_Undefined :\
     break;\
 }\
-
-
 
 #endif /* _EXPAND_TRAITS_HPP */

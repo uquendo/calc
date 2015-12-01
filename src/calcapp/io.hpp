@@ -9,12 +9,13 @@
 #include <fstream>
 #include <regex>
 #include <type_traits>
+#include <iomanip>
 
 #include "numeric/real.hpp"
 
 namespace Calc {
 
-enum TFileType {
+enum TFileType : int {
     FT_Undefined = -2,
     FT_None = -1,
     FT_MatrixText = 0,
@@ -34,10 +35,21 @@ static const char TFileExt[FT_Count][FILE_EXTENSION_WIDTH] =
 static const int LINE_BUF_SIZE=4*4096; //4KiB is default page size for most architectures
 
 namespace IOUtil {
+    template <typename T> std::string to_string_hex( T i )
+    {
+      std::stringstream stream;
+      stream << "0x" << std::setfill ('0') << std::setw(sizeof(T)*2)  << std::hex << i;
+      return stream.str();
+    }
+
     bool readLine(std::istream& in, std::string& str);
     bool readLine(std::istream& in, char * buf, int bufSize);
     bool tryOpenFile(const char * name, const char * mode);
-    std::string fileGrep(const char * fileName, const std::regex& rx, bool firstOnly = true, const unsigned submatchNumber = 0);
+    bool isOkToReadFile(const std::string& filename);
+    bool isOkToWriteFile(const std::string& filename);
+    std::string getFileExt(const std::string& filename);
+    TFileType guessFileTypeByExt(const std::string& fileName);
+    std::string fileGrep(const std::string& fileName, const std::regex& rx, bool firstOnly = true, const unsigned submatchNumber = 0);
 
     template <typename T>
     inline int scan(const char * str, const int nElem,  T * const dest, T (*f)(const char *), const int stride=1){
@@ -101,10 +113,10 @@ private:
 public:
     // default constructor: let the holder refer to nothing
     ios_guard() : m_ptr(0) {}
-    
+
     // constructor for a pointer: let the holder refer to where the pointer refers
     explicit ios_guard(S * p) : m_ptr(p) {}
-    
+
     // destructor: releases the object to which it refers (if any)
     ~ios_guard() { close(); }
 

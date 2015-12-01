@@ -1,6 +1,7 @@
 #include "calcapp/log.hpp"
 #include "calcapp/exception.hpp"
 #include "calcapp/system.hpp"
+#include "calcapp/io.hpp"
 
 #include <cstdarg>
 #include <cstdio>
@@ -95,7 +96,7 @@ void Logger::error(BaseException * e)
 #ifdef HAVE_BOOST
   r = (boost::format("%6x: %s") % e->code() % e->what()).str();
 #else
-  r.append(std::to_string(e->code())).append(": ").append(e->what());
+  r.append(IOUtil::to_string_hex(e->code())).append(": ").append(e->what());
 #endif
   IOError * ioe = dynamic_cast<IOError *>(e);
   if ( ioe ) {   

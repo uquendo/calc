@@ -1,5 +1,6 @@
 #include "calcapp/outfile.hpp"
 #include "calcapp/io.hpp"
+#include "calcapp/exception.hpp"
 
 #include <cstring>
 #include <cstdio>
@@ -17,14 +18,29 @@
 
 namespace Calc {
 
-OutFileText::OutFileText(const char * fileName, TFileType fileType, bool append) 
+OutFileText::OutFileText(const char* fileName, TFileType fileType /* = FT_Undefined */, bool append /* = false */ )
+  : OutFileText(std::string(fileName), fileType, append)
+{}
+
+OutFileText::OutFileText(const std::string& fileName, TFileType fileType /* = FT_Undefined */ , bool append /* = false */ )
   : m_f(nullptr) 
   , m_fileName(fileName)
   , m_fileType(fileType)
   , m_curLine(0)
 {
+  if(!IOUtil::isOkToWriteFile(m_fileName))
+    throw IOError(FERR_IO_GENERAL_WRITE, "Error while opening file for writing", m_fileType, m_fileName.c_str(), m_curLine);
+
+  //prepare filename and type
+  if(m_fileType == FT_Undefined) {
+    //try to guess type from file extension
+    m_fileType = IOUtil::guessFileTypeByExt(fileName);
+  } else {
+    //append extension if file format is known
+    m_fileName.append(TFileExt[fileType]);
+  }
 #ifdef __GLIBCXX__
-  FILE* cfile = fopen(fileName, append ? "a" : "w" );
+  FILE* cfile = fopen(fileName.c_str(), append ? "a" : "w" );
   int posix_fd = fileno(cfile);
 #if (_XOPEN_SOURCE >= 600 || _POSIX_C_SOURCE >= 200112L)
   //hint os kernel about writing 

@@ -8,7 +8,7 @@ include(FeatureSummary)
 include(GetGitRevisionDescription)
 include(CheckCXXCompilerFlag)
 
-project(numeric)
+project(numeric C CXX Fortran)
 
 #set output path
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -85,7 +85,7 @@ cmake_dependent_option(USE_TBB            "enable Intel TBB threads support"  ${
 cmake_dependent_option(USE_CILK           "enable Cilk Plus language extension"  ${ENV_USE_CILK} "BUILD_THREADING; NOT BUILD_VANILLA" OFF)
 
 #utility libs options
-cmake_dependent_option(USE_BOOST          "enable some utility libraries from Boost suite(filesystem, system, program_options, date_time)" ${ENV_USE_BOOST} "NOT BUILD_VANILLA" OFF)
+cmake_dependent_option(USE_BOOST          "enable some utility libraries from Boost suite(filesystem, system, program_options)" ${ENV_USE_BOOST} "NOT BUILD_VANILLA" OFF)
 cmake_dependent_option(USE_TCMALLOC       "use google tcmalloc instead of default one"  ${ENV_USE_TCMALLOC} "NOT BUILD_VANILLA" OFF)
 
 #math libs options
@@ -299,7 +299,7 @@ endif()
 #utility libs options
 
 if (USE_BOOST)
-   find_package(Boost COMPONENTS program_options date_time filesystem system)
+   find_package(Boost COMPONENTS program_options filesystem system )
    if(Boost_FOUND)
      include_directories(${Boost_INCLUDE_DIRS})
      set(calcapp_LIBS ${Boost_LIBRARIES} ${calcapp_LIBS})

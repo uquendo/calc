@@ -14,6 +14,7 @@ namespace SysUtil {
     std::string getOSVersion();
     std::string getCpuSpec();
     std::string getBuildOptions();
+    std::string getMemStats();
     unsigned getCpuCoresCount();
     double getCurTimeSec();
     bool getFreeDiskMB(double *SizeMB, std::string Name);

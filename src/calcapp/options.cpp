@@ -20,7 +20,7 @@ const OptName<TThreading> _threading_opt_names[] = {
     { "Intel TBB", "tbb", T_TBB },
 #endif
     { NULL, 0, T_Undefined }
-};  
+};
 
 const OptName<TPrecision> _precision_opt_names[] = {
     { "32-bit float", "32", P_Float },
@@ -36,11 +36,9 @@ const OptName<TPrecision> _precision_opt_names[] = {
 };
 
 //TODO: STUBS!
-AppOptions::AppOptions(std::string AppName,std::string AppVersion):m_AppName(AppName),
-  m_AppVersion(AppVersion),
-  m_logging({false, Logger::L_NONE, false, false, ""}),
-  m_threading({T_Undefined,0}),
-  m_precision({P_Undefined,0,0})
+AppOptions::AppOptions(std::string AppName,std::string AppVersion):
+  m_AppName(AppName)
+  ,m_AppVersion(AppVersion)
 {
 }
 

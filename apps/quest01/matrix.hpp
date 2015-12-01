@@ -7,9 +7,14 @@
 #include <type_traits>
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 
-#include "numeric/blas_impl.hpp"
+#include "numeric/blas.hpp"
 #include "numeric/cache.hpp"
+#include "numeric/real.hpp"
+
+#include "calcapp/infile.hpp"
+#include "calcapp/outfile.hpp"
 #include "calcapp/exception.hpp"
 
 using std::size_t;
@@ -19,18 +24,27 @@ namespace Calc
 
 class MatrixBase
 {
+protected:
+  MatrixBase(const numeric::TMatrixStorage storage=numeric::TMatrixStorage::RowMajor ):
+      m_nrows(0), m_ncolumns(0), m_storage(storage)
+  {}
+  MatrixBase(const size_t nrows, const size_t ncolumns,
+    const numeric::TMatrixStorage storage=numeric::TMatrixStorage::RowMajor ):
+      m_nrows(nrows), m_ncolumns(ncolumns), m_storage(storage)
+  {}
 public:
-  static constexpr size_t ALIGNMENT = 32;
+  size_t m_nrows;
+  size_t m_ncolumns;
   const numeric::TMatrixStorage m_storage;
-  const size_t m_nrows;
-  const size_t m_ncolumns;
 
-  MatrixBase(const size_t nrows, const size_t ncolumns, const numeric::TMatrixStorage storage=numeric::TMatrixStorage::RowMajor );
   virtual ~MatrixBase() {}
 
+  inline bool isRowMajor() const { return (m_storage == numeric::TMatrixStorage::RowMajor); }
   inline size_t getSize() const { return m_nrows*m_ncolumns; }
+  inline size_t getRowsNum() const { return m_nrows; }
+  inline size_t getColumnsNum() const { return m_ncolumns; }
   inline size_t index(size_t i, size_t j) const
-    { return (m_storage == numeric::TMatrixStorage::RowMajor ? i*m_ncolumns+j : j*m_nrows+i ); }
+    { return ( isRowMajor() ? i*m_ncolumns+j : j*m_nrows+i ); }
 
   // data access
   template<typename T> inline T* getDataPtr() const;
@@ -43,23 +57,37 @@ public:
   template<typename T> inline T operator()(size_t idx) const;
   template<typename T> inline T& operator[](size_t idx);
   template<typename T> inline const T operator[](size_t idx) const ;
+
+  //data IO
+  virtual void readFromFile(InFileText& f, const bool transpose) = 0 ;
 };
 
-template<typename T> class Matrix : MatrixBase
+template<typename T> class Matrix : public MatrixBase
 {
 private:
+  numeric::unique_aligned_buf_ptr m_buf; // smart pointer is used to correctly deallocate memory obtained from aligned_alloc
   T* m_data;
-  char* m_buf;
-  size_t m_bytesize;
+
 public:
+  size_t m_stride;
 
-  static constexpr size_t getAlignment()
-    { return ( std::alignment_of<T>::value < ALIGNMENT ? ALIGNMENT : std::alignment_of<T>::value ) ; }
-  const numeric::TMatrixStorage m_storage;
-  const size_t m_stride;
+public:
+  static constexpr size_t getDefaultAlignment()
+  {
+    return ( numeric::default_cache_line_size() > std::alignment_of<T>::value ? numeric::default_cache_line_size() : std::alignment_of<T>::value );
+  }
+  static size_t getAlignment()
+  {
+    const size_t line_size = numeric::cache_line_size();
+    return ( line_size > std::alignment_of<T>::value ? line_size : std::alignment_of<T>::value );
+  }
 
-  Matrix(const size_t nrows, const size_t ncolumns, const bool reset=true,
-    const numeric::TMatrixStorage storage=numeric::TMatrixStorage::RowMajor );
+  Matrix(const size_t nrows, const size_t ncolumns, const bool reset = true,
+    const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
+  Matrix(InFileText& f, const bool readData = true, const bool transpose = false,
+    const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
+  Matrix(const size_t nrows, const size_t ncolumns, InFileText& f, const bool transpose = true,
+    const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
   ~Matrix();
 
   // data access
@@ -74,6 +102,12 @@ public:
   inline T& operator[](size_t idx)  { return m_data[idx];  }
   inline const T operator[](size_t idx) const { return m_data[idx];  }
 
+  //data IO
+  void readFromFile(InFileText& f, const bool transpose);
+
+private:
+  void ParseHeaderDat(InFileText& f, size_t& rows, size_t& columns);
+
 private:
   // no copying and copy assignment allowed
   Matrix(const Matrix&);
@@ -81,73 +115,18 @@ private:
   Matrix& operator= (const Matrix&);
 };
 
-template<typename T> Matrix<T>::Matrix(const size_t nrows, const size_t ncolumns, const bool reset,
-  const numeric::TMatrixStorage storage ) :
-    MatrixBase(nrows, ncolumns, storage)
-  , m_stride((storage == numeric::TMatrixStorage::RowMajor ? ncolumns : nrows ))
-  , m_bytesize(sizeof(T)*m_ncolumns*m_nrows+getAlignment())
-  , m_buf(nullptr)
-  , m_data(nullptr)
-{
-  m_buf = (char*) malloc(m_bytesize);
-  if(reset)
-    memset(m_buf,0,m_bytesize);
-  m_data = reinterpret_cast<T*>(numeric::align(getAlignment(), sizeof(T)*m_ncolumns*m_nrows, m_buf, m_bytesize));
-  if(m_data == nullptr){
-    free(m_buf);
-    throw InternalError(FERR_GENERAL_ERROR, "Internal error: Can't align data storage for matrix");
-  }
-}
+//helper functions to create matrices with corresponting type
+inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns,
+  const bool reset = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
+inline MatrixBase* NewMatrix(const numeric::TPrecision p, InFileText& f, const bool readData = true,
+  const bool transpose = false, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
+inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns, InFileText& f,
+  const bool transpose = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
 
-template<typename T> Matrix<T>::~Matrix()
-{
-  free(m_buf);
-  m_buf = nullptr;
-  m_data = nullptr;
-}
-
-// data access
-template<typename T> inline T* MatrixBase::getDataPtr() const
-{
-  return dynamic_cast<const Matrix<T>&>(*this).getDataPtr();
-}
-template<typename T> inline T MatrixBase::get(size_t i, size_t j) const
-{
-  return dynamic_cast<const Matrix<T>&>(*this).get(i,j);
-}
-template<typename T> inline T& MatrixBase::get(size_t i,size_t j)
-{
-  return dynamic_cast<Matrix<T>&>(*this).get(i,j);
-}
-template<typename T> inline T MatrixBase::get(size_t idx) const
-{
-  return dynamic_cast<const Matrix<T>&>(*this).get(idx);
-}
-template<typename T> inline T& MatrixBase::operator()(size_t i, size_t j)
-{
-  return dynamic_cast<Matrix<T>&>(*this)(i,j);
-}
-template<typename T> inline T MatrixBase::operator()(size_t i, size_t j) const
-{
-  return dynamic_cast<const Matrix<T>&>(*this)(i,j);
-}
-template<typename T> inline T& MatrixBase::operator()(size_t idx)
-{
-  return dynamic_cast<Matrix<T>&>(*this)(idx);
-}
-template<typename T> inline T MatrixBase::operator()(size_t idx) const
-{
-  return dynamic_cast<const Matrix<T>&>(*this)(idx);
-}
-template<typename T> inline T& MatrixBase::operator[](size_t idx)
-{
-  return dynamic_cast<Matrix<T>&>(*this)[idx];
-}
-template<typename T> inline const T MatrixBase::operator[](size_t idx) const
-{
-  return dynamic_cast<const Matrix<T>&>(*this)[idx];
-}
 
 }
+
+//implementation
+#include "matrix_impl.hpp"
 
 #endif /* _MATRIX_HPP */

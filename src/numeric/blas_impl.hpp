@@ -3,6 +3,7 @@
 #define _BLAS_IMPL_HPP
 #include "config.h"
 
+#include "numeric/blas.hpp"
 #include "numeric/complex.hpp"
 #include "numeric/parallel.hpp"
 
@@ -12,10 +13,6 @@ using std::size_t;
 
 namespace numeric {
 
-enum class TMatrixStorage { RowMajor, ColumnMajor };
-enum class TMatrixTranspose : char { No='N', Transpose='T', Conjugate='C' };
-
-enum class TMM_Algo { IJK, JKI, KIJ, IKJ, KJI, JIK };
 
 //helper for simple serial matrix multiplication
 //a['] -- nrows_a x ncolumns_a, b['] -- ncolumns_a x ncolumns_b , c=a*b -- nrows_a x ncolumns_b
@@ -85,7 +82,7 @@ template<typename T>
       const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
       const size_t nrows_a, const size_t ncolumns_a,
       const size_t nrows_b, const size_t ncolumns_b,
-      const TThreading threading_model=T_Serial)
+      const TThreading threading_model)
 {
   const bool tA = (transA != TMatrixTranspose::No) ;
   const bool tB = (transB != TMatrixTranspose::No) ;
@@ -169,24 +166,9 @@ template<typename T>
   void dgemm(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
     const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
     const size_t sz,
-    const TThreading threading_model=T_Serial)
+    const TThreading threading_model)
 {
     return dgemm<T>(stor,transA,transB,a,b,c,sz,sz,sz,sz,threading_model);
-}
-
-//default version for square matrices in row major order
-template<typename T> void square_matmul(const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c, 
-    const size_t sz,
-    const TThreading tm=T_Serial)
-{
-    return dgemm<T>(TMatrixStorage::RowMajor,TMatrixTranspose::No,TMatrixTranspose::No,a,b,c,sz,tm);
-}
-//default version for square matrices in row major order
-template<typename T> void square_matmul_transpose(const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c, 
-    const size_t sz,
-    const TThreading tm=T_Serial)
-{
-    return dgemm<T>(TMatrixStorage::RowMajor,TMatrixTranspose::No,TMatrixTranspose::Transpose,a,b,c,sz,tm);
 }
 
 }

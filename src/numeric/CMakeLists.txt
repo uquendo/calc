@@ -1,8 +1,9 @@
 set(numeric_SOURCES
-    blas_impl.cpp
+    blas.cpp
     )
 
 set(numeric_HEADERS
+    blas.hpp
     blas_impl.hpp
     cache.hpp
     parallel.hpp

@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <string>
+#include <limits>
 
 #include "numeric/parallel.hpp"
 #include "numeric/real.hpp"
@@ -35,17 +36,36 @@ namespace Calc {
         bool profile;
         bool progress;
         std::string filename;
+
+        LoggingOptions():
+          verbose(false)
+          ,level(Logger::L_NONE)
+          ,profile(false)
+          ,progress(false)
+          ,filename("")
+        {}
     };
 
     struct ThreadingOptions {
         TThreading type;
         unsigned num;
+
+        ThreadingOptions():
+          type(numeric::T_Serial)
+          ,num(0)
+        {}
     };
 
     struct PrecisionOptions {
         TPrecision type;
         unsigned decimal_digits;
         ptrdiff_t print_precision; //for output i.e. via ios_base::precision(streamsize)
+
+        PrecisionOptions():
+          type(numeric::P_Double)
+          ,decimal_digits(std::numeric_limits<double>::digits10)
+          ,print_precision(std::numeric_limits<double>::max_digits10)
+        {}
     };
 
     template<class T> struct OptName {
@@ -69,9 +89,11 @@ public:
         //set options from command line arguments
         virtual bool processOptions(int argc, char* argv[]) = 0;
         //const access functions
-        inline const LoggingOptions& getLogOpts() const { return m_logging; };
-        inline const ThreadingOptions& getThreadOpts() const { return m_threading; };
-        inline const PrecisionOptions& getPrecOpts() const { return m_precision; };
+        inline const LoggingOptions& getLogOpts() const { return m_logging; }
+        inline const ThreadingOptions& getThreadOpts() const { return m_threading; }
+        inline const PrecisionOptions& getPrecOpts() const { return m_precision; }
+        inline const std::string getAppName() const { return m_AppName; }
+        inline const std::string getAppVersion() const { return m_AppVersion; }
 };
 
 }

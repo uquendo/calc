@@ -10,6 +10,7 @@
 #cmakedefine RESTRICT_KEYWORD @RESTRICT_KEYWORD@
 #cmakedefine HAVE_FORCEINLINE
 #cmakedefine FORCEINLINE_KEYWORD @FORCEINLINE_KEYWORD@
+#cmakedefine DEFAULT_CACHE_LINE_SIZE @DEFAULT_CACHE_LINE_SIZE@
 
 //build info strings
 #cmakedefine INFO_COMMON_LIBS "@INFO_COMMON_LIBS@"
@@ -79,6 +80,17 @@
 # define __FORCEINLINE FORCEINLINE_KEYWORD
 #else
 # define __FORCEINLINE
+#endif
+
+#ifndef DEFAULT_CACHE_LINE_SIZE
+#define DEFAULT_CACHE_LINE_SIZE 64
+#endif
+
+// setting feature test macros for libc
+#if defined( __GNUC__ ) || defined( __clang__ )
+//#define _ISOC11_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 700
 #endif
 
 #ifdef _WIN32

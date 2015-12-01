@@ -1,4 +1,5 @@
 #include "quest.hpp"
+#include "matmul.hpp"
 
 #include <cassert>
 
@@ -6,16 +7,12 @@ using std::string;
 
 namespace Calc {
 
-  QuestAppOptions::QuestAppOptions():CliAppOptions(string(APP_NAME),string(APP_VERSION)),
-    inputHelp(""),
-    outputHelp(""),
-    algoHelp(""),
-//    m_input({FT_MatrixText,"data1","data2"}),
-    m_output({FT_MatrixText,"result"}),
-    m_algo({A_Undefined})
+  QuestAppOptions::QuestAppOptions():
+    CliAppOptions(string(APP_NAME),string(APP_VERSION))
   {
-    //workaround for weird intel compiler bug(internal error: assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 11651)
-    m_input.filetype = FT_MatrixText; m_input.filename_A = "data1";  m_input.filename_B = "data2";
+    m_input.filetype = _input_opt_names[0].type; m_input.filename_A = "data1";  m_input.filename_B = "data2";
+    m_output.filetype = _output_opt_names[0].type; m_output.filename = "result";
+    m_algo.type=A_Undefined;
   }
 
   const string QuestAppOptions::About() const
@@ -51,8 +48,8 @@ namespace Calc {
 #ifdef HAVE_BOOST
     inputOpt.add_options()
       (INPUT_OPT ",i",  bpo::value<string>()->default_value(_input_opt_names[0].opt), inputHelp.c_str())
-      ("in-A,A",        bpo::value<string>()->default_value("data1"), "name of matrix A file(without extension)")
-      ("in-B,B",        bpo::value<string>()->default_value("data2"), "name of matrix B file(without extension)")
+      ("in-A,A",        bpo::value<string>()->default_value("data1"), "name of matrix A file(without an extension if format is specified)")
+      ("in-B,B",        bpo::value<string>()->default_value("data2"), "name of matrix B file(without an extension if format is specified)")
       ;
 #endif
   }
@@ -70,7 +67,7 @@ namespace Calc {
 #ifdef HAVE_BOOST
     outputOpt.add_options()
       (OUTPUT_OPT ",o", bpo::value<string>()->default_value(_output_opt_names[0].opt), outputHelp.c_str())
-      ("out-C,C",       bpo::value<string>()->default_value("result"), "name of matrix C(results) file(without extension)")
+      ("out-C,C",       bpo::value<string>()->default_value("result"), "name of matrix C(results) file(without an extension if format is specified)")
       ;
 #endif
   }
@@ -170,18 +167,33 @@ namespace Calc {
     return true;
   }
 
+
+  QuestApp::QuestApp(const QuestAppOptions& opt)
+    : CliApp(dynamic_cast<const CliAppOptions&>(opt))
+    , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
+    , m_pAlgoParameters(new matmul::AlgoParameters({m_threading,m_precision,m_algo,nullptr,nullptr,nullptr
+          ,false,false,numeric::TMatrixStorage::RowMajor,0,0}))
+    , m_pfA(new InFileText(m_input.filename_A,m_input.filetype,true))
+    , m_pfB(new InFileText(m_input.filename_B,m_input.filetype,true))
+    , m_pfC(new OutFileText(m_output.filename,m_output.filetype,false))
+  {
+  }
+
+  QuestApp::QuestApp(const QuestAppOptions& opt, ProgressCtrl* pc)
+    : CliApp(dynamic_cast<const CliAppOptions&>(opt), pc)
+    , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
+    , m_pAlgoParameters(new matmul::AlgoParameters({m_threading,m_precision,m_algo,nullptr,nullptr,nullptr
+          ,false,false,numeric::TMatrixStorage::RowMajor,0,0}))
+    , m_pfA(new InFileText(m_input.filename_A,m_input.filetype,true))
+    , m_pfB(new InFileText(m_input.filename_B,m_input.filetype,true))
+    , m_pfC(new OutFileText(m_output.filename,m_output.filetype,false))
+  {
+  }
+
   QuestApp::QuestApp(ProgressCtrl* pc):
     CliApp(pc)
-//    ,m_input({FT_MatrixText,"data1","data2"})
-    ,m_output({FT_MatrixText,"result"})
-    ,m_algo({A_NumCpp})
-    ,m_pA(nullptr)
-    ,m_pB(nullptr)
-    ,m_pC(nullptr)
-    ,m_pAlgoParameters(nullptr)
   {
-    //workaround for weird intel compiler bug(internal error: assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 11651)
-    m_input.filetype = FT_MatrixText; m_input.filename_A = "data1";  m_input.filename_B = "data2";
+    setDefaultOptions();
   }
 
   QuestApp::QuestApp():QuestApp(nullptr)
@@ -190,18 +202,85 @@ namespace Calc {
 
   void QuestApp::setDefaultOptions()
   {
-  }
-
-  void QuestApp::setOptions(const QuestAppOptions&)
-  {
+    //init m_input,m_output,m_algo,m_AlgoParameters with safe defaults
+    m_input.filetype = _input_opt_names[0].type; m_input.filename_A = "data1";  m_input.filename_B = "data2";
+    m_output.filetype = _output_opt_names[0].type; m_output.filename = "result";
+    m_algo.type = A_NumCppSimple;
+    m_pAlgoParameters.reset(new matmul::AlgoParameters({m_threading,m_precision,m_algo,nullptr,nullptr,nullptr
+          ,false,false,numeric::TMatrixStorage::RowMajor,0,0}));
+    m_pfA.reset(new InFileText(m_input.filename_A,m_input.filetype,true));
+    m_pfB.reset(new InFileText(m_input.filename_B,m_input.filetype,true));
+    m_pfC.reset(new OutFileText(m_output.filename,m_output.filetype,false));
   }
 
   void QuestApp::readInput()
   {
+    //read input matrices from files
+    m_pAlgoParameters->a->readFromFile(*m_pfA,m_pAlgoParameters->transposeA);
+    m_pAlgoParameters->b->readFromFile(*m_pfB,m_pAlgoParameters->transposeB);
   }
 
   void QuestApp::run()
   {
+    //PRERUN:
+    //prepare matrix reading flags per algo
+    if( (m_algo.type == A_NumCSimpleTranspose) || (m_algo.type == A_NumCppSimpleTranspose) ) {
+      m_pAlgoParameters->transposeB = true;
+    } else if( m_algo.type == A_NumFortranSimpleTranspose ) {
+      m_pAlgoParameters->transposeA = true;
+    }
+    switch(m_algo.type)
+    {
+      case A_NumFortran :
+      case A_NumFortranSimple :
+      case A_NumFortranSimpleTranspose :
+      case A_NumFortranInternal :
+      case A_NumFortranStrassen :
+        m_pAlgoParameters->storage = numeric::TMatrixStorage::ColumnMajor;
+      default:
+        break;
+    }
+    //create input matrices
+    m_pAlgoParameters->a.reset(NewMatrix(m_pAlgoParameters->Popt.type,
+          m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage));
+    m_pAlgoParameters->b.reset(NewMatrix(m_pAlgoParameters->Popt.type,
+          m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage));
+    //sanity check(input can be used by selected algorithm)
+    //check that sizes are valid
+    bool canMultiply = false;
+    if(m_pAlgoParameters->transposeB) {
+      canMultiply = ( m_pAlgoParameters->a->getColumnsNum() == m_pAlgoParameters->b->getColumnsNum() );
+      m_pAlgoParameters->nrows_C = m_pAlgoParameters->a->getRowsNum();
+      m_pAlgoParameters->ncolumns_C = m_pAlgoParameters->b->getRowsNum();
+    } else if(m_pAlgoParameters->transposeA) {
+      canMultiply = ( m_pAlgoParameters->a->getRowsNum() == m_pAlgoParameters->b->getRowsNum() );
+      m_pAlgoParameters->nrows_C = m_pAlgoParameters->a->getColumnsNum();
+      m_pAlgoParameters->ncolumns_C = m_pAlgoParameters->b->getColumnsNum();
+    } else {
+      canMultiply = ( m_pAlgoParameters->a->getColumnsNum() == m_pAlgoParameters->b->getRowsNum() );
+      m_pAlgoParameters->nrows_C = m_pAlgoParameters->a->getRowsNum();
+      m_pAlgoParameters->ncolumns_C = m_pAlgoParameters->b->getColumnsNum();
+    }
+    if(!canMultiply) {
+      throw FileFormatValueBoundsError("Invalid matrix sizes in files, can't multiply them with selected algorithm",
+          m_pfA->fileType(), m_pfA->fileName().c_str(), m_pfA->lineNum());
+    }
+    //initialize output structures and possibly file
+    //create output matrix
+    m_pAlgoParameters->c.reset(NewMatrix(m_pAlgoParameters->Popt.type,
+          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage));
+    //read input data
+    readInput();
+    //estimate output file size, check available disk space
+    //log stats
+    //RUN_IO_ITER:
+    //run selected algorithm
+    matmul::perform(*m_pAlgoParameters);
+    //output results
+    //m_pAlgoParameters->c->writeToFile(*m_pfC);
+    //POSTRUN:
+    //finalize output file
+    //log stats
   }
 
 }
