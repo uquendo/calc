@@ -83,7 +83,7 @@ namespace IOUtil {
     numeric::mpreal __atompfr__(const char * str);
 #endif
 
-    template <typename T> inline int scanArray(const char * str, int nElem , T * const dest, int stride=1) {
+    template <typename T> inline int scanArray(const char * str, int nElem , T * const dest, int stride = 1) {
       static_assert(std::is_arithmetic<T>::value, "Number required. No support for any other arrays yet.");
       return 0;
     }
@@ -108,6 +108,41 @@ namespace IOUtil {
 #ifdef HAVE_MPREAL
     template <> inline int scanArray<numeric::mpreal>(const char * str, int nElem, numeric::mpreal * dest, int stride)
       { return scan<numeric::mpreal>(str, nElem, dest, __atompfr__, stride); }
+#endif
+
+    template <typename T> inline constexpr const char* getNumFmt()
+    { return "%.*g"; }
+    template <> inline constexpr const char* getNumFmt< numeric::TraitBuiltin<numeric::P_LongDouble>::type >()
+    { return "%.*Lg"; }
+#ifdef HAVE_QUADMATH
+    template <> inline constexpr const char* getNumFmt< numeric::TraitBuiltin<numeric::P_Quad>::type >()
+    { return "%.*Qg"; }
+#endif
+#ifdef HAVE_MPREAL
+    template <> inline constexpr const char* getNumFmt< numeric::TraitBuiltin<numeric::P_MPFR>::type >()
+    { return "%.*Rg"; }
+#endif
+
+    template <typename T> inline bool printNumber(char * const str, const size_t len, const T& n, const int digits = 6)
+    {
+      static_assert(std::is_arithmetic<T>::value, "Number required. No support for any other arrays yet.");
+      return ( len > ::snprintf(str, len, getNumFmt<T>(), digits, n) );
+    }
+#ifdef HAVE_QUADMATH
+    template <> inline bool printNumber(char * const str, const size_t len, const numeric::quad& n, const int digits)
+    {
+      return ( len > size_t(::quadmath_snprintf(str, len, getNumFmt<numeric::quad>(), digits, n.backend().value())));
+    }
+#endif
+#ifdef HAVE_MPREAL
+    template <> inline bool printNumber(char * const str, const size_t len, const numeric::mpreal& n, const int digits)
+    {
+# ifdef HAVE_BOOST_MPREAL
+      return ( len > size_t(::mpfr_snprintf(str, len, getNumFmt<numeric::mpreal>(), digits, n.backend().data())));
+# else
+      return ( len > size_t(::mpfr_snprintf(str, len, getNumFmt<numeric::mpreal>(), digits, n.mpfr_srcptr())));
+# endif
+    }
 #endif
 
 }

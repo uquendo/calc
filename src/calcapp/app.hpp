@@ -26,6 +26,7 @@ public:
     App(ProgressCtrl * const);
     virtual void setDefaultOptions() = 0;
     virtual void readInput() = 0;
+    virtual void writeOutput() = 0;
     virtual void run() = 0;
     inline ProgressCtrl * ctrl() const { return m_pProgress; }
     inline Logger& log() const { return m_pProgress->log(); }

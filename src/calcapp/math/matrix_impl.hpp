@@ -30,7 +30,7 @@ template<typename T> Matrix<T>::Matrix(const size_t nrows, const size_t ncolumns
   m_data = reinterpret_cast<T*>(numeric::aligned_malloc(sizeof(T)*getSize(), getAlignment(), &buf));
   m_buf.reset(buf);
 
-  if(m_data == nullptr){
+  if(m_data == nullptr) {
     throw OOMError("Can't allocate aligned data buffer for the matrix");
   }
 
@@ -54,14 +54,15 @@ template<typename T> void Matrix<T>::ParseHeaderDat(InFileText& f, size_t& rows,
 {
   if(f.readNextLine_scan(1,"# %zu %zu",&rows,&columns) == 1)
   {
-    //it's square matrix
+    //it's a square matrix
     columns = rows;
   }
 }
 
 template<typename T> Matrix<T>::Matrix(InFileText& f, const bool readData,
   const bool transpose, const numeric::TMatrixStorage storage)
-  : m_buf(nullptr)
+  : MatrixBase(0,0,storage)
+  , m_buf(nullptr)
   , m_data(nullptr)
 {
 //  static_assert(std::is_arithmetic<T>::value, "Arithmetical type expected"); //TODO: check boost::multiprecision type traits
@@ -95,6 +96,7 @@ template<typename T> Matrix<T>::Matrix(InFileText& f, const bool readData,
   }
 }
 
+//data IO
 template<typename T> void Matrix<T>::readFromFile(InFileText& f, const bool transpose)
 {
   if(f.fileType() != FT_MatrixText)
@@ -105,18 +107,18 @@ template<typename T> void Matrix<T>::readFromFile(InFileText& f, const bool tran
   if(transpose)
      std::swap(f_nrows,f_ncolumns);
 
-  if(f.lineNum()==0){
+  if(f.lineNum()==0) {
     //just opened file, check header
     size_t tmp_nrows=0,
            tmp_ncolumns=0;
     ParseHeaderDat(f,tmp_nrows,tmp_ncolumns);
-    if( ( f_nrows != tmp_nrows ) || ( f_ncolumns != tmp_ncolumns ) ){
+    if( ( f_nrows != tmp_nrows ) || ( f_ncolumns != tmp_ncolumns ) ) {
       throw FileFormatValueBoundsError("Mismatched size of matrix in file",f.fileType(),f.fileName().c_str(),f.lineNum());
     }
   }
 
   //allocate memory if necessary
-  if( m_buf==nullptr || m_data==nullptr ){
+  if( m_buf==nullptr || m_data==nullptr ) {
     void* buf=nullptr;
     m_data = reinterpret_cast<T*>(numeric::aligned_malloc(sizeof(T)*getSize(), getAlignment(), &buf));
     m_buf.reset(buf);
@@ -132,6 +134,40 @@ template<typename T> void Matrix<T>::readFromFile(InFileText& f, const bool tran
   for (size_t i = 0; i < f_nrows; ++i) {
     f.readNextLine_scanNumArray<T>(f_ncolumns, f_ncolumns, m_data+input_inc*i, input_stride);
   }
+}
+
+template<typename T> void Matrix<T>::WriteHeaderDat(OutFileText& f, const size_t rows, const size_t columns)
+{
+  if(columns == rows)
+  {
+    //it's a square matrix
+    f.printf("# %zu", rows);
+  } else {
+    f.printf("# %zu %zu", rows, columns);
+  }
+  f.println();
+}
+
+template<typename T> void Matrix<T>::writeToFile(OutFileText& f, const bool transpose, const int print_precision)
+{
+  if(f.fileType() != FT_MatrixText)
+    throw FileFormatUnsupportedError("File format unsupported",f.fileType(),f.fileName().c_str(),f.lineNum());
+  size_t f_nrows=m_nrows,
+         f_ncolumns=m_ncolumns;
+  if(transpose)
+  {
+    std::swap(f_nrows,f_ncolumns);
+  }
+
+  WriteHeaderDat(f, f_nrows, f_ncolumns);
+
+  const size_t output_stride = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? f_nrows : 1 );
+  const size_t output_inc = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? 1 : f_ncolumns );
+
+  for (size_t i = 0; i < f_nrows; ++i) {
+    f.println_printNumArray(f_ncolumns, m_data+output_inc*i, output_stride, print_precision);
+  }
+  f.flush();
 }
 
 // data access
@@ -175,8 +211,6 @@ template<typename T> inline const T MatrixBase::operator[](size_t idx) const
 {
   return dynamic_cast<const Matrix<T>&>(*this)[idx];
 }
-//data IO
-void readFromFile(InFileText& f, const bool transpose);
 
 struct CreateMatrixHelperArgs
 {

@@ -261,6 +261,12 @@ namespace Calc {
     m_pAlgoParameters->b->readFromFile(*m_pfB,m_pAlgoParameters->transposeB);
   }
 
+  void QuestApp::writeOutput()
+  {
+    //write ouput matrix to file
+    m_pAlgoParameters->c->writeToFile(*m_pfC,false,m_pAlgoParameters->Popt.print_precision);
+  }
+
   void QuestApp::run()
   {
     //PRERUN:
@@ -311,7 +317,7 @@ namespace Calc {
       throw FileFormatValueBoundsError("Invalid matrix sizes in files, can't multiply them with selected algorithm",
           m_pfA->fileType(), m_pfA->fileName().c_str(), m_pfA->lineNum());
     }
-    //initialize output structures and possibly file
+    //initialize output structure[s] and possibly file[s]
     //create output matrix
     log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C);
     m_pAlgoParameters->c.reset(NewMatrix(m_pAlgoParameters->Popt.type,
@@ -319,8 +325,7 @@ namespace Calc {
     //read input data
     log().debug("reading input matrices...");
     readInput();
-    //estimate output file size, check available disk space
-    //...
+    //TODO: estimate output file size, check available disk space
     //log stats
     log().debug(SysUtil::getMemStats());
     //RUN_IO_ITER:
@@ -328,12 +333,12 @@ namespace Calc {
     log().debug("running main task...");
     matmul::perform(*m_pAlgoParameters,log());
     //output results
-//    log().debug("writing output matrix...");
-//    m_pAlgoParameters->c->writeToFile(*m_pfC);
-//    log().debug("...done");
+    log().debug("writing output matrix...");
+    writeOutput();
     //POSTRUN:
     //finalize output file
     //log stats
+    log().debug("have a nice day.");
   }
 
 }

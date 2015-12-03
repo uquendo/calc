@@ -165,6 +165,7 @@ public:
     virtual ~QuestApp(){};
     virtual void setDefaultOptions() override;
     virtual void readInput() override;
+    virtual void writeOutput() override;
     virtual void run() override;
     const std::string Summary() const;
 private:

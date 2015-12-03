@@ -27,18 +27,6 @@ template<typename T, bool tA, bool tB, bool cA, bool cB>
                       ( cB ? conj<T>(b[tB ? k*stride_b+j : j*stride_b+k]) : b[tB ? k*stride_b+j : j*stride_b+k] );
 }
 
-//helper for simple serial square matrix multiplication
-template<typename T, bool tA, bool tB, bool cA, bool cB>
-  __FORCEINLINE inline void _mm_square_op(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
-    const size_t stride,
-    const size_t i, const size_t j, const size_t k)
-{
-  //if nothing's transposed, do c(i,k) += a(i,j) * b(j,k)
-  //transpose option switches corresponding indices. tA: a(i,j) -> a(j,i), tB: b(j,k) -> b(k,j)
-  c[i*stride+k] +=  ( cA ? conj<T>(a[tA ? j*stride+i : i*stride+j]) : a[tA ? j*stride+i : i*stride+j] ) *
-                      ( cB ? conj<T>(b[tB ? k*stride+j : j*stride+k]) : b[tB ? k*stride+j : j*stride+k] );
-}
-
 template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB, bool sqr>
   inline void matmul_helper(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
     const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
@@ -49,60 +37,37 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB, bool sq
   size_t i,j,k;
   switch(tAlgo)
   {
+//it's a bit of a shame, but these macros actually enchance readability IMO
 #define _FOR_I for(i=0; i < nrows_op_a; i++)
 #define _FOR_J for(j=0; j < ncolumns_op_a; j++)
 #define _FOR_K for(k=0; k < ncolumns_op_b; k++)
-#define _SQR_FOR_I for(i=0; i < ncolumns_op_a; i++)
-#define _SQR_FOR_J for(j=0; j < ncolumns_op_a; j++)
-#define _SQR_FOR_K for(k=0; k < ncolumns_op_a; k++)
     case TMM_Algo::IJK:
-      if(sqr) {
-        _SQR_FOR_I _SQR_FOR_J _SQR_FOR_K  _mm_square_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,i,j,k);
-      } else {
-        _FOR_I _FOR_J _FOR_K  _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
-      }
+        _FOR_I _FOR_J _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JKI:
-      if(sqr) {
-        _SQR_FOR_J _SQR_FOR_K _SQR_FOR_I  _mm_square_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,i,j,k);
-      } else {
-        _FOR_J _FOR_K _FOR_I  _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
-      }
+        _FOR_J _FOR_K _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KIJ:
-      if(sqr) {
-        _SQR_FOR_K _SQR_FOR_I _SQR_FOR_J  _mm_square_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,i,j,k);
-      } else {
-        _FOR_K _FOR_I _FOR_J  _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
-      }
+        _FOR_K _FOR_I _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::IKJ:
-      if(sqr) {
-        _SQR_FOR_I _SQR_FOR_K _SQR_FOR_J  _mm_square_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,i,j,k);
-      } else {
-        _FOR_I _FOR_K _FOR_J  _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
-      }
+        _FOR_I _FOR_K _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KJI:
-      if(sqr) {
-        _SQR_FOR_K _SQR_FOR_J _SQR_FOR_I  _mm_square_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,i,j,k);
-      } else {
-        _FOR_K _FOR_J _FOR_I  _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
-      }
+        _FOR_K _FOR_J _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JIK:
-      if(sqr) {
-        _SQR_FOR_J _SQR_FOR_I _SQR_FOR_K  _mm_square_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,i,j,k);
-      } else {
-        _FOR_J _FOR_I _FOR_K  _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
-      }
+        _FOR_J _FOR_I _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
 #undef _FOR_I
 #undef _FOR_J
 #undef _FOR_K
-#undef _SQR_FOR_I
-#undef _SQR_FOR_J
-#undef _SQR_FOR_K
   }
 }
 
@@ -201,9 +166,9 @@ template<typename T>
   const bool square = ( nrows_a == ncolumns_a && nrows_b == ncolumns_b );
 
   if(square) {
-    return dgemm_helper<T,true>(stor,transA,transB,a,b,c,nrows_a,nrows_b,ncolumns_a,ncolumns_b,threading_model);
+    return dgemm_helper<T,true>(stor,transA,transB,a,b,c,nrows_a,ncolumns_a,nrows_b,ncolumns_b,threading_model);
   } else {
-    return dgemm_helper<T,false>(stor,transA,transB,a,b,c,nrows_a,nrows_b,ncolumns_a,ncolumns_b,threading_model);
+    return dgemm_helper<T,false>(stor,transA,transB,a,b,c,nrows_a,ncolumns_a,nrows_b,ncolumns_b,threading_model);
   }
 
 }

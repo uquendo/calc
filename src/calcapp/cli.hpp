@@ -73,6 +73,7 @@ public:
     CliApp(ProgressCtrl* const);
     virtual void setDefaultOptions() = 0;
     virtual void readInput() = 0;
+    virtual void writeOutput() = 0;
     virtual void run() = 0;
 };
 

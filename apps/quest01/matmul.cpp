@@ -27,8 +27,8 @@ namespace Calc
     //dispatcher
     void perform(const AlgoParameters& parameters, Logger& log)
     {
-      PERF_METER(log, "matmul::perform");
-//      Calc::ExecTimeMeter __etm(log, "matmul::perform");
+//      PERF_METER(log, "matmul::perform");
+      Calc::ExecTimeMeter __etm(log, "matmul::perform");
       switch(parameters.Aopt.type)
       {
         case A_NumC:

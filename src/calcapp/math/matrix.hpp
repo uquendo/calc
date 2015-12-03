@@ -60,7 +60,8 @@ public:
   template<typename T> inline const T operator[](size_t idx) const ;
 
   //data IO
-  virtual void readFromFile(InFileText& f, const bool transpose) = 0 ;
+  virtual void readFromFile(InFileText& f, const bool transpose = false) = 0 ;
+  virtual void writeToFile(OutFileText& f, const bool transpose = false, const int print_precision = 6) = 0 ;
 };
 
 template<typename T> class Matrix : public MatrixBase
@@ -104,10 +105,12 @@ public:
   inline const T operator[](size_t idx) const { return m_data[idx];  }
 
   //data IO
-  void readFromFile(InFileText& f, const bool transpose);
+  virtual void readFromFile(InFileText& f, const bool transpose = false) override;
+  virtual void writeToFile(OutFileText& f, const bool transpose = false, const int print_precision = 6) override;
 
 private:
   void ParseHeaderDat(InFileText& f, size_t& rows, size_t& columns);
+  void WriteHeaderDat(OutFileText& f, const size_t rows, const size_t columns);
 
 private:
   // no copying and copy assignment allowed
