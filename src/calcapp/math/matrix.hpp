@@ -16,6 +16,7 @@
 #include "calcapp/infile.hpp"
 #include "calcapp/outfile.hpp"
 #include "calcapp/exception.hpp"
+#include "calcapp/log.hpp"
 
 using std::size_t;
 
@@ -119,7 +120,7 @@ private:
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns,
   const bool reset = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, InFileText& f, const bool readData = true,
-  const bool transpose = false, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
+  const bool transpose = false, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor);
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns, InFileText& f,
   const bool transpose = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor );
 

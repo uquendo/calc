@@ -32,7 +32,13 @@ static const char TFileExt[FT_Count][FILE_EXTENSION_WIDTH] =
     ".csv"
 };
 
-static const int LINE_BUF_SIZE=4*4096; //4KiB is default page size for most architectures
+#if CALC_DEFAULT_LINE_BUF_SIZE > 1024
+static const int LINE_BUF_SIZE=CALC_DEFAULT_LINE_BUF_SIZE;
+#else
+//4KiB is default page size for most architectures
+//modern system though usualy support also the so-called Huge(Super/Large) pages with sizes of several MiB (2,4,16 and so on)
+static const int LINE_BUF_SIZE=4*1024*1024;
+#endif
 
 namespace IOUtil {
     template <typename T> std::string to_string_hex( T i )
@@ -68,8 +74,8 @@ namespace IOUtil {
     }
 
     float __atof__(const char * str);
-    double __atod__(const char * str); 
-    long double __atold__(const char * str); 
+    double __atod__(const char * str);
+    long double __atold__(const char * str);
 #ifdef HAVE_QUADMATH
     numeric::quad __atoq__(const char * str);
 #endif

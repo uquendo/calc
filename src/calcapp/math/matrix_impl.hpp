@@ -52,7 +52,7 @@ template<typename T> Matrix<T>::Matrix(const size_t nrows, const size_t ncolumns
 
 template<typename T> void Matrix<T>::ParseHeaderDat(InFileText& f, size_t& rows, size_t& columns)
 {
-  if(f.readNextLine_scan(1,"# %zu %zu",rows,columns) == 1)
+  if(f.readNextLine_scan(1,"# %zu %zu",&rows,&columns) == 1)
   {
     //it's square matrix
     columns = rows;

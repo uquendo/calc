@@ -126,7 +126,7 @@ bool CliAppOptions::parseOptions(int argc, char* argv[]){
 #ifdef CLIAPP_OPT_DEFAULT_HELP
     printHelp();
     return false;
-#elseif CLIAPP_OPT_DEFAULT_ABOUT
+#elif CLIAPP_OPT_DEFAULT_ABOUT
     printAbout();
     return false;
 #endif
@@ -147,27 +147,51 @@ bool CliAppOptions::parseOptions(int argc, char* argv[]){
   //TODO: invent some cli options parsing wheel there to make boost haters happy enough
 #endif
   bool parsing_succeded = (
-    parseLoggingOptions() ||
-    parseThreadingOptions() ||
-    parsePrecisionOptions() ||
-    parseInputOptions() ||
-    parseOutputOptions() ||
-    parseAlgoOptions() 
+    parseLoggingOptions() &&
+    parseThreadingOptions() &&
+    parsePrecisionOptions() &&
+    parseInputOptions() &&
+    parseOutputOptions() &&
+    parseAlgoOptions()
   );
   return parsing_succeded;
 }
 
 bool CliAppOptions::parseLoggingOptions(){
-  bool v=false;
-#ifdef HAVE_BOOST
-  v=argMap.count(VERBOSE_OPT)>0;
+#ifdef CLIAPP_OPT_DEFAULT_LOG_VERBOSITY
+  Logger::LogLevel verbosityLevel = CLIAPP_OPT_DEFAULT_LOGGING_VERBOSITY ;
+#else
+  Logger::LogLevel verbosityLevel = Logger::L_DEBUG;
 #endif
-  m_logging.verbose=v;
+#ifdef CLIAPP_OPT_DEFAULT_LOG_FILE
+  std::string logFile = CLIAPP_OPT_DEFAULT_LOG_FILE;
+#else
+  std::string logFile = "";
+#endif
+  bool verbose = false;
+  bool profile = false;
+  bool progress = false;
+#ifdef HAVE_BOOST
+  verbose = argMap.count(VERBOSE_OPT)>0;
+  verbosityLevel = (Logger::LogLevel) argMap[VERBOSE_OPT].as<int>();
+  logFile = argMap[LOGFILE_OPT].as<string>();
+  //profile =
+  //progress =
+#endif
+  m_logging.verbose = verbose;
+  m_logging.level = verbosityLevel;
+  m_logging.filename = logFile;
+  m_logging.profile = profile;
+  m_logging.progress = progress;
   return true;
 }
 
 bool CliAppOptions::parseThreadingOptions(){
+#ifdef CLIAPP_OPT_DEFAULT_THREADING
+  TThreading thr = CLIAPP_OPT_DEFAULT_THREADING;
+#else
   TThreading thr = _threading_opt_names[0].type;
+#endif
   unsigned thread_count = 0;
 #ifdef HAVE_BOOST
   if ( argMap.count(THREADING_OPT) > 0 ) {
@@ -179,7 +203,7 @@ bool CliAppOptions::parseThreadingOptions(){
           }
       }
   }
-  thread_count=argMap[THREADS_OPT].as<unsigned>();
+  thread_count = argMap[THREADS_OPT].as<unsigned>();
 #endif
   m_threading.type = thr;
   m_threading.num = thread_count;
@@ -187,8 +211,13 @@ bool CliAppOptions::parseThreadingOptions(){
 }
 
 bool CliAppOptions::parsePrecisionOptions(){
+#if defined( CLIAPP_OPT_DEFAULT_PRECISION )
+  TPrecision prec = CLIAPP_OPT_DEFAULT_PRECISION;
+#else
   TPrecision prec = _precision_opt_names[0].type;
+#endif
   unsigned digits = 10;
+  ptrdiff_t print_precision = 10;
 #ifdef HAVE_BOOST
   if ( argMap.count(PRECISION_OPT) > 0 ) {
       const string& s = argMap[PRECISION_OPT].as<string>();
@@ -200,11 +229,13 @@ bool CliAppOptions::parsePrecisionOptions(){
       }
   }
 #ifdef HAVE_MPREAL
-  digits=argMap[DIGITS_OPT].as<unsigned>();
+  digits = argMap[DIGITS_OPT].as<unsigned>();
 #endif
+  //print_precision =
 #endif
-  m_precision.type=prec;
-  m_precision.decimal_digits=digits;
+  m_precision.type = prec;
+  m_precision.decimal_digits = digits;
+  m_precision.print_precision = print_precision;
   return true;
 }
 
@@ -257,9 +288,9 @@ void CliAppOptions::printHelp(){
   std::cout << Help() << std::endl;
 }
 
-bool CliAppOptions::processOptions(int argc, char* argv[]){ 
+bool CliAppOptions::processOptions(int argc, char* argv[]){
   prepareOptions();
-   return parseOptions(argc, argv);
+  return parseOptions(argc, argv);
 }
 
 }

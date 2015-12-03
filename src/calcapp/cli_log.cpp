@@ -52,7 +52,7 @@ public:
     m.append(": ").append(msg);
 #endif
     if ( m_logFile.get() )
-      *m_logFile << m << "\n";
+      *m_logFile << m << '\n';
 
     puts(m.c_str());
   };

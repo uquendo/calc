@@ -36,9 +36,6 @@ InFileText::InFileText(const std::string& fileName, TFileType fileType /* = FT_U
   , m_lineNum(0)
   , m_seqAccess(seqAccess)
 {
-  if(!IOUtil::isOkToReadFile(m_fileName))
-    throwIOError(FERR_IO_GENERAL_READ, "File open error");
-
   //prepare filename and type
   if(m_fileType == FT_Undefined) {
     //try to guess type from file extension
@@ -47,6 +44,10 @@ InFileText::InFileText(const std::string& fileName, TFileType fileType /* = FT_U
     //append extension if file format is known
     m_fileName.append(TFileExt[fileType]);
   }
+
+  if(!IOUtil::isOkToReadFile(m_fileName))
+    throwIOError(FERR_IO_GENERAL_READ, "File open error");
+
   m_line[0] = 0;
 #ifdef __GLIBCXX__
   FILE* cfile = fopen(m_fileName.c_str(), "r");
@@ -55,8 +56,8 @@ InFileText::InFileText(const std::string& fileName, TFileType fileType /* = FT_U
   //hint os kernel about sequential access
   posix_fadvise(posix_fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 # endif
-  __gnu_cxx::stdio_filebuf<char> filebuf(posix_fd, std::ios::in);
-  m_f.reset(new std::istream(&filebuf));
+  __gnu_cxx::stdio_filebuf<char>* filebuf = new __gnu_cxx::stdio_filebuf<char>(posix_fd, std::ios::in);
+  m_f.reset(new std::istream(filebuf));
 #else
   //TODO: on MSVC we can try to use winapi-ish CreateFile with FILE_FLAG_SEQUENTIAL_SCAN
   m_f.reset(new ifstream(m_fileName.c_str()));
@@ -67,10 +68,10 @@ InFileText::InFileText(const std::string& fileName, TFileType fileType /* = FT_U
 
 bool InFileText::readNextLineOrEOF()
 {
-  if ( ! IOUtil::readLine(*m_f, m_line, LINE_BUF_SIZE) )
+  if ( ! IOUtil::readLine(*m_f.get(), m_line, LINE_BUF_SIZE) )
     return false;
 
-  if ( (*m_f).fail() )
+  if ( m_f->fail() )
     throwIOError(FERR_IO_GENERAL_READ, "File read error");
 
   ++m_lineNum;
@@ -79,8 +80,13 @@ bool InFileText::readNextLineOrEOF()
 
 void InFileText::readNextLine()
 {
-  if ( ! readNextLineOrEOF() )
-    throw PreliminaryEofError("Premature EOF", m_fileType, m_fileName.c_str(), m_lineNum);
+  if ( ! readNextLineOrEOF() ) {
+    if( m_f->bad() ) {
+      throwIOError(FERR_IO_GENERAL_READ, "File read error(input stream has badbit set)");
+    } else {
+      throwFormatError(FERR_IO_FORMAT_ERROR, std::string("Line is too long, current limit is ").append(std::to_string(LINE_BUF_SIZE/1024)).append(" KiB.").c_str());
+    }
+  }
 }
 
 int InFileText::readNextLine_until(int nStr, ...) 
@@ -140,7 +146,7 @@ void InFileText::readNextLine_untilExcept(const char * str, const char * except)
 int vsscanf(const char *s, const char *fmt, va_list ap)
 {
   void *a[20];
-  for (int i=0; i<sizeof(a)/sizeof(a[0]); ++i) a[i] = va_arg(ap, void *);
+  for ( int i=0; i < sizeof(a)/sizeof(a[0]); ++i ) a[i] = va_arg(ap, void *);
   return sscanf(s, fmt, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15], a[16], a[17], a[18], a[19]);
 }
 #endif
@@ -154,7 +160,7 @@ int InFileText::readNextLine_scan(int minCount, const char * format, ...)
   va_end(va);
 
   if ( n < minCount )
-    throwIOError(FERR_IO_FORMAT_ERROR, string("Expected at least ").append(to_string(minCount)).append(" values, got ").append(to_string(n)).c_str());
+    throwFormatError(FERR_IO_FORMAT_ERROR, string("Expected at least ").append(to_string(minCount)).append(" values, got ").append(to_string(n)).c_str());
 
   return n;
 }

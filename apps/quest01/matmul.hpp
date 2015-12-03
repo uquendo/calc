@@ -16,7 +16,7 @@ namespace Calc {
   namespace matmul {
 
     //dispatcher
-    void perform(const AlgoParameters& parameters);
+    void perform(const AlgoParameters& parameters, Logger& log);
 
     //default c++ version for square matrices in row major order
     struct numeric_cpp_simple;

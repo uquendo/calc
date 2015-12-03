@@ -1,6 +1,8 @@
 #pragma once
 #ifndef _QUEST_HPP
 #define _QUEST_HPP
+#include "config.h"
+#include "appconfig.h"
 
 #include <string>
 #include <unordered_set>
@@ -8,8 +10,6 @@
 #include "calcapp/cli.hpp"
 #include "calcapp/io.hpp"
 #include "calcapp/math/matrix.hpp"
-
-#include "appconfig.h"
 
 namespace Calc {
 
@@ -65,19 +65,19 @@ static const OptName<TAlgo> _algo_opt_names[] = {
 #ifdef HAVE_BLAS
   { "contrib-c-blas", "ext-c-blas", A_ExtCBLAS },
 #endif
-  { NULL, 0, A_Undefined }
+  { nullptr, nullptr, A_Undefined }
 };
 
 static const OptName<TFileType> _input_opt_names[] = {
   { "Read matrices in .dat format", "dat", FT_MatrixText },
   { "Read matrices in .csv format", "csv", FT_Csv },
-  { NULL, 0, FT_None }
+  { nullptr, nullptr, FT_None }
 };
 
 static const OptName<TFileType> _output_opt_names[] = {
   { "Write matrices in .dat format", "dat", FT_MatrixText },
   { "Write matrices in .csv format", "csv", FT_Csv },
-  { NULL, 0, FT_None }
+  { nullptr, nullptr, FT_None }
 };
 
 struct InputOptions {
@@ -166,6 +166,7 @@ public:
     virtual void setDefaultOptions() override;
     virtual void readInput() override;
     virtual void run() override;
+    const std::string Summary() const;
 private:
     InputOptions m_input;
     OutputOptions m_output;

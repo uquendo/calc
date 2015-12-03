@@ -15,7 +15,6 @@ int main(int argc, char** argv)
 
     //std::cout.precision(calcOpt.getPrecOpts().print_precision);
     Calc::CliProgress pc(calcOpt.getLogOpts());
-
     std::string cmdLine("Command line: ");
     for ( int i = 0; i < argc; i++ )
     {
@@ -25,7 +24,7 @@ int main(int argc, char** argv)
     std::time_t t;
     time(&t);
     pc.log().fdebug("Launch time: %s", ctime(&t));
-    pc.log().debug(calcOpt.About());
+//    pc.log().debug(calcOpt.About());
 
     Calc::QuestApp calc(calcOpt,&pc);
     calc.run();

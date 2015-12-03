@@ -19,7 +19,7 @@ const OptName<TThreading> _threading_opt_names[] = {
 #ifdef HAVE_TBB
     { "Intel TBB", "tbb", T_TBB },
 #endif
-    { NULL, 0, T_Undefined }
+    { nullptr, nullptr, T_Undefined }
 };
 
 const OptName<TPrecision> _precision_opt_names[] = {
@@ -32,7 +32,7 @@ const OptName<TPrecision> _precision_opt_names[] = {
 #ifdef HAVE_MPREAL
     { "fixed decimal digits MPFR", "mpfr", P_MPFR },
 #endif
-    { NULL, 0, P_Undefined }
+    { nullptr, nullptr, P_Undefined }
 };
 
 //TODO: STUBS!

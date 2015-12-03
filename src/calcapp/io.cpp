@@ -11,7 +11,7 @@
 
 #if defined(MSC_VER)
 #define HAVE_UNLINK
-#elif defined(__linux__) || defined(__APPLE__) || defined(_POSIX_C_SOURCE) || HAVE_POSIX_UNISTD_H
+#elif defined(__linux__) || defined(__APPLE__) || defined(_POSIX_C_SOURCE) || HAVE_UNISTD_H
 #include "unistd.h"
 #define HAVE_UNLINK
 #endif
@@ -26,7 +26,10 @@ float __atof__(const char * str) { return strtof(str,nullptr); }
 double __atod__(const char * str) { return atof(str); }
 long double __atold__(const char * str) { return strtold(str,nullptr); }
 #ifdef HAVE_QUADMATH
-numeric::quad __atoq__(const char * str) { return numeric::quad(str); }
+numeric::quad __atoq__(const char * str) {
+  return strtoflt128(str,nullptr);
+//  return numeric::quad(str);
+}
 #endif
 #ifdef HAVE_MPREAL
 numeric::mpreal __atompfr__(const char * str) { return numeric::mpreal(str); }
@@ -35,7 +38,7 @@ numeric::mpreal __atompfr__(const char * str) { return numeric::mpreal(str); }
 bool readLine(std::istream& in, char * buf, int bufSize) 
 {
   buf[0]=0;
-  in.getline(buf, bufSize, '\n');
+  in.getline(buf, bufSize);
 
   // Fast trim
   char * start = buf;
@@ -46,7 +49,19 @@ bool readLine(std::istream& in, char * buf, int bufSize)
   memmove(buf, start, len);
   buf[len] = 0;
 
-  return ! in.fail();
+  if(!in.fail())
+  {
+    return true;
+  } else {
+    if(!in.bad() && buf[0]==0)
+    {
+      // found empty line, no big deal
+      return true;
+    } else {
+      //either stream is bad or line is too long for our buffer
+      return false;
+    }
+  }
 }
 
 bool readLine(std::istream& in, string& str)

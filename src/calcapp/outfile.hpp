@@ -31,8 +31,8 @@ public:
   inline void print(const std::string& str) { print(str.c_str()); }
 
   template <class T> std::ostream& operator << (T t) {
-    *m_f << t;
-    return *m_f;
+    *m_f.get() << t;
+    return *m_f.get();
   }
 
   void flush();

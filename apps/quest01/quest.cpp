@@ -1,6 +1,8 @@
 #include "quest.hpp"
 #include "matmul.hpp"
 
+#include "calcapp/system.hpp"
+
 #include <cassert>
 
 using std::string;
@@ -151,7 +153,11 @@ namespace Calc {
 
   bool QuestAppOptions::parseAlgoOptions()
   {
+#ifdef QUESTAPP_OPT_DEFAULT_ALGO
+    TAlgo algo = QUESTAPP_OPT_DEFAULT_ALGO;
+#else
     TAlgo algo = _algo_opt_names[0].type;
+#endif
 #ifdef HAVE_BOOST
     if ( argMap.count(ALGO_OPT) > 0 ) {
       const string& s = argMap[ALGO_OPT].as<string>();
@@ -190,8 +196,8 @@ namespace Calc {
   {
   }
 
-  QuestApp::QuestApp(ProgressCtrl* pc):
-    CliApp(pc)
+  QuestApp::QuestApp(ProgressCtrl* pc)
+    : CliApp(pc)
   {
     setDefaultOptions();
   }
@@ -213,6 +219,41 @@ namespace Calc {
     m_pfC.reset(new OutFileText(m_output.filename,m_output.filetype,false));
   }
 
+  const std::string QuestApp::Summary() const
+  {
+    std::string s;
+    //TODO: rewrite using getNameByType(...) helpers
+    for ( int i = 0; _algo_opt_names[i].name; ++i )
+    {
+      if( _algo_opt_names[i].type == m_pAlgoParameters->Aopt.type )
+      {
+        s.append("Running dense matrix multiplication algorithm ").append(_algo_opt_names[i].name);
+        break;
+      }
+    }
+    for ( int i = 0; _threading_opt_names[i].name; ++i )
+    {
+      if( _threading_opt_names[i].type == m_pAlgoParameters->Topt.type )
+      {
+        s.append(" (").append(_threading_opt_names[i].name).append(" variant)");
+        break;
+      }
+    }
+    for ( int i = 0; _precision_opt_names[i].name; ++i )
+    {
+      if( _precision_opt_names[i].type == m_pAlgoParameters->Popt.type )
+      {
+        s.append(" using ").append(_precision_opt_names[i].name).append(" precision");
+#ifdef HAVE_MPREAL
+        if( m_pAlgoParameters->Popt.type == numeric::P_MPFR )
+          s.append("(").append(std::to_string(m_pAlgoParameters->Popt.decimal_digits)).append("decimal digits)");
+#endif
+        break;
+      }
+    }
+    return s;
+  }
+
   void QuestApp::readInput()
   {
     //read input matrices from files
@@ -223,6 +264,7 @@ namespace Calc {
   void QuestApp::run()
   {
     //PRERUN:
+    log().debug(Summary());
     //prepare matrix reading flags per algo
     if( (m_algo.type == A_NumCSimpleTranspose) || (m_algo.type == A_NumCppSimpleTranspose) ) {
       m_pAlgoParameters->transposeB = true;
@@ -241,11 +283,15 @@ namespace Calc {
         break;
     }
     //create input matrices
+    log().debug("creating input matrices...");
     m_pAlgoParameters->a.reset(NewMatrix(m_pAlgoParameters->Popt.type,
           m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage));
     m_pAlgoParameters->b.reset(NewMatrix(m_pAlgoParameters->Popt.type,
           m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage));
+    log().fdebug("found input matrices: A ( %zu x %zu ), B ( %zu x %zu )",
+        m_pAlgoParameters->a->m_nrows, m_pAlgoParameters->a->m_ncolumns, m_pAlgoParameters->b->m_nrows,m_pAlgoParameters->b->m_ncolumns);
     //sanity check(input can be used by selected algorithm)
+    log().debug("sanity check of matrix sizes...");
     //check that sizes are valid
     bool canMultiply = false;
     if(m_pAlgoParameters->transposeB) {
@@ -267,17 +313,24 @@ namespace Calc {
     }
     //initialize output structures and possibly file
     //create output matrix
+    log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C);
     m_pAlgoParameters->c.reset(NewMatrix(m_pAlgoParameters->Popt.type,
           m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage));
     //read input data
+    log().debug("reading input matrices...");
     readInput();
     //estimate output file size, check available disk space
+    //...
     //log stats
+    log().debug(SysUtil::getMemStats());
     //RUN_IO_ITER:
     //run selected algorithm
-    matmul::perform(*m_pAlgoParameters);
+    log().debug("running main task...");
+    matmul::perform(*m_pAlgoParameters,log());
     //output results
-    //m_pAlgoParameters->c->writeToFile(*m_pfC);
+//    log().debug("writing output matrix...");
+//    m_pAlgoParameters->c->writeToFile(*m_pfC);
+//    log().debug("...done");
     //POSTRUN:
     //finalize output file
     //log stats

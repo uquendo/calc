@@ -87,6 +87,7 @@ struct TraitEnum<long double> {
 #ifdef HAVE_QUADMATH
 #ifdef HAVE_BOOST
 typedef boost::multiprecision::float128 quad;
+//typedef float128_type quad;
 
 template<>
 struct TraitBuiltin<P_Quad> {
