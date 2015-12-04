@@ -47,7 +47,6 @@
 #cmakedefine HAVE_MTL
 //#cmakedefine HAVE_NVBLAS
 #cmakedefine HAVE_OPENMP
-#cmakedefine HAVE_POSIX
 #cmakedefine HAVE_PTHREADS
 #cmakedefine HAVE_QUADMATH
 #cmakedefine HAVE_TBB
@@ -80,6 +79,20 @@
 # define __FORCEINLINE FORCEINLINE_KEYWORD
 #else
 # define __FORCEINLINE
+#endif
+
+//selections for use with C11 _Generic
+//TODO: setup proper macro for backend type
+#ifdef HAVE_QUADMATH
+# define QUAD_SELECTOR(Y) __float128*: Y,
+#else
+# define QUAD_SELECTOR(Y)
+#endif
+
+#ifdef HAVE_MPREAL
+#define MPREAL_SELECTOR(Y) mpfr_t*: Y,
+#else
+#define MPREAL_SELECTOR(Y)
 #endif
 
 #ifndef DEFAULT_CACHE_LINE_SIZE

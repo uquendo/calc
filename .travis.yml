@@ -32,6 +32,8 @@ env:
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
       - libboost1.55-dev
       - libboost-date-time1.55-dev
@@ -44,13 +46,15 @@ addons:
       - liblapacke-dev
       - libeigen3-dev
       - libarmadillo-dev
-      - gfortran
+      - g++-4.9
+      - gcc-4.9
+      - gfortran-4.9
 #      - libtcmalloc-minimal4
 #      - mtl
 
 install:
-  - if [ "${BUILD_WITH}" = "gnu" ]; then export CXX="g++" CC="gcc"; fi
-  - if [ "${BUILD_WITH}" = "clang" ]; then export CXX="clang++" CC="clang"; fi
+  - if [ "${CC}" = "gcc" ]; then export CXX="g++-4.9" CC="gcc-4.9" FC="gfortran-4.9"; fi
+  - if [ "${CC}" = "clang" ]; then export CXX="clang++" CC="clang" FC="gfortran-4.9"; fi
 #  - if [ "${BUILD_WITH}" = "intel" ]; then ./contrib/setup_intel_toolchain.sh; export CXX="icpc" CC="icc"; fi
 
 before_script:

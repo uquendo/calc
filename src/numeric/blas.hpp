@@ -14,7 +14,7 @@ namespace numeric
 
 enum class TMatrixStorage { RowMajor, ColumnMajor };
 enum class TMatrixTranspose : char { No='N', Transpose='T', Conjugate='C' };
-enum class TMM_Algo { IJK, JKI, KIJ, IKJ, KJI, JIK };
+enum class TMM_Algo : int { IJK=0, JKI, KIJ, IKJ, KJI, JIK };
 
 //generic version of dgemm, C=op(A)*op(B)
 template<typename T>

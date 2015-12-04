@@ -7,6 +7,14 @@
 #include "numeric/complex.hpp"
 #include "numeric/parallel.hpp"
 
+#ifdef HAVE_CILK
+#include <cilk/cilk.h>
+#endif
+
+#ifdef HAVE_TBB
+#include "numeric/parallel_tbb.hpp"
+#endif
+
 #include <limits>
 #include <cstddef>
 
@@ -27,20 +35,18 @@ template<typename T, bool tA, bool tB, bool cA, bool cB>
                       ( cB ? conj<T>(b[tB ? k*stride_b+j : j*stride_b+k]) : b[tB ? k*stride_b+j : j*stride_b+k] );
 }
 
-template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB, bool sqr>
-  inline void matmul_helper(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void matmul_serial(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
     const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
 {
   constexpr bool ccA = (cA && is_complex<T>::value) ;
   constexpr bool ccB = (cB && is_complex<T>::value) ;
-
-  size_t i,j,k;
   switch(tAlgo)
   {
 //it's a bit of a shame, but these macros actually enchance readability IMO
-#define _FOR_I for(i=0; i < nrows_op_a; i++)
-#define _FOR_J for(j=0; j < ncolumns_op_a; j++)
-#define _FOR_K for(k=0; k < ncolumns_op_b; k++)
+#define _FOR_I for(size_t i=0; i < nrows_op_a; i++)
+#define _FOR_J for(size_t j=0; j < ncolumns_op_a; j++)
+#define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
     case TMM_Algo::IJK:
         _FOR_I _FOR_J _FOR_K
           _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
@@ -71,8 +77,298 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB, bool sq
   }
 }
 
-template<typename T, bool isSquare>
-  void dgemm_helper(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void matmul_stdthreads(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+    const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
+{
+  constexpr bool ccA = (cA && is_complex<T>::value) ;
+  constexpr bool ccB = (cB && is_complex<T>::value) ;
+  switch(tAlgo)
+  {
+//it's a bit of a shame, but these macros actually enchance readability IMO
+#define _FOR_I for(size_t i=0; i < nrows_op_a; i++)
+#define _FOR_J for(size_t j=0; j < ncolumns_op_a; j++)
+#define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
+    case TMM_Algo::IJK:
+        _FOR_I _FOR_J _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::JKI:
+        _FOR_J _FOR_K _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::KIJ:
+        _FOR_K _FOR_I _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::IKJ:
+        _FOR_I _FOR_K _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::KJI:
+        _FOR_K _FOR_J _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::JIK:
+        _FOR_J _FOR_I _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+#undef _FOR_I
+#undef _FOR_J
+#undef _FOR_K
+  }
+}
+
+#ifdef HAVE_PTHREADS
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void matmul_pthreads(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+    const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
+{
+  constexpr bool ccA = (cA && is_complex<T>::value) ;
+  constexpr bool ccB = (cB && is_complex<T>::value) ;
+  switch(tAlgo)
+  {
+//it's a bit of a shame, but these macros actually enchance readability IMO
+#define _FOR_I for(size_t i=0; i < nrows_op_a; i++)
+#define _FOR_J for(size_t j=0; j < ncolumns_op_a; j++)
+#define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
+    case TMM_Algo::IJK:
+        _FOR_I _FOR_J _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::JKI:
+        _FOR_J _FOR_K _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::KIJ:
+        _FOR_K _FOR_I _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::IKJ:
+        _FOR_I _FOR_K _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::KJI:
+        _FOR_K _FOR_J _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::JIK:
+        _FOR_J _FOR_I _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+#undef _FOR_I
+#undef _FOR_J
+#undef _FOR_K
+  }
+}
+#endif
+
+#ifdef HAVE_OPENMP
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void matmul_openmp(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+    const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
+{
+  constexpr bool ccA = (cA && is_complex<T>::value) ;
+  constexpr bool ccB = (cB && is_complex<T>::value) ;
+  switch(tAlgo)
+  {
+//it's a bit of a shame, but these macros actually enchance readability IMO
+#define _FOR_I for(size_t i=0; i < nrows_op_a; i++)
+#define _FOR_J for(size_t j=0; j < ncolumns_op_a; j++)
+#define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
+    case TMM_Algo::IJK:
+#pragma omp parallel for
+        _FOR_I {
+          _FOR_J _FOR_K
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        }
+      return;
+    case TMM_Algo::JKI:
+#pragma omp parallel for
+        _FOR_J {
+          _FOR_K _FOR_I
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        }
+    case TMM_Algo::KIJ:
+#pragma omp parallel for
+        _FOR_K {
+          _FOR_I _FOR_J
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        }
+    case TMM_Algo::IKJ:
+#pragma omp parallel for
+        _FOR_I {
+          _FOR_K _FOR_J
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        }
+      return;
+    case TMM_Algo::KJI:
+#pragma omp parallel for
+        _FOR_K {
+          _FOR_J _FOR_I
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        }
+      return;
+    case TMM_Algo::JIK:
+#pragma omp parallel for
+        _FOR_J {
+          _FOR_I _FOR_K
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        }
+      return;
+#undef _FOR_I
+#undef _FOR_J
+#undef _FOR_K
+  }
+}
+#endif
+
+#ifdef HAVE_CILK
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void matmul_cilk(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+    const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
+{
+  constexpr bool ccA = (cA && is_complex<T>::value) ;
+  constexpr bool ccB = (cB && is_complex<T>::value) ;
+  switch(tAlgo)
+  {
+//it's a bit of a shame, but these macros actually enchance readability IMO
+#define _FOR_I for(size_t i=0; i < nrows_op_a; i++)
+#define _FOR_J for(size_t j=0; j < ncolumns_op_a; j++)
+#define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
+#define _CILK_FOR_I cilk_for(size_t i=0; i < nrows_op_a; i++)
+#define _CILK_FOR_J cilk_for(size_t j=0; j < ncolumns_op_a; j++)
+#define _CILK_FOR_K cilk_for(size_t k=0; k < ncolumns_op_b; k++)
+    case TMM_Algo::IJK:
+        _CILK_FOR_I _FOR_J _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::JKI:
+        _CILK_FOR_J _FOR_K _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::KIJ:
+        _CILK_FOR_K _FOR_I _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::IKJ:
+        _CILK_FOR_I _FOR_K _FOR_J
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::KJI:
+        _CILK_FOR_K _FOR_J _FOR_I
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+    case TMM_Algo::JIK:
+        _CILK_FOR_J _FOR_I _FOR_K
+          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+      return;
+#undef _FOR_I
+#undef _FOR_J
+#undef _FOR_K
+#undef _CILK_FOR_I
+#undef _CILK_FOR_J
+#undef _CILK_FOR_K
+  }
+}
+#endif
+
+#ifdef HAVE_TBB
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void matmul_tbb(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+    const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b)
+{
+  constexpr bool ccA = (cA && is_complex<T>::value) ;
+  constexpr bool ccB = (cB && is_complex<T>::value) ;
+  switch(tAlgo)
+  {
+//it's a bit of a shame, but these macros actually enchance readability IMO
+#define _FOR_I for(size_t i=0; i < nrows_op_a; i++)
+#define _FOR_J for(size_t j=0; j < ncolumns_op_a; j++)
+#define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
+#define _TBB_FOR_I size_t(0), nrows_op_a,[&a,&b,&c,&nrows_op_a,&ncolumns_op_a,&ncolumns_op_b](size_t i)
+#define _TBB_FOR_J size_t(0), ncolumns_op_a,[&a,&b,&c,&nrows_op_a,&ncolumns_op_a,&ncolumns_op_b](size_t j)
+#define _TBB_FOR_K size_t(0), ncolumns_op_b,[&a,&b,&c,&nrows_op_a,&ncolumns_op_a,&ncolumns_op_b](size_t k)
+    case TMM_Algo::IJK:
+        parallelForElem( _TBB_FOR_I {
+          _FOR_J _FOR_K
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        } );
+      return;
+    case TMM_Algo::JKI:
+        parallelForElem( _TBB_FOR_J {
+          _FOR_K _FOR_I
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        } );
+    case TMM_Algo::KIJ:
+        parallelForElem( _TBB_FOR_K {
+          _FOR_I _FOR_J
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        } );
+    case TMM_Algo::IKJ:
+        parallelForElem( _TBB_FOR_I {
+          _FOR_K _FOR_J
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        } );
+      return;
+    case TMM_Algo::KJI:
+        parallelForElem( _TBB_FOR_K {
+          _FOR_J _FOR_I
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        } );
+      return;
+    case TMM_Algo::JIK:
+        parallelForElem( _TBB_FOR_J {
+          _FOR_I _FOR_K
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+        } );
+      return;
+#undef _FOR_I
+#undef _FOR_J
+#undef _FOR_K
+#undef _TBB_FOR_I
+#undef _TBB_FOR_J
+#undef _TBB_FOR_K
+  }
+}
+#endif
+
+template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
+  inline void dgemm_helper(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+    const size_t nrows_op_a, const size_t ncolumns_op_a, const size_t ncolumns_op_b,
+    const TThreading threading_model)
+{
+  switch(threading_model)
+  {
+    case T_Serial:
+      return matmul_serial<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+    case T_Std:
+      return matmul_stdthreads<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+#ifdef HAVE_PTHREADS
+    case T_Posix:
+      return matmul_pthreads<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+#endif
+#ifdef HAVE_OPENMP
+    case T_OpenMP:
+      return matmul_openmp<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+#endif
+#ifdef HAVE_CILK
+    case T_Cilk:
+      return matmul_cilk<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+#endif
+#ifdef HAVE_TBB
+    case T_TBB:
+      return matmul_tbb<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+#endif
+    case T_Undefined:
+    default:
+      return matmul_serial<T,tAlgo,tA,tB,cA,cB>(a,b,c,nrows_op_a,ncolumns_op_a,ncolumns_op_b);
+  }
+}
+
+//generic version of dgemm, C=op(A)*op(B)
+template<typename T>
+  void dgemm(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
       const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
       const size_t nrows_a, const size_t ncolumns_a,
       const size_t nrows_b, const size_t ncolumns_b,
@@ -90,31 +386,31 @@ template<typename T, bool isSquare>
         if(tA && tB) // KIJ
         {
           if(cA && cB)
-            return matmul_helper<T,TMM_Algo::KIJ,true,true,true,true,isSquare>(a,b,c,ncolumns_a,nrows_a,nrows_b);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,true,true>(a,b,c,ncolumns_a,nrows_a,nrows_b,threading_model);
           else if(cA && !cB)
-            return matmul_helper<T,TMM_Algo::KIJ,true,true,true,false,isSquare>(a,b,c,ncolumns_a,nrows_a,nrows_b);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,true,false>(a,b,c,ncolumns_a,nrows_a,nrows_b,threading_model);
           else if(!cA && cB)
-            return matmul_helper<T,TMM_Algo::KIJ,true,true,false,true,isSquare>(a,b,c,ncolumns_a,nrows_a,nrows_b);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,false,true>(a,b,c,ncolumns_a,nrows_a,nrows_b,threading_model);
           else //if((!cA) && (!cB))
-            return matmul_helper<T,TMM_Algo::KIJ,true,true,false,false,isSquare>(a,b,c,ncolumns_a,nrows_a,nrows_b);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,false,false>(a,b,c,ncolumns_a,nrows_a,nrows_b,threading_model);
         }
         else if (tA && !tB) // JIK
         {
           if(cA)
-            return matmul_helper<T,TMM_Algo::JIK,true,false,true,false,isSquare>(a,b,c,ncolumns_a,nrows_a,ncolumns_b);
+            return dgemm_helper<T,TMM_Algo::JIK,true,false,true,false>(a,b,c,ncolumns_a,nrows_a,ncolumns_b,threading_model);
           else
-            return matmul_helper<T,TMM_Algo::JIK,true,false,false,false,isSquare>(a,b,c,ncolumns_a,nrows_a,ncolumns_b);
+            return dgemm_helper<T,TMM_Algo::JIK,true,false,false,false>(a,b,c,ncolumns_a,nrows_a,ncolumns_b,threading_model);
         }
         else if(!tA && tB) // IKJ
         {
           if(cB)
-            return matmul_helper<T,TMM_Algo::IKJ,false,true,false,true,isSquare>(a,b,c,nrows_a,ncolumns_a,nrows_b);
+            return dgemm_helper<T,TMM_Algo::IKJ,false,true,false,true>(a,b,c,nrows_a,ncolumns_a,nrows_b,threading_model);
           else
-            return matmul_helper<T,TMM_Algo::IKJ,false,true,false,false,isSquare>(a,b,c,nrows_a,ncolumns_a,nrows_b);
+            return dgemm_helper<T,TMM_Algo::IKJ,false,true,false,false>(a,b,c,nrows_a,ncolumns_a,nrows_b,threading_model);
         }
         else //if((!tA) && (!tB)) // IJK
         {
-          return matmul_helper<T,TMM_Algo::IJK,false,false,false,false,isSquare>(a,b,c,nrows_a,ncolumns_a,ncolumns_b);
+          return dgemm_helper<T,TMM_Algo::IJK,false,false,false,false>(a,b,c,nrows_a,ncolumns_a,ncolumns_b,threading_model);
         }
       }
     case TMatrixStorage::ColumnMajor:
@@ -123,56 +419,37 @@ template<typename T, bool isSquare>
         //corresponing mappings: tA->!tA,tB->!tB, A<->B
         if(!tA && !tB) // KIJ
         {
-          return matmul_helper<T,TMM_Algo::IJK,true,true,false,false,isSquare>(b,a,c,ncolumns_b,nrows_b,nrows_a);
+          return dgemm_helper<T,TMM_Algo::IJK,true,true,false,false>(b,a,c,ncolumns_b,nrows_b,nrows_a,threading_model);
         }
         else if (!tB && tA) // JIK
         {
           if(cA)
-            return matmul_helper<T,TMM_Algo::JIK,true,false,false,true,isSquare>(b,a,c,ncolumns_b,nrows_b,ncolumns_a);
+            return dgemm_helper<T,TMM_Algo::JIK,true,false,false,true>(b,a,c,ncolumns_b,nrows_b,ncolumns_a,threading_model);
           else
-            return matmul_helper<T,TMM_Algo::JIK,true,false,false,false,isSquare>(b,a,c,ncolumns_b,nrows_b,ncolumns_a);
+            return dgemm_helper<T,TMM_Algo::JIK,true,false,false,false>(b,a,c,ncolumns_b,nrows_b,ncolumns_a,threading_model);
         }
         else if(tB && !tA) // IKJ
         {
           if(cB)
-            return matmul_helper<T,TMM_Algo::IKJ,false,true,true,false,isSquare>(b,a,c,nrows_b,ncolumns_b,nrows_a);
+            return dgemm_helper<T,TMM_Algo::IKJ,false,true,true,false>(b,a,c,nrows_b,ncolumns_b,nrows_a,threading_model);
           else
-            return matmul_helper<T,TMM_Algo::IKJ,false,true,false,false,isSquare>(b,a,c,nrows_b,ncolumns_b,nrows_a);
+            return dgemm_helper<T,TMM_Algo::IKJ,false,true,false,false>(b,a,c,nrows_b,ncolumns_b,nrows_a,threading_model);
         }
         else //if(tA && tB) // IJK
         {
           if(cA && cB)
-            return matmul_helper<T,TMM_Algo::KIJ,false,false,true,true,isSquare>(b,a,c,nrows_b,ncolumns_b,ncolumns_a);
+            return dgemm_helper<T,TMM_Algo::KIJ,false,false,true,true>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
           else if(cA && !cB)
-            return matmul_helper<T,TMM_Algo::KIJ,false,false,false,true,isSquare>(b,a,c,nrows_b,ncolumns_b,ncolumns_a);
+            return dgemm_helper<T,TMM_Algo::KIJ,false,false,false,true>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
           else if(!cA && cB)
-            return matmul_helper<T,TMM_Algo::KIJ,false,false,true,false,isSquare>(b,a,c,nrows_b,ncolumns_b,ncolumns_a);
+            return dgemm_helper<T,TMM_Algo::KIJ,false,false,true,false>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
           else //if((!cA) && (!cB))
-            return matmul_helper<T,TMM_Algo::KIJ,false,false,false,false,isSquare>(b,a,c,nrows_b,ncolumns_b,ncolumns_a);
+            return dgemm_helper<T,TMM_Algo::KIJ,false,false,false,false>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
         }
       }
   }
 
 }
-
-//generic version of dgemm, C=op(A)*op(B)
-template<typename T>
-  void dgemm(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
-      const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
-      const size_t nrows_a, const size_t ncolumns_a,
-      const size_t nrows_b, const size_t ncolumns_b,
-      const TThreading threading_model)
-{
-  const bool square = ( nrows_a == ncolumns_a && nrows_b == ncolumns_b );
-
-  if(square) {
-    return dgemm_helper<T,true>(stor,transA,transB,a,b,c,nrows_a,ncolumns_a,nrows_b,ncolumns_b,threading_model);
-  } else {
-    return dgemm_helper<T,false>(stor,transA,transB,a,b,c,nrows_a,ncolumns_a,nrows_b,ncolumns_b,threading_model);
-  }
-
-}
-
 
 //generic version of dgemm for square matrices
 template<typename T>

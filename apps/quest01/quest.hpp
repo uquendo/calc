@@ -32,6 +32,7 @@ enum TAlgo {
   A_ExtCppMTL,
   A_ExtCppArmadillo,
   A_ExtCBLAS,
+  A_ExtFortranBLAS,
   A_Undefined
 };
 
@@ -51,7 +52,7 @@ static const OptName<TAlgo> _algo_opt_names[] = {
   { "numeric-fortran-internal", "num-f-int", A_NumFortranInternal },
   //TODO: clean up macro hell 
 #ifdef HAVE_BOOST_UBLAS
-  { "contrib-cpp-boost.ublas", "ext-cpp-boost", A_ExtCppBoost },
+  { "contrib-cpp-boost-ublas", "ext-cpp-boost", A_ExtCppBoost },
 #endif
 #ifdef HAVE_EIGEN
   { "contrib-cpp-eigen", "ext-cpp-eigen", A_ExtCppEigen },
@@ -64,6 +65,7 @@ static const OptName<TAlgo> _algo_opt_names[] = {
 #endif
 #ifdef HAVE_BLAS
   { "contrib-c-blas", "ext-c-blas", A_ExtCBLAS },
+  { "contrib-fortran-blas", "ext-f-blas", A_ExtFortranBLAS },
 #endif
   { nullptr, nullptr, A_Undefined }
 };

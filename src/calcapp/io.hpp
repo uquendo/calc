@@ -126,7 +126,7 @@ namespace IOUtil {
     template <typename T> inline bool printNumber(char * const str, const size_t len, const T& n, const int digits = 6)
     {
       static_assert(std::is_arithmetic<T>::value, "Number required. No support for any other arrays yet.");
-      return ( len > ::snprintf(str, len, getNumFmt<T>(), digits, n) );
+      return ( len > size_t(::snprintf(str, len, getNumFmt<T>(), digits, n)) );
     }
 #ifdef HAVE_QUADMATH
     template <> inline bool printNumber(char * const str, const size_t len, const numeric::quad& n, const int digits)

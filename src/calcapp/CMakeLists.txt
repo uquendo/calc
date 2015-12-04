@@ -20,6 +20,7 @@ set(calcapp_HEADERS
     log.hpp
     options.hpp
     progress.hpp
+    parallel_progress.hpp
     system.hpp
     math/matrix.hpp
     math/matrix_impl.hpp

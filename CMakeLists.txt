@@ -6,7 +6,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 include(CMakeDependentOption)
 include(FeatureSummary)
 include(GetGitRevisionDescription)
+#standard compiler flag checking routines...
+include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
+#...and wrapper with some fortran support
+include(SetCompileFlag)
 
 project(numeric C CXX Fortran)
 
@@ -26,8 +30,10 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Release" "Debug" "RelWithD
 #override options from environment variables
 if("$ENV{BUILD_VARIANT}" STREQUAL "vanilla")
   set(ENV_BUILD_VANILLA ON)
+  set(ENV_BUILD_QUAD OFF)
 else()
   set(ENV_BUILD_VANILLA OFF)
+  set(ENV_BUILD_QUAD ON)
 endif()
 
 if("$ENV{BUILD_VARIANT}" STREQUAL "full")
@@ -72,9 +78,11 @@ endif()
 
 #build options
 option(BUILD_APPS           "build quest apps"         ON )
+option(BUILD_APPS_C         "build C variants of functions for quest apps"         ON )
+option(BUILD_APPS_FORTRAN   "build Fortran variants of functions for quest apps"         ON )
 option(BUILD_THREADING      "build code that uses multithreading"  ON)
 option(BUILD_FASTMATH       "enable non-IEEE754 compliant fp compiler optimisations(in Release mode)"   ON)
-option(BUILD_QUAD           "enable quad precision(128 bit) support"    ON)
+option(BUILD_QUAD           "enable quad precision(128 bit) support"    ${ENV_BUILD_QUAD})
 option(BUILD_VANILLA        "build without any external dependencies"      ${ENV_BUILD_VANILLA} )
 #option(BUILD_GPGPU         "build with GPGPU libraries"     OFF)
 
@@ -108,32 +116,58 @@ cmake_dependent_option(USE_ARMADILLO      "enable Armadillo library support" ${E
 #cmake_dependent_option(USE_CLBLAS      "enable AMD clBLAS OpenCL library support" OFF "NOT BUILD_VANILLA" OFF)
 
 #generic compiler options
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 
 # setup tooling for LLVM
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+#fortranism
+if(NOT CMAKE_Fortran_COMPILER_SUPPORTS_F90)
+  message(FATAL_ERROR "Fortran compiler ${CMAKE_Fortran_COMPILER} does not support F90")
+endif()
+
+#more fortranisms
+include(SetFortranFlags)
+
+#c[++]
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+
 if(MSVC)
-  add_compile_options(/Wall)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Wall")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Ox /GL")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /GL")
 else()
-  #compiling with C++11 dialect is slightly more painful for cmake versions older than 3.1
+  #compiling with C[++]11 dialect is slightly more painful for cmake versions older than 3.1
   if("${CMAKE_VERSION}" VERSION_LESS "3.1")
     CHECK_CXX_COMPILER_FLAG("-std=gnu++11" COMPILER_SUPPORTS_GNUXX11)
     CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
     CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
     if(COMPILER_SUPPORTS_GNUXX11)
-      add_compile_options(-std=gnu++11)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
     elseif(COMPILER_SUPPORTS_CXX11)
-      add_compile_options(-std=c++11)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     elseif(COMPILER_SUPPORTS_CXX0X)
-      add_compile_options(-std=c++0x)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
     else()
       message(FATAL_ERROR "Compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
     endif()
+    CHECK_C_COMPILER_FLAG("-std=gnu11" COMPILER_SUPPORTS_GNU11)
+    CHECK_C_COMPILER_FLAG("-std=c11" COMPILER_SUPPORTS_C11)
+    CHECK_C_COMPILER_FLAG("-std=c1x" COMPILER_SUPPORTS_C1X)
+    if(COMPILER_SUPPORTS_GNU11)
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
+    elseif(COMPILER_SUPPORTS_C11)
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+    elseif(COMPILER_SUPPORTS_C0X)
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c1x")
+    else()
+      message(FATAL_ERROR "Compiler ${CMAKE_C_COMPILER} has no C11 support.")
+    endif()
   endif()
+
   if(NOT BUILD_FASTMATH)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
@@ -147,8 +181,8 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto -fuse-linker-plugin -ffat-lto-objects")
   endif()
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel ")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel ")
   endif()
 endif()
 
@@ -255,6 +289,10 @@ endif()
 if (USE_OPENMP)
   find_package(OpenMP)
   if(OPENMP_FOUND)
+    find_package(OpenMP_Fortran)
+    if(OpenMP_Fortran_FOUND)
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
+    endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(HAVE_OPENMP YES)
@@ -291,6 +329,10 @@ if (USE_CILK)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Cilk_CXX_FLAGS}")
     set(HAVE_CILK YES)
     set(INFO_HAVE_OPTIONS "${INFO_HAVE_OPTIONS} CILK")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+      add_compile_options(-cilk-serialize)
+      message("... icpc 16.0.0.109 Build 20150815 crashes during cilk processing, cilk temporary disabled for intel compiler")
+    endif()
   else()
     message("-- Could NOT find Intel Cilk Plus extension")
   endif()
@@ -421,6 +463,13 @@ feature_summary(WHAT ALL)
 #feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES VAR INFO_CMAKE_FEATURE_SUMMARY)
 
 # final compiler setup
+
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}" CACHE STRING "" FORCE )
+set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE}" CACHE STRING "" FORCE )
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "" FORCE )
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" CACHE STRING "" FORCE )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE )
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" CACHE STRING "" FORCE )
 
 set (numeric_LIBS ${common_LIBS})
 set (calcapp_LIBS ${common_LIBS} ${calcapp_LIBS})

@@ -235,7 +235,14 @@ namespace Calc {
     {
       if( _threading_opt_names[i].type == m_pAlgoParameters->Topt.type )
       {
-        s.append(" (").append(_threading_opt_names[i].name).append(" variant)");
+        s.append(" (").append(_threading_opt_names[i].name).append(" variant");
+        if( m_pAlgoParameters->Topt.type != numeric::T_Serial )
+        {
+          s.append(" with ");
+          s.append(std::to_string(m_pAlgoParameters->Topt.num > 0 ? m_pAlgoParameters->Topt.num : numeric::hardware_concurrency()));
+          s.append(" threads");
+        }
+        s.append(")");
         break;
       }
     }

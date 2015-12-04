@@ -1,5 +1,6 @@
 set(numeric_SOURCES
     blas.cpp
+    parallel.cpp
     )
 
 set(numeric_HEADERS
@@ -7,6 +8,7 @@ set(numeric_HEADERS
     blas_impl.hpp
     cache.hpp
     parallel.hpp
+    parallel_tbb.hpp
     real.hpp
     complex.hpp
     expand_traits.hpp

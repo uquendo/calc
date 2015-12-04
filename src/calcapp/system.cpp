@@ -2,6 +2,8 @@
 #include "calcapp/exception.hpp"
 #include "calcapp/log.hpp"
 
+#include "numeric/parallel.hpp"
+
 #include <cctype>
 #include <iostream>
 #include <string>
@@ -34,7 +36,10 @@
 
 namespace Calc {
 
-std::string SysUtil::getMemStats(){
+namespace SysUtil {
+
+std::string getMemStats()
+{
   std::string r="";
 #ifdef HAVE_TCMALLOC
   char buf[LINE_BUF_SIZE];
@@ -44,7 +49,7 @@ std::string SysUtil::getMemStats(){
   return r;
 }
 
-bool SysUtil::getFreeDiskMB(double *SizeMB, std::string Name)
+bool getFreeDiskMB(double *SizeMB, std::string Name)
 {
 #ifdef HAVE_BOOST
   boost::filesystem::path p(Name);
@@ -58,7 +63,7 @@ bool SysUtil::getFreeDiskMB(double *SizeMB, std::string Name)
   return false;
 }
 
-bool SysUtil::isEnoughDiskSpace(const std::string  fileName, double minMB, double * curMB)
+bool isEnoughDiskSpace(const std::string  fileName, double minMB, double * curMB)
 {
   double mb=0.0;
   if(!getFreeDiskMB(&mb, fileName))
@@ -68,18 +73,18 @@ bool SysUtil::isEnoughDiskSpace(const std::string  fileName, double minMB, doubl
   return ( mb >= minMB );
 }
 
-void SysUtil::throwOnOutOfDiskSpace(TFileType fileType, const std::string fileName, double minMB)
+void throwOnOutOfDiskSpace(TFileType fileType, const std::string fileName, double minMB)
 {
   double mb;
   if ( ! isEnoughDiskSpace(fileName, minMB, &mb) )
     throw OutOfDiskSpaceError("No enough free space to write file", fileType, fileName.c_str(), (unsigned long) mb, (unsigned long) minMB);
 }
 
-unsigned SysUtil::getCpuCoresCount() {
-  return (int) std::thread::hardware_concurrency();
+unsigned getCpuCoresCount() {
+  return (unsigned) numeric::hardware_concurrency();
 }
 
-double SysUtil::getCurTimeSec()
+double getCurTimeSec()
 {
   double r = 0.0;
   r = std::chrono::duration_cast< std::chrono::milliseconds > (
@@ -110,7 +115,8 @@ inline BOOL IsWow64()
 
 #endif
 
-std::string SysUtil::getOSVersion() {
+std::string getOSVersion()
+{
 #ifdef _WIN32
    OSVERSIONINFOEX osvi;
    BOOL bOsVersionInfoEx;
@@ -200,7 +206,8 @@ std::string SysUtil::getOSVersion() {
 #endif
 }
 
-std::string SysUtil::getCpuSpec() {
+std::string getCpuSpec()
+{
   std::string r="";
 #if __linux
   try{
@@ -227,7 +234,8 @@ std::string SysUtil::getCpuSpec() {
 #endif
 }
 
-std::string SysUtil::getBuildOptions() {
+std::string getBuildOptions()
+{
   //here goes macro frenzy
   std::string r = "";
   r+="build toolchain : " CMAKE_CXX_COMPILER_ID " " CMAKE_CXX_COMPILER_VERSION "\n";
@@ -260,13 +268,15 @@ std::string SysUtil::getBuildOptions() {
   return r;
 }
 
-std::string SysUtil::getCurrentDirectory() 
+std::string getCurrentDirectory()
 {
   std::string r = "";
 #ifdef HAVE_BOOST
   r = boost::filesystem::absolute(boost::filesystem::path(".")).string();
 #endif
   return r;
+}
+
 }
 
 }

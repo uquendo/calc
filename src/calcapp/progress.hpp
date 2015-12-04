@@ -15,12 +15,12 @@ namespace Calc {
 class ProgressBar {
 public:
   virtual ~ProgressBar() {};
-  virtual void setProgressRange(int lower, int upper) = 0; 
+  virtual void setProgressRange(int lower, int upper) = 0;
   virtual void setProgress(int pos) = 0;
-  virtual void setProgressStep(int step) = 0; 
-  virtual void setTitle(const char * title) = 0; 
+  virtual void setProgressStep(int step) = 0;
+  virtual void setTitle(const char * title) = 0;
   inline void setTitle(const std::string& title) { setTitle(title.c_str()); }
-  virtual void clearTitle() = 0; 
+  virtual void clearTitle() = 0;
   virtual void stepIt() = 0; // advance the progress by one step
 
   void initProgressParams(long *Step, long* Sum);
@@ -44,7 +44,7 @@ public:
   inline void setStatusText(const std::string& text) { setStatusText(text.c_str()); }
   virtual void clearStatusText() = 0;
 
-  // Logging 
+  // Logging
   virtual Logger& log() = 0;
 };
 
