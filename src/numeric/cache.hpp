@@ -96,6 +96,7 @@ namespace numeric {
 
   static constexpr inline std::size_t default_cache_line_size()
   {
+//  return ( DEFAULT_CACHE_LINE_SIZE > alignof(std::max_align_t) ? DEFAULT_CACHE_LINE_SIZE : alignof(std::max_align_t) );
     return DEFAULT_CACHE_LINE_SIZE ;
   }
 
@@ -137,11 +138,86 @@ namespace numeric {
       return default_cache_line_size();
   }
 
+  inline std::size_t gcd_size(size_t a, size_t b) noexcept
+  {
+    size_t c;
+    while( a != 0 )
+    {
+      c = a;
+      a = b % a;
+      b = c;
+    }
+    return b;
+  }
+
+  inline std::size_t lcm_size(size_t a, size_t b) noexcept
+  {
+    size_t c = gcd_size(a,b);
+    return (a/c)*(b/c)*c;
+  }
+
   inline void* cache_aligned_malloc(std::size_t __size, void** __buf) noexcept
   {
     return aligned_malloc(__size, cache_line_size(), __buf);
   }
 
+  template<typename T> static constexpr size_t getDefaultAlignment()
+  {
+    return ( numeric::default_cache_line_size() > std::alignment_of<T>::value ? numeric::default_cache_line_size() : std::alignment_of<T>::value );
+  }
+
+  template<typename T> static size_t getCacheLineAlignment()
+  {
+    size_t line_size = numeric::cache_line_size();
+    if(line_size <= getDefaultAlignment<T>())
+      return getDefaultAlignment<T>();
+    //assuring that our alignment is multiple of default one, so that we can safely assume all data aligned to default one
+    if( ( line_size % getDefaultAlignment<T>() ) != 0)
+    {
+      //it's not very healthy situation btw
+      line_size = numeric::lcm_size(line_size, getDefaultAlignment<T>());
+    }
+    return line_size ;
+  }
+
+  namespace aligned {
+
+    template<typename T, std::size_t Alignment = getDefaultAlignment<T>()> constexpr size_t pack_size()
+    {
+      static_assert( Alignment % sizeof(T) == 0, "Alignment should be multiple of type size");
+      return ( Alignment == 0 ? 1 : Alignment/sizeof(T) );
+    }
+
+/*
+   //we're doomed! usage of alignas in typedef was forbidden in initial proposal from '05
+   //actual standard for C++11 avoids direct discussion of this issue, so some compilers(GNU) support(?) it, some(Clang, Intel) don't
+
+    template<typename T, std::size_t Alignment> using
+      pack alignas(Alignment) = T[pack_size<T,Alignment>()];
+
+    template<typename T, std::size_t Alignment> using
+      type alignas(Alignment) = T ;
+
+    template<typename T, int Alignment> using
+      ptr = type<T,Alignment> * ;
+*/
+    //therefore we're stuck with struct
+    template<typename T, std::size_t Alignment = getDefaultAlignment<T>()>
+      struct raw_pack_storage {
+        typedef struct {
+            alignas(Alignment) unsigned char data[sizeof(T)*pack_size<T,Alignment>()];
+        } type;
+        static constexpr size_t size = pack_size<T,Alignment>();
+    };
+
+    //can hold pack_size() of T's
+    template<typename T, std::size_t Alignment = getDefaultAlignment<T>()> using
+      raw_pack = typename raw_pack_storage<T,Alignment>::type;
+
+    template<typename T, std::size_t Alignment = getDefaultAlignment<T>()> using
+      raw_pack_ptr = raw_pack<T,Alignment>*;
+
+  }
 }
 
 #endif /* _CACHE_HPP */

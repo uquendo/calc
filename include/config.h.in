@@ -10,6 +10,8 @@
 #cmakedefine RESTRICT_KEYWORD @RESTRICT_KEYWORD@
 #cmakedefine HAVE_FORCEINLINE
 #cmakedefine FORCEINLINE_KEYWORD @FORCEINLINE_KEYWORD@
+#cmakedefine HAVE_ASSUME_ALIGNED
+#cmakedefine ASSUME_ALIGNED_KEYWORD @ASSUME_ALIGNED_KEYWORD@
 #cmakedefine DEFAULT_CACHE_LINE_SIZE @DEFAULT_CACHE_LINE_SIZE@
 
 //build info strings
@@ -90,24 +92,40 @@
 #endif
 
 #ifdef HAVE_MPREAL
-#define MPREAL_SELECTOR(Y) mpfr_t*: Y,
+# define MPREAL_SELECTOR(Y) mpfr_t*: Y,
 #else
-#define MPREAL_SELECTOR(Y)
+# define MPREAL_SELECTOR(Y)
 #endif
 
 #ifndef DEFAULT_CACHE_LINE_SIZE
-#define DEFAULT_CACHE_LINE_SIZE 64
+# define DEFAULT_CACHE_LINE_SIZE 64
+#endif
+
+#ifndef __ASSUME_ALIGNED
+# if defined( __clang__ )
+#   if __clang_major__ >= 3 && __clang_minor__ >= 8
+#     define __ASSUME_ALIGNED( X , Y ) (X) = __builtin_assume_aligned( (X) , (Y) )
+#   else
+#     define __ASSUME_ALIGNED( X, Y )
+#   endif
+# elif defined(__ICC) || defined(__INTEL_COMPILER)
+#   define __ASSUME_ALIGNED( X , Y ) __assume_aligned( (X) , (Y) )
+# elif defined( __GNUC__ )
+#   define __ASSUME_ALIGNED( X , Y ) (X) = __builtin_assume_aligned( (X) , (Y) )
+# else
+#   define __ASSUME_ALIGNED( X , Y )
+# endif
 #endif
 
 // setting feature test macros for libc
 #if defined( __GNUC__ ) || defined( __clang__ )
 //#define _ISOC11_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#define _XOPEN_SOURCE 700
+# define _POSIX_C_SOURCE 200809L
+# define _XOPEN_SOURCE 700
 #endif
 
 #ifdef _WIN32
-#include "stdafx.h"
+# include "stdafx.h"
 #endif
 
 #endif /* _CONFIG_H */

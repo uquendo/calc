@@ -46,15 +46,15 @@ addons:
       - liblapacke-dev
       - libeigen3-dev
       - libarmadillo-dev
-      - g++-4.9
-      - gcc-4.9
-      - gfortran-4.9
+      - g++
+      - gcc
+      - gfortran
 #      - libtcmalloc-minimal4
 #      - mtl
 
 install:
-  - if [ "${CC}" = "gcc" ]; then export CXX="g++-4.9" CC="gcc-4.9" FC="gfortran-4.9"; fi
-  - if [ "${CC}" = "clang" ]; then export CXX="clang++" CC="clang" FC="gfortran-4.9"; fi
+  - if [ "${CC}" = "gcc" ]; then export CXX="g++" CC="gcc" FC="gfortran"; fi
+  - if [ "${CC}" = "clang" ]; then export CXX="clang++" CC="clang" FC="gfortran"; fi
 #  - if [ "${BUILD_WITH}" = "intel" ]; then ./contrib/setup_intel_toolchain.sh; export CXX="icpc" CC="icc"; fi
 
 before_script:
