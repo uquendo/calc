@@ -120,11 +120,12 @@ namespace matmul{
     std::unique_ptr<MatrixBase> a;
     std::unique_ptr<MatrixBase> b;
     std::unique_ptr<MatrixBase> c;
+    size_t rows_C;
+    size_t columns_C;
     bool transposeA;
     bool transposeB;
     numeric::TMatrixStorage storage;
-    size_t nrows_C;
-    size_t ncolumns_C;
+    bool initCsize();
   };
 }
 
@@ -169,7 +170,7 @@ public:
     virtual void readInput() override;
     virtual void writeOutput() override;
     virtual void run() override;
-    const std::string Summary() const;
+    std::string Summary() const;
 private:
     InputOptions m_input;
     OutputOptions m_output;

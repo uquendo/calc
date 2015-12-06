@@ -173,12 +173,30 @@ namespace Calc {
     return true;
   }
 
+  bool matmul::AlgoParameters::initCsize()
+  {
+    bool canMultiply = false;
+    if(transposeB) {
+      canMultiply = ( a->getColumnsNum() == b->getColumnsNum() );
+      rows_C = a->getRowsNum();
+      columns_C = b->getRowsNum();
+    } else if(transposeA) {
+      canMultiply = ( a->getRowsNum() == b->getRowsNum() );
+      rows_C = a->getColumnsNum();
+      columns_C = b->getColumnsNum();
+    } else {
+      canMultiply = ( a->getColumnsNum() == b->getRowsNum() );
+      rows_C = a->getRowsNum();
+      columns_C = b->getColumnsNum();
+    }
+    return canMultiply;
+  }
 
   QuestApp::QuestApp(const QuestAppOptions& opt)
     : CliApp(dynamic_cast<const CliAppOptions&>(opt))
     , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
     , m_pAlgoParameters(new matmul::AlgoParameters({m_threading,m_precision,m_algo,nullptr,nullptr,nullptr
-          ,false,false,numeric::TMatrixStorage::RowMajor,0,0}))
+          ,0,0,false,false,numeric::TMatrixStorage::RowMajor}))
     , m_pfA(new InFileText(m_input.filename_A,m_input.filetype,true))
     , m_pfB(new InFileText(m_input.filename_B,m_input.filetype,true))
     , m_pfC(new OutFileText(m_output.filename,m_output.filetype,false))
@@ -189,7 +207,7 @@ namespace Calc {
     : CliApp(dynamic_cast<const CliAppOptions&>(opt), pc)
     , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
     , m_pAlgoParameters(new matmul::AlgoParameters({m_threading,m_precision,m_algo,nullptr,nullptr,nullptr
-          ,false,false,numeric::TMatrixStorage::RowMajor,0,0}))
+          ,0,0,false,false,numeric::TMatrixStorage::RowMajor}))
     , m_pfA(new InFileText(m_input.filename_A,m_input.filetype,true))
     , m_pfB(new InFileText(m_input.filename_B,m_input.filetype,true))
     , m_pfC(new OutFileText(m_output.filename,m_output.filetype,false))
@@ -213,13 +231,13 @@ namespace Calc {
     m_output.filetype = _output_opt_names[0].type; m_output.filename = "result";
     m_algo.type = A_NumCppSimple;
     m_pAlgoParameters.reset(new matmul::AlgoParameters({m_threading,m_precision,m_algo,nullptr,nullptr,nullptr
-          ,false,false,numeric::TMatrixStorage::RowMajor,0,0}));
+          ,0,0,false,false,numeric::TMatrixStorage::RowMajor}));
     m_pfA.reset(new InFileText(m_input.filename_A,m_input.filetype,true));
     m_pfB.reset(new InFileText(m_input.filename_B,m_input.filetype,true));
     m_pfC.reset(new OutFileText(m_output.filename,m_output.filetype,false));
   }
 
-  const std::string QuestApp::Summary() const
+  std::string QuestApp::Summary() const
   {
     std::string s;
     //TODO: rewrite using getNameByType(...) helpers
@@ -302,33 +320,20 @@ namespace Calc {
     m_pAlgoParameters->b.reset(NewMatrix(m_pAlgoParameters->Popt.type,
           m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage));
     log().fdebug("found input matrices: A ( %zu x %zu ), B ( %zu x %zu )",
-        m_pAlgoParameters->a->m_nrows, m_pAlgoParameters->a->m_ncolumns, m_pAlgoParameters->b->m_nrows,m_pAlgoParameters->b->m_ncolumns);
+        m_pAlgoParameters->a->getRowsNum(), m_pAlgoParameters->a->getColumnsNum(),
+        m_pAlgoParameters->b->getRowsNum(),m_pAlgoParameters->b->getColumnsNum());
     //sanity check(input can be used by selected algorithm)
     log().debug("sanity check of matrix sizes...");
     //check that sizes are valid
-    bool canMultiply = false;
-    if(m_pAlgoParameters->transposeB) {
-      canMultiply = ( m_pAlgoParameters->a->getColumnsNum() == m_pAlgoParameters->b->getColumnsNum() );
-      m_pAlgoParameters->nrows_C = m_pAlgoParameters->a->getRowsNum();
-      m_pAlgoParameters->ncolumns_C = m_pAlgoParameters->b->getRowsNum();
-    } else if(m_pAlgoParameters->transposeA) {
-      canMultiply = ( m_pAlgoParameters->a->getRowsNum() == m_pAlgoParameters->b->getRowsNum() );
-      m_pAlgoParameters->nrows_C = m_pAlgoParameters->a->getColumnsNum();
-      m_pAlgoParameters->ncolumns_C = m_pAlgoParameters->b->getColumnsNum();
-    } else {
-      canMultiply = ( m_pAlgoParameters->a->getColumnsNum() == m_pAlgoParameters->b->getRowsNum() );
-      m_pAlgoParameters->nrows_C = m_pAlgoParameters->a->getRowsNum();
-      m_pAlgoParameters->ncolumns_C = m_pAlgoParameters->b->getColumnsNum();
-    }
-    if(!canMultiply) {
+    if(!m_pAlgoParameters->initCsize()) {
       throw FileFormatValueBoundsError("Invalid matrix sizes in files, can't multiply them with selected algorithm",
           m_pfA->fileType(), m_pfA->fileName().c_str(), m_pfA->lineNum());
     }
     //initialize output structure[s] and possibly file[s]
     //create output matrix
-    log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C);
+    log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->rows_C, m_pAlgoParameters->columns_C);
     m_pAlgoParameters->c.reset(NewMatrix(m_pAlgoParameters->Popt.type,
-          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage));
+          m_pAlgoParameters->rows_C, m_pAlgoParameters->columns_C, true, m_pAlgoParameters->storage));
     //read input data
     log().debug("reading input matrices...");
     readInput();

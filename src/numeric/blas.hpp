@@ -17,7 +17,7 @@ enum class TMatrixTranspose : char { No='N', Transpose='T', Conjugate='C' };
 enum class TMM_Algo : int { IJK=0, JKI, KIJ, IKJ, KJI, JIK };
 
 //generic version of dgemm, C=op(A)*op(B)
-template<typename T>
+template<typename T, typename S=T>
   void dgemm(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
       const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
       const size_t nrows_a, const size_t ncolumns_a,
@@ -25,7 +25,7 @@ template<typename T>
       const TThreading threading_model=T_Serial);
 
 //generic version of dgemm for square matrices
-template<typename T>
+template<typename T, typename S=T>
   void dgemm(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
     const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
     const size_t sz,
