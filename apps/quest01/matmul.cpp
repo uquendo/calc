@@ -1,4 +1,6 @@
 #include "matmul.hpp"
+#include <valarray>
+#include <numeric>
 
 namespace Calc
 {
@@ -56,7 +58,7 @@ namespace Calc
       template<typename T> inline void perform(const AlgoParameters& p)
       {
         numeric::dgemm<T>(numeric::TMatrixStorage::RowMajor, numeric::TMatrixTranspose::No, numeric::TMatrixTranspose::No,
-            p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(), p.a->m_nrows, p.a->m_ncolumns, p.b->m_nrows, p.b->m_ncolumns, p.Topt.type);
+            p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(), p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
       }
     };
 
@@ -66,9 +68,67 @@ namespace Calc
       template<typename T> void perform(const AlgoParameters& p)
       {
         numeric::dgemm<T>(numeric::TMatrixStorage::RowMajor, numeric::TMatrixTranspose::No, numeric::TMatrixTranspose::Transpose,
-          p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(), p.a->m_nrows, p.a->m_ncolumns, p.b->m_nrows, p.b->m_ncolumns, p.Topt.type);
+          p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(), p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
       }
     };
+
+    //simple c++ version for square matrices in row major order using std::valarray
+    struct numeric_cpp_valarray : numeric::MPFuncBase<numeric_cpp_valarray,AlgoParameters>
+    {
+      template<typename T> inline void perform(const AlgoParameters& p)
+      {
+        //warming up
+        const size_t rows = p.a->getRowsNum();
+        const size_t columns = p.b->getColumnsNum();
+        const size_t stride = p.a->getColumnsNum();
+        const ValArrayMatrix<T>* const a = dynamic_cast<ValArrayMatrix<T>*>(p.a.get());
+        const ValArrayMatrix<T>* const b = dynamic_cast<ValArrayMatrix<T>*>(p.b.get());
+        ValArrayMatrix<T>* const c = dynamic_cast<ValArrayMatrix<T>*>(p.c.get());
+        if(a == nullptr || b == nullptr || c == nullptr)
+          throw Calc::ParameterError("Valarray algo internal error");
+        const std::valarray<T>& A = a->getValArray();
+        const std::valarray<T>& B = b->getValArray();
+        std::valarray<T>& C = c->getValArray();
+        //actual run
+        for(size_t i = 0; i < rows; i++)
+          for(size_t j = 0; j < stride; j++)
+          {
+            C[std::slice(i*columns,columns,1)] += A[i*stride+j] * B[std::slice(j*columns,columns,1)];
+          }
+      }
+    };
+
+    //simple c++ version for square matrices in row major order with second matrix transposed using std::valarray
+    struct numeric_cpp_valarray_transpose : numeric::MPFuncBase<numeric_cpp_valarray_transpose,AlgoParameters>
+    {
+      template<typename T> inline void perform(const AlgoParameters& p)
+      {
+        //warming up
+        const size_t rows = p.a->getRowsNum();
+        const size_t columns = p.b->getColumnsNum();
+        const size_t stride = p.a->getColumnsNum();
+        const ValArrayMatrix<T>* const a = dynamic_cast<ValArrayMatrix<T>*>(p.a.get());
+        const ValArrayMatrix<T>* const b = dynamic_cast<ValArrayMatrix<T>*>(p.b.get());
+        ValArrayMatrix<T>* const c = dynamic_cast<ValArrayMatrix<T>*>(p.c.get());
+        if(a == nullptr || b == nullptr || c == nullptr)
+          throw Calc::ParameterError("Valarray algo internal error");
+        const std::valarray<T>& A = a->getValArray();
+        const std::valarray<T>& B = b->getValArray();
+        std::valarray<T>& C = c->getValArray();
+        //actual run
+        for(size_t i = 0; i < rows; i++)
+          for(size_t k = 0; k < columns; k++)
+          {
+            C[i*columns+k]=std::inner_product(&A[i*stride],&A[(i+1)*stride],&B[k*stride],T(0.0));
+            //slice_array helper lack reference semantics which makes slices almost useless here
+            //see f.e. "Fixing valarray for real world use" ( http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2000/n1246.ps )
+            //std::valarray<T> tmp = A[std::slice(i*stride, stride, 1)];
+            //tmp *= B[std::slice(i*stride, stride, 1)];
+            //C[i*columns+k] = std::valarray<T>( tmp ).sum();
+          }
+      }
+    };
+
 
     //strassen c++ version for matrices in row major order
     struct numeric_cpp_strassen : numeric::MPFuncBase<numeric_cpp_strassen,AlgoParameters>
@@ -187,6 +247,10 @@ namespace Calc
     //dispatcher
     void perform(const AlgoParameters& parameters, Logger& log)
     {
+      if(parameters.Aopt.type == A_NumCppValarray || parameters.Aopt.type == A_NumCppValarrayTranspose)
+      {
+
+      }
       numeric::ParallelScheduler __ps(parameters.Topt.type,parameters.Topt.num);
       ExecTimeMeter __etm(log, "matmul::perform");
 //      PERF_METER(log, "matmul::perform");
@@ -208,6 +272,10 @@ namespace Calc
           return numeric_cpp_simple()(parameters.Popt.type, parameters);
         case A_NumCppSimpleTranspose:
           return numeric_cpp_simple_transpose()(parameters.Popt.type, parameters);
+        case A_NumCppValarray:
+          return numeric_cpp_valarray()(parameters.Popt.type, parameters);
+        case A_NumCppValarrayTranspose:
+          return numeric_cpp_valarray_transpose()(parameters.Popt.type, parameters);
         case A_NumCppStrassen:
 //          return numeric_cpp_strassen()(parameters.Popt.type, parameters);
           throw Calc::ParameterError("Algorithm is not implemented");
@@ -249,7 +317,6 @@ namespace Calc
         case A_Undefined:
         default:
           throw Calc::ParameterError("Algorithm is not implemented");
-
       }
     }
   }

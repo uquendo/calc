@@ -33,6 +33,10 @@ namespace Calc {
     struct numeric_cpp_simple;
     //simple c++ version for square matrices in row major order with second matrix transposed
     struct numeric_cpp_simple_transpose;
+    //simple c++ version for square matrices in row major order using std::valarray
+    struct numeric_cpp_valarray;
+    //simple c++ version for square matrices in row major order with second matrix transposed using std::valarray
+    struct numeric_cpp_valarray_transpose;
     //strassen c++ version for matrices in row major order
     struct numeric_cpp_strassen;
 

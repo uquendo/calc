@@ -182,9 +182,12 @@ else()
 #    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fopt-info")
   endif()
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel ")
-#    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -qopt-report=5 -qopt-report-phase=cg,loop,openmp,vec -qopt-report-routine=matmul,dgemm,perform  -qopt-report-file=report.lst")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ipo -restrict -xHost -static-intel ")
+#    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -qopt-report=5 -qopt-report-phase=cg,loop,vec -qopt-report-routine=dgemm  -qopt-report-file=report.lst")
+  endif()
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+#    add_compile_options(-flto -emit-llvm)
   endif()
 endif()
 
@@ -260,6 +263,8 @@ if(BUILD_FASTMATH)
           add_compile_options(-fast) # -fast implies -static which we don't want to appear on the linker commandline
           set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -no-prec-div -fp-model fast=2")
           set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -no-prec-div -fp-model fast=2")
+#          set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -parallel") # enables -qopt-matmul which is dirty cheating
+#          set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -parallel") # enables -qopt-matmul which is dirty cheating
 #          set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fast -fpie -pie")
 #          set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fast -fpie -pie")
         else()

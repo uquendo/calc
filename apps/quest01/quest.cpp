@@ -297,12 +297,13 @@ namespace Calc {
     }
     //create input matrices
     log().debug("creating input matrices...");
+    const bool useValArray =  m_pAlgoParameters->Aopt.type == A_NumCppValarray || m_pAlgoParameters->Aopt.type == A_NumCppValarrayTranspose;
     m_pAlgoParameters->a.reset(NewMatrix(m_pAlgoParameters->Popt.type,
-          m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage));
+          m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage, useValArray));
     m_pAlgoParameters->b.reset(NewMatrix(m_pAlgoParameters->Popt.type,
-          m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage));
+          m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage, useValArray));
     log().fdebug("found input matrices: A ( %zu x %zu ), B ( %zu x %zu )",
-        m_pAlgoParameters->a->m_nrows, m_pAlgoParameters->a->m_ncolumns, m_pAlgoParameters->b->m_nrows,m_pAlgoParameters->b->m_ncolumns);
+        m_pAlgoParameters->a->getRowsNum(), m_pAlgoParameters->a->getColumnsNum(), m_pAlgoParameters->b->getRowsNum(),m_pAlgoParameters->b->getColumnsNum());
     //sanity check(input can be used by selected algorithm)
     log().debug("sanity check of matrix sizes...");
     //check that sizes are valid
@@ -328,7 +329,7 @@ namespace Calc {
     //create output matrix
     log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C);
     m_pAlgoParameters->c.reset(NewMatrix(m_pAlgoParameters->Popt.type,
-          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage));
+          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage, useValArray));
     //read input data
     log().debug("reading input matrices...");
     readInput();
