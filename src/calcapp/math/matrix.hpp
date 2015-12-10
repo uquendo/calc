@@ -19,10 +19,33 @@
 #include "calcapp/exception.hpp"
 #include "calcapp/log.hpp"
 
+#ifdef HAVE_BOOST_UBLAS
+# include <boost/numeric/ublas/matrix.hpp>
+#endif
+#ifdef HAVE_EIGEN
+# include <Eigen/Dense>
+#endif
+#ifdef HAVE_MTL
+# include <boost/numeric/mtl/matrix/dense2D.hpp>
+#endif
+#ifdef HAVE_ARMADILLO
+# include <armadillo>
+#endif
+
+
 using std::size_t;
 
 namespace Calc
 {
+
+enum class TMatrixType {
+  Array,
+  ValArray,
+  BoostUblas,
+  Eigen,
+  MTL,
+  Armadillo
+};
 
 class MatrixBase
 {
@@ -180,16 +203,207 @@ private:
   ValArrayMatrix& operator= (const ValArrayMatrix&);
 };
 
+template<numeric::TMatrixStorage storage> struct TraitStorage {};
+template<> struct TraitStorage<numeric::TMatrixStorage::RowMajor>
+{
+#ifdef HAVE_BOOST_UBLAS
+  typedef boost::numeric::ublas::row_major boost_type;
+#endif
+#ifdef HAVE_EIGEN
+  static constexpr int eigen_type = Eigen::RowMajor;
+#endif
+#ifdef HAVE_MTL
+  typedef mtl::tag::row_major mtl_type;
+#endif
+};
+template<> struct TraitStorage<numeric::TMatrixStorage::ColumnMajor> {
+#ifdef HAVE_BOOST_UBLAS
+  typedef boost::numeric::ublas::column_major boost_type;
+#endif
+#ifdef HAVE_EIGEN
+  static constexpr int eigen_type = Eigen::ColMajor;
+#endif
+#ifdef HAVE_MTL
+  typedef mtl::tag::col_major mtl_type;
+#endif
+};
+
+#ifdef HAVE_BOOST_UBLAS
+template<typename T, numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor> class BoostUblasMatrix final : public ArrayBasedMatrix<T>
+{
+private:
+  std::unique_ptr<boost::numeric::ublas::matrix<T,typename TraitStorage<storage>::boost_type> > m_boost_matrix;
+
+public:
+  BoostUblasMatrix()
+    : ArrayBasedMatrix<T>(storage)
+  {}
+  BoostUblasMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, storage)
+  {}
+  ~BoostUblasMatrix() {};
+
+  inline const boost::numeric::ublas::matrix<T,typename TraitStorage<storage>::boost_type>& getBoostMatrix() const { return *(m_boost_matrix.get()); }
+  inline boost::numeric::ublas::matrix<T,typename TraitStorage<storage>::boost_type>& getBoostMatrix() { return *(m_boost_matrix.get()); }
+  inline boost::numeric::ublas::matrix<T,typename TraitStorage<storage>::boost_type>* getBoostMatrixPtr() const { return m_boost_matrix.get(); }
+
+protected:
+  virtual void ensureAllocated() override;
+
+private:
+  // no copying and copy assignment allowed
+  BoostUblasMatrix(const BoostUblasMatrix&);
+  BoostUblasMatrix(const BoostUblasMatrix&&);
+  BoostUblasMatrix& operator= (const BoostUblasMatrix&);
+};
+#endif
+
+#ifdef HAVE_EIGEN
+template<typename T, numeric::TMatrixStorage storage = numeric::TMatrixStorage::ColumnMajor> class EigenMatrix final : public ArrayBasedMatrix<T>
+{
+private:
+  std::unique_ptr<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,TraitStorage<storage>::eigen_type> > m_eigen_matrix;
+
+public:
+  EigenMatrix()
+    : ArrayBasedMatrix<T>(storage)
+  {}
+  EigenMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, storage)
+  {}
+  ~EigenMatrix() {};
+
+  inline const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,TraitStorage<storage>::eigen_type>& getEigenMatrix() const { return *(m_eigen_matrix.get()); }
+  inline Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,TraitStorage<storage>::eigen_type>& getEigenMatrix() { return *(m_eigen_matrix.get()); }
+  inline Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,TraitStorage<storage>::eigen_type>* getEigenMatrixPtr() const { return m_eigen_matrix.get(); }
+
+protected:
+  virtual void ensureAllocated() override;
+
+private:
+  // no copying and copy assignment allowed
+  EigenMatrix(const EigenMatrix&);
+  EigenMatrix(const EigenMatrix&&);
+  EigenMatrix& operator= (const EigenMatrix&);
+};
+#endif
+#ifdef HAVE_MTL
+template<typename T, numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor> class MTLMatrix final : public ArrayBasedMatrix<T>
+{
+private:
+  std::unique_ptr<mtl::mat::dense2D<T,mtl::mat::parameters<typename TraitStorage<storage>::mtl_type> > > m_mtl_matrix;
+
+public:
+  MTLMatrix()
+    : ArrayBasedMatrix<T>(storage)
+  {}
+  MTLMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, storage)
+  {}
+  ~MTLMatrix() {};
+
+  inline const mtl::mat::dense2D<T,mtl::mat::parameters<typename TraitStorage<storage>::mtl_type> >& getMTLMatrix() const { return *(m_mtl_matrix.get()); }
+  inline mtl::mat::dense2D<T,mtl::mat::parameters<typename TraitStorage<storage>::mtl_type> >& getMTLMatrix() { return *(m_mtl_matrix.get()); }
+  inline mtl::mat::dense2D<T,mtl::mat::parameters<typename TraitStorage<storage>::mtl_type> >* getMTLMatrixPtr() const { return m_mtl_matrix.get(); }
+
+protected:
+  virtual void ensureAllocated() override;
+
+private:
+  // no copying and copy assignment allowed
+  MTLMatrix(const MTLMatrix&);
+  MTLMatrix(const MTLMatrix&&);
+  MTLMatrix& operator= (const MTLMatrix&);
+};
+#endif
+#ifdef HAVE_ARMADILLO
+template<typename T> class ArmadilloMatrix final : public ArrayBasedMatrix<T>
+{
+private:
+  numeric::unique_aligned_buf_ptr m_buf; // smart pointer is used to correctly deallocate memory obtained from aligned_alloc
+  std::unique_ptr<arma::Mat<T> > m_armadillo_matrix;
+
+public:
+  ArmadilloMatrix()
+    : ArrayBasedMatrix<T>(numeric::TMatrixStorage::ColumnMajor)
+  {}
+  ArmadilloMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, numeric::TMatrixStorage::ColumnMajor)
+  {}
+  ~ArmadilloMatrix();
+
+  inline const arma::Mat<T>& getArmadilloMatrix() const { return *(m_armadillo_matrix.get()); }
+  inline arma::Mat<T>& getArmadilloMatrix() { return *(m_armadillo_matrix.get()); }
+  inline arma::Mat<T>* getArmadilloMatrixPtr() const { return m_armadillo_matrix.get(); }
+
+protected:
+  virtual void ensureAllocated() override;
+
+private:
+  // no copying and copy assignment allowed
+  ArmadilloMatrix(const ArmadilloMatrix&);
+  ArmadilloMatrix(const ArmadilloMatrix&&);
+  ArmadilloMatrix& operator= (const ArmadilloMatrix&);
+};
+
+template<> class ArmadilloMatrix<long double> final : public ArrayBasedMatrix<long double>
+{
+  typedef long double T;
+public:
+  ArmadilloMatrix()
+    : ArrayBasedMatrix<T>(numeric::TMatrixStorage::ColumnMajor)
+  { throw ParameterError("80-bit long double is not supported by Armadillo"); }
+  ArmadilloMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, numeric::TMatrixStorage::ColumnMajor)
+  { throw ParameterError("80-bit long double is not supported by Armadillo"); }
+  ~ArmadilloMatrix() {}
+protected:
+  virtual void ensureAllocated() override {}
+};
+# ifdef HAVE_QUADMATH
+template<> class ArmadilloMatrix<numeric::quad> final : public ArrayBasedMatrix<numeric::quad>
+{
+  typedef numeric::quad T;
+public:
+  ArmadilloMatrix()
+    : ArrayBasedMatrix<T>(numeric::TMatrixStorage::ColumnMajor)
+  { throw ParameterError("128-bit quad is not supported by Armadillo"); }
+  ArmadilloMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, numeric::TMatrixStorage::ColumnMajor)
+  { throw ParameterError("128-bit quad is not supported by Armadillo"); }
+  ~ArmadilloMatrix() {}
+protected:
+  virtual void ensureAllocated() override {}
+};
+# endif
+# ifdef HAVE_MPREAL
+template<> class ArmadilloMatrix<numeric::mpreal> final : public ArrayBasedMatrix<numeric::mpreal>
+{
+  typedef numeric::mpreal T;
+public:
+  ArmadilloMatrix()
+    : ArrayBasedMatrix<T>(numeric::TMatrixStorage::ColumnMajor)
+  { throw ParameterError("MPFR is not supported by Armadillo"); }
+  ArmadilloMatrix(const size_t nrows, const size_t ncolumns)
+      : ArrayBasedMatrix<T>(nrows, ncolumns, numeric::TMatrixStorage::ColumnMajor)
+  { throw ParameterError("MPFR is not supported by Armadillo"); }
+  ~ArmadilloMatrix() {}
+protected:
+  virtual void ensureAllocated() override {}
+};
+# endif
+#endif
+
 //helper functions to create matrices with corresponting type
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns,
   const bool reset = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor,
-  const bool useValArray = false);
+  const TMatrixType type = TMatrixType::Array);
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, InFileText& f, const bool readData = true,
   const bool transpose = false, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor,
-  const bool useValArray = false);
+  const TMatrixType type = TMatrixType::Array);
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns, InFileText& f,
   const bool transpose = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor,
-  const bool useValArray = false);
+  const TMatrixType type = TMatrixType::Array);
 
 
 }

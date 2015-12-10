@@ -2,6 +2,22 @@
 #include <valarray>
 #include <numeric>
 
+#ifdef HAVE_BOOST_UBLAS
+# include <boost/numeric/ublas/matrix.hpp>
+#endif
+#ifdef HAVE_EIGEN
+# include <Eigen/Dense>
+#endif
+#ifdef HAVE_MTL
+# include <boost/numeric/mtl/mtl.hpp>
+# include <boost/numeric/mtl/matrix/dense2D.hpp>
+#endif
+#ifdef HAVE_ARMADILLO
+# include <armadillo>
+#endif
+#ifdef HAVE_BLAS
+#endif
+
 namespace Calc
 {
   namespace matmul
@@ -78,6 +94,8 @@ namespace Calc
       template<typename T> inline void perform(const AlgoParameters& p)
       {
         //warming up
+        if(p.Topt.type != numeric::T_Serial)
+          throw Calc::ParameterError("Algotithm is not implemented");
         const size_t rows = p.a->getRowsNum();
         const size_t columns = p.b->getColumnsNum();
         const size_t stride = p.a->getColumnsNum();
@@ -89,6 +107,7 @@ namespace Calc
         const std::valarray<T>& A = a->getValArray();
         const std::valarray<T>& B = b->getValArray();
         std::valarray<T>& C = c->getValArray();
+
         //actual run
         for(size_t i = 0; i < rows; i++)
           for(size_t j = 0; j < stride; j++)
@@ -104,6 +123,8 @@ namespace Calc
       template<typename T> inline void perform(const AlgoParameters& p)
       {
         //warming up
+        if(p.Topt.type != numeric::T_Serial)
+          throw Calc::ParameterError("Algotithm is not implemented");
         const size_t rows = p.a->getRowsNum();
         const size_t columns = p.b->getColumnsNum();
         const size_t stride = p.a->getColumnsNum();
@@ -115,6 +136,7 @@ namespace Calc
         const std::valarray<T>& A = a->getValArray();
         const std::valarray<T>& B = b->getValArray();
         std::valarray<T>& C = c->getValArray();
+
         //actual run
         for(size_t i = 0; i < rows; i++)
           for(size_t k = 0; k < columns; k++)
@@ -190,17 +212,44 @@ namespace Calc
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        //TODO:
+        using namespace boost::numeric::ublas;
+        //warming up
+        if(p.Topt.type != numeric::T_Serial)
+          throw Calc::ParameterError("Algotithm is not implemented");
+        const BoostUblasMatrix<T>* const a = dynamic_cast<BoostUblasMatrix<T>*>(p.a.get());
+        const BoostUblasMatrix<T>* const b = dynamic_cast<BoostUblasMatrix<T>*>(p.b.get());
+        BoostUblasMatrix<T>* const c = dynamic_cast<BoostUblasMatrix<T>*>(p.c.get());
+        if(a == nullptr || b == nullptr || c == nullptr)
+          throw Calc::ParameterError("contrib_cpp_boost_ublas algo internal error");
+        const matrix<T>& A = a->getBoostMatrix();
+        const matrix<T>& B = b->getBoostMatrix();
+        matrix<T>& C = c->getBoostMatrix();
+
+        //actual run:
+        noalias(C) = prod(A, B);
       }
     };
 #endif
 #ifdef HAVE_EIGEN
-    //Eigen c++ version for matrices in row major order
+    //Eigen c++ version for matrices in column major order
     struct contrib_cpp_eigen : numeric::MPFuncBase<contrib_cpp_eigen,AlgoParameters>
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        //TODO:
+        //warming up
+        if(p.Topt.type != numeric::T_Serial)
+          throw Calc::ParameterError("Algotithm is not implemented");
+        const EigenMatrix<T>* const a = dynamic_cast<EigenMatrix<T>*>(p.a.get());
+        const EigenMatrix<T>* const b = dynamic_cast<EigenMatrix<T>*>(p.b.get());
+        EigenMatrix<T>* const c = dynamic_cast<EigenMatrix<T>*>(p.c.get());
+        if(a == nullptr || b == nullptr || c == nullptr)
+          throw Calc::ParameterError("contrib_cpp_eigen algo internal error");
+        const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& A = a->getEigenMatrix();
+        const Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& B = b->getEigenMatrix();
+        Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>& C = c->getEigenMatrix();
+
+        //actual run:
+        C = A * B;
       }
     };
 #endif
@@ -210,17 +259,66 @@ namespace Calc
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        //TODO:
+        using namespace mtl;
+        //warming up
+        if(p.Topt.type != numeric::T_Serial)
+          throw Calc::ParameterError("Algotithm is not implemented");
+        const MTLMatrix<T>* const a = dynamic_cast<MTLMatrix<T>*>(p.a.get());
+        const MTLMatrix<T>* const b = dynamic_cast<MTLMatrix<T>*>(p.b.get());
+        MTLMatrix<T>* const c = dynamic_cast<MTLMatrix<T>*>(p.c.get());
+        if(a == nullptr || b == nullptr || c == nullptr)
+          throw Calc::ParameterError("contrib_cpp_mtl algo internal error");
+        const mtl::mat::dense2D<T>& A = a->getMTLMatrix();
+        const mtl::mat::dense2D<T>& B = b->getMTLMatrix();
+        mtl::mat::dense2D<T>& C = c->getMTLMatrix();
+
+        //actual run:
+        C = A * B;
       }
     };
 #endif
+
 #ifdef HAVE_ARMADILLO
-    //armadillo c++ version for matrices in row major order
+    template<typename T> struct ArmaTraits
+    {
+      typedef T type;
+    };
+    template<> struct ArmaTraits<long double>
+    {
+      typedef double type;
+    };
+# ifdef HAVE_QUADMATH
+    template<> struct ArmaTraits<numeric::quad>
+    {
+      typedef double type;
+    };
+# endif
+# ifdef HAVE_MPREAL
+    template<> struct ArmaTraits<numeric::mpreal>
+    {
+      typedef double type;
+    };
+# endif
+
+    //armadillo c++ version for matrices in column major order
     struct contrib_cpp_armadillo : numeric::MPFuncBase<contrib_cpp_armadillo,AlgoParameters>
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        //TODO:
+        //warming up
+        if(p.Topt.type != numeric::T_Serial)
+          throw Calc::ParameterError("Algotithm is not implemented");
+        const ArmadilloMatrix<typename ArmaTraits<T>::type>* const a = dynamic_cast<ArmadilloMatrix<typename ArmaTraits<T>::type>*>(p.a.get());
+        const ArmadilloMatrix<typename ArmaTraits<T>::type>* const b = dynamic_cast<ArmadilloMatrix<typename ArmaTraits<T>::type>*>(p.b.get());
+        ArmadilloMatrix<typename ArmaTraits<T>::type>* const c = dynamic_cast<ArmadilloMatrix<typename ArmaTraits<T>::type>*>(p.c.get());
+        if(a == nullptr || b == nullptr || c == nullptr)
+          throw Calc::ParameterError("contrib_cpp_armadillo algo internal error");
+        const arma::Mat<typename ArmaTraits<T>::type>& A = a->getArmadilloMatrix();
+        const arma::Mat<typename ArmaTraits<T>::type>& B = b->getArmadilloMatrix();
+        arma::Mat<typename ArmaTraits<T>::type>& C = c->getArmadilloMatrix();
+
+        //actual run:
+        C = A * B;
       }
     };
 #endif
@@ -294,19 +392,19 @@ namespace Calc
 
 #ifdef HAVE_BOOST_UBLAS
         case A_ExtCppBoost:
-//          return contrib_cpp_boost_ublas()(parameters.Popt.type, parameters);
+          return contrib_cpp_boost_ublas()(parameters.Popt.type, parameters);
 #endif
 #ifdef HAVE_EIGEN
         case A_ExtCppEigen:
-//          return contrib_cpp_eigen()(parameters.Popt.type, parameters);
+          return contrib_cpp_eigen()(parameters.Popt.type, parameters);
 #endif
 #ifdef HAVE_MTL
         case A_ExtCppMTL:
-//          return contrib_cpp_mtl()(parameters.Popt.type, parameters);
+          return contrib_cpp_mtl()(parameters.Popt.type, parameters);
 #endif
 #ifdef HAVE_ARMADILLO
         case A_ExtCppArmadillo:
-//          return contrib_cpp_armadillo()(parameters.Popt.type, parameters);
+          return contrib_cpp_armadillo()(parameters.Popt.type, parameters);
 #endif
 #ifdef HAVE_BLAS
         case A_ExtCBLAS:

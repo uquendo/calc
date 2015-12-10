@@ -124,11 +124,12 @@ namespace matmul{
     std::unique_ptr<MatrixBase> a;
     std::unique_ptr<MatrixBase> b;
     std::unique_ptr<MatrixBase> c;
+    size_t nrows_C;
+    size_t ncolumns_C;
     bool transposeA;
     bool transposeB;
     numeric::TMatrixStorage storage;
-    size_t nrows_C;
-    size_t ncolumns_C;
+    bool initCsize();
   };
 }
 

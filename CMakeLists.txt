@@ -424,7 +424,7 @@ if (USE_MTL)
   if(MTL4_FOUND)
     include_directories(${MTL4_INCLUDE_DIRS})
     set(common_LIBS ${common_LIBS} ${MTL4_LIBRARIES})
-    add_definitions(${MTL4_DEFINITIONS})
+#    add_definitions(${MTL4_DEFINITIONS}) # we want to test MTL's version of routines, not BLAS one
     set(HAVE_MTL YES)
     set(INFO_HAVE_OPTIONS "${INFO_HAVE_OPTIONS} MTL")
   else()

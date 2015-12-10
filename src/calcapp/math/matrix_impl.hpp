@@ -157,12 +157,83 @@ template<typename T> inline void Matrix<T>::ensureAllocated()
 
 template<typename T> inline void ValArrayMatrix<T>::ensureAllocated()
 {
-  if( m_valarray == nullptr || ArrayBasedMatrix<T>::m_data==nullptr )
+  if( m_valarray == nullptr || ArrayBasedMatrix<T>::m_data == nullptr )
   {
     m_valarray.reset(new std::valarray<T>(MatrixBase::getSize()));
     ArrayBasedMatrix<T>::m_data = &(*(m_valarray.get()))[0];
   }
 }
+
+#ifdef HAVE_BOOST_UBLAS
+template<typename T, numeric::TMatrixStorage storage> inline void BoostUblasMatrix<T,storage>::ensureAllocated()
+{
+  if( m_boost_matrix == nullptr || ArrayBasedMatrix<T>::m_data == nullptr)
+  {
+    using namespace boost::numeric::ublas;
+    m_boost_matrix.reset(new matrix<T,typename TraitStorage<storage>::boost_type>(MatrixBase::getRowsNum(), MatrixBase::getColumnsNum()));
+    ArrayBasedMatrix<T>::m_data = &((m_boost_matrix->data())[0]);
+  }
+}
+#endif
+
+#ifdef HAVE_EIGEN
+template<typename T, numeric::TMatrixStorage storage> inline void EigenMatrix<T,storage>::ensureAllocated()
+{
+  if( m_eigen_matrix == nullptr || ArrayBasedMatrix<T>::m_data == nullptr)
+  {
+    m_eigen_matrix.reset(new 
+      Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,TraitStorage<storage>::eigen_type>(
+        MatrixBase::getRowsNum(), MatrixBase::getColumnsNum()));
+    ArrayBasedMatrix<T>::m_data = &((m_eigen_matrix->data())[0]);
+  }
+}
+#endif
+
+#ifdef HAVE_MTL
+template<typename T, numeric::TMatrixStorage storage> inline void MTLMatrix<T,storage>::ensureAllocated()
+{
+  if( m_mtl_matrix == nullptr || ArrayBasedMatrix<T>::m_data == nullptr)
+  {
+    using namespace mtl;
+    m_mtl_matrix.reset(new mat::dense2D<T,mat::parameters<typename TraitStorage<storage>::mtl_type> >(MatrixBase::getRowsNum(), MatrixBase::getColumnsNum()));
+    ArrayBasedMatrix<T>::m_data = &((m_mtl_matrix->address_data())[0]);
+  }
+}
+#endif
+
+#ifdef HAVE_ARMADILLO
+template<typename T> inline void ArmadilloMatrix<T>::ensureAllocated()
+{
+  if( m_armadillo_matrix == nullptr || m_buf == nullptr || ArrayBasedMatrix<T>::m_data == nullptr)
+  {
+    void* buf=nullptr;
+    ArrayBasedMatrix<T>::m_data = reinterpret_cast<T*>(
+        numeric::aligned_malloc(sizeof(T)*MatrixBase::getSize(), ArrayBasedMatrix<T>::getAlignment(), &buf)
+        );
+    m_buf.reset(buf);
+    if(ArrayBasedMatrix<T>::m_data == nullptr) {
+      throw OOMError("Can't allocate aligned data buffer for the matrix");
+    }
+    if(!MatrixBase::isRowMajor())
+      m_armadillo_matrix.reset(new arma::Mat<T>(ArrayBasedMatrix<T>::m_data, MatrixBase::getRowsNum(), MatrixBase::getColumnsNum(), false, true));
+    else
+      throw ParameterError("Armadillo doesn't support row major stored matrices");
+  }
+}
+
+template<typename T>  ArmadilloMatrix<T>::~ArmadilloMatrix()
+{
+  //explicitly call destructor for types that require it
+  if(std::is_class<T>::value)
+  {
+    size_t i;
+    for (i = 0; i < MatrixBase::getSize(); ++i) {
+      ArrayBasedMatrix<T>::m_data[i].~T();
+    }
+  }
+  //no need to free allocated memory, m_buf will take care of it
+}
+#endif
 
 // data access
 template<typename T> inline T* MatrixBase::getDataPtr() const
@@ -210,9 +281,10 @@ struct CreateMatrixHelperArgs
 {
   enum InitType { FixedSize, FromFile, FromFileFixedSize } m_InitType;
   size_t m_nrows, m_ncolumns;
-  bool m_reset, m_transpose, m_readData, m_useValArray;
+  bool m_reset, m_transpose, m_readData;
   InFileText* m_pf;
   numeric::TMatrixStorage m_storage;
+  TMatrixType m_type;
 };
 
 template<CreateMatrixHelperArgs::InitType type> struct CreateMatrixHelperFunc :
@@ -224,60 +296,139 @@ template<CreateMatrixHelperArgs::InitType type> struct CreateMatrixHelperFunc :
     switch(type)
     {
       case CreateMatrixHelperArgs::FixedSize:
-        p = a.m_useValArray ?
-            dynamic_cast<ArrayBasedMatrix<T>*>(new ValArrayMatrix<T>(a.m_nrows,a.m_ncolumns,a.m_storage)) :
-            dynamic_cast<ArrayBasedMatrix<T>*>(new Matrix<T>(a.m_nrows,a.m_ncolumns,a.m_storage)) ;
-        p -> init(a.m_reset, !a.m_useValArray);
-        break;
-      case CreateMatrixHelperArgs::FromFile:
-        p = a.m_useValArray ?
-            dynamic_cast<ArrayBasedMatrix<T>*>(new ValArrayMatrix<T>(a.m_storage)) :
-            dynamic_cast<ArrayBasedMatrix<T>*>(new Matrix<T>(a.m_storage)) ;
-        p -> init(*a.m_pf,a.m_readData,a.m_transpose);
-        break;
       case CreateMatrixHelperArgs::FromFileFixedSize:
-        p = a.m_useValArray ?
-            dynamic_cast<ArrayBasedMatrix<T>*>(new ValArrayMatrix<T>(a.m_nrows,a.m_ncolumns,a.m_storage)) :
-            dynamic_cast<ArrayBasedMatrix<T>*>(new Matrix<T>(a.m_nrows,a.m_ncolumns,a.m_storage)) ;
+        switch(a.m_type)
+        {
+#ifdef HAVE_BOOST_UBLAS
+          case TMatrixType::BoostUblas:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new BoostUblasMatrix<T,numeric::TMatrixStorage::RowMajor>(a.m_nrows,a.m_ncolumns)) ;
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new BoostUblasMatrix<T,numeric::TMatrixStorage::ColumnMajor>(a.m_nrows,a.m_ncolumns)) ;
+            break;
+#endif
+#ifdef HAVE_EIGEN
+          case TMatrixType::Eigen:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new EigenMatrix<T,numeric::TMatrixStorage::RowMajor>(a.m_nrows,a.m_ncolumns)) ;
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new EigenMatrix<T,numeric::TMatrixStorage::ColumnMajor>(a.m_nrows,a.m_ncolumns)) ;
+            break;
+#endif
+#ifdef HAVE_MTL
+          case TMatrixType::MTL:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new MTLMatrix<T,numeric::TMatrixStorage::RowMajor>(a.m_nrows,a.m_ncolumns)) ;
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new MTLMatrix<T,numeric::TMatrixStorage::ColumnMajor>(a.m_nrows,a.m_ncolumns)) ;
+            break;
+#endif
+#ifdef HAVE_ARMADILLO
+          case TMatrixType::Armadillo:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              throw ParameterError("Armadillo doesn't support row major stored matrices");
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new ArmadilloMatrix<T>(a.m_nrows,a.m_ncolumns)) ;
+            break;
+#endif
+          case TMatrixType::ValArray:
+            p = dynamic_cast<ArrayBasedMatrix<T>*>(new ValArrayMatrix<T>(a.m_nrows,a.m_ncolumns,a.m_storage)) ;
+            break;
+          case TMatrixType::Array:
+            p = dynamic_cast<ArrayBasedMatrix<T>*>(new Matrix<T>(a.m_nrows,a.m_ncolumns,a.m_storage)) ;
+            break;
+          default:
+            throw ParameterError("matrix type unsupported");
+        }
+        if(type == CreateMatrixHelperArgs::FixedSize)
+          p -> init(a.m_reset, a.m_type == TMatrixType::Array || a.m_type == TMatrixType::Armadillo);
+        else
+          p -> init(*a.m_pf,a.m_readData,a.m_transpose);
+        break;
+
+      case CreateMatrixHelperArgs::FromFile:
+        switch(a.m_type)
+        {
+#ifdef HAVE_BOOST_UBLAS
+          case TMatrixType::BoostUblas:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new BoostUblasMatrix<T,numeric::TMatrixStorage::RowMajor>()) ;
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new BoostUblasMatrix<T,numeric::TMatrixStorage::ColumnMajor>()) ;
+            break;
+#endif
+#ifdef HAVE_EIGEN
+          case TMatrixType::Eigen:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new EigenMatrix<T,numeric::TMatrixStorage::RowMajor>()) ;
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new EigenMatrix<T,numeric::TMatrixStorage::ColumnMajor>()) ;
+            break;
+#endif
+#ifdef HAVE_MTL
+          case TMatrixType::MTL:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new MTLMatrix<T,numeric::TMatrixStorage::RowMajor>()) ;
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new MTLMatrix<T,numeric::TMatrixStorage::ColumnMajor>()) ;
+            break;
+#endif
+#ifdef HAVE_ARMADILLO
+          case TMatrixType::Armadillo:
+            if(a.m_storage == numeric::TMatrixStorage::RowMajor)
+              throw ParameterError("Armadillo doesn't support row major stored matrices");
+            else
+              p = dynamic_cast<ArrayBasedMatrix<T>*>(new ArmadilloMatrix<T>()) ;
+            break;
+#endif
+          case TMatrixType::ValArray:
+            p = dynamic_cast<ArrayBasedMatrix<T>*>(new ValArrayMatrix<T>(a.m_storage)) ;
+            break;
+          case TMatrixType::Array:
+            p = dynamic_cast<ArrayBasedMatrix<T>*>(new Matrix<T>(a.m_storage)) ;
+            break;
+          default:
+            throw ParameterError("matrix type unsupported");
+        }
         p -> init(*a.m_pf,a.m_readData,a.m_transpose);
         break;
-    }
+      }
     return p;
   }
 };
 
 //helper functions to create matrices with corresponding type
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns,
-  const bool reset, const numeric::TMatrixStorage storage, const bool useValArray)
+  const bool reset, const numeric::TMatrixStorage storage, const TMatrixType type)
 {
   CreateMatrixHelperArgs args;
   args.m_InitType = CreateMatrixHelperArgs::FixedSize;
   args.m_nrows = nrows; args.m_ncolumns = ncolumns; args.m_reset = reset; args.m_storage = storage;
-  args.m_useValArray = useValArray;
+  args.m_type = type;
   return CreateMatrixHelperFunc<CreateMatrixHelperArgs::FixedSize>()(p,args);
 }
 
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, InFileText* pf, const bool readData,
-  const bool transpose, const numeric::TMatrixStorage storage,  const bool useValArray)
+  const bool transpose, const numeric::TMatrixStorage storage,  const TMatrixType type)
 {
   if(pf==nullptr)
     return nullptr;
   CreateMatrixHelperArgs args;
   args.m_InitType = CreateMatrixHelperArgs::FromFile;
   args.m_pf = pf; args.m_readData = readData; args.m_transpose = transpose; args.m_storage = storage;
-  args.m_useValArray = useValArray;
+  args.m_type = type;
   return CreateMatrixHelperFunc<CreateMatrixHelperArgs::FromFile>()(p,args);
 }
 
 inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns, InFileText* pf,
-  const bool transpose, const numeric::TMatrixStorage storage, const bool useValArray)
+  const bool transpose, const numeric::TMatrixStorage storage, const TMatrixType type)
 {
   if(pf==nullptr)
     return nullptr;
   CreateMatrixHelperArgs args;
   args.m_InitType = CreateMatrixHelperArgs::FromFileFixedSize;
   args.m_nrows = nrows; args.m_ncolumns = ncolumns; args.m_pf = pf; args.m_transpose = transpose; args.m_storage = storage;
-  args.m_useValArray = useValArray;
+  args.m_type = type;
   return CreateMatrixHelperFunc<CreateMatrixHelperArgs::FromFileFixedSize>()(p,args);
 }
 

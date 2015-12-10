@@ -11,6 +11,7 @@
   * fortran variants of quest01 algorithms
   * performance comparsion
 * README
+* threading dispatcher via some generic parallelisable constructs(i.e. map/reduce)
 +- BUILD_VANILLA review
 * BUILD_THREADING review
 * progress bar and logger logic review

@@ -58,7 +58,7 @@ namespace IOUtil {
     std::string fileGrep(const std::string& fileName, const std::regex& rx, bool firstOnly = true, const unsigned submatchNumber = 0);
 
     template <typename T>
-    inline int scan(const char * str, const int nElem,  T * const dest, T (*f)(const char *), const int stride=1){
+    inline int scan(const char * str, const int nElem, T * const dest, T (*f)(const char *), const int stride=1){
         const char * start = str;
         const char * end = start + strlen(str);
         int nTok = 0;
@@ -67,6 +67,22 @@ namespace IOUtil {
             if ( start >= end )
                 return nTok;
             dest[nTok*stride] = f(start);
+            nTok++;
+            while ( start < end && ! isspace(*(unsigned const char *)start) ) ++start;
+        }
+        return nTok;
+    }
+
+    template <class Array, typename T>
+    inline int scan(const char * str, const int nElem, Array& dest, T (*f)(const char *), const int stride=1){
+        const char * start = str;
+        const char * end = start + strlen(str);
+        int nTok = 0;
+        while ( nTok < nElem ) {
+            while ( start < end && isspace(*(unsigned const char *)start) ) ++start;
+            if ( start >= end )
+                return nTok;
+            dest(nTok*stride) = f(start);
             nTok++;
             while ( start < end && ! isspace(*(unsigned const char *)start) ) ++start;
         }
