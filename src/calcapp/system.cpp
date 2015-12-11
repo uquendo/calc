@@ -122,7 +122,7 @@ std::string getOSVersion()
    BOOL bOsVersionInfoEx;
 
    std::string bit=IsWow64()?" 64bit":" 32bit";
-   
+
    // Try calling GetVersionEx using the OSVERSIONINFOEX structure.
    // If that fails, try using the OSVERSIONINFO structure.
 
@@ -153,7 +153,7 @@ std::string getOSVersion()
 
     if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1 )
          return "Microsoft Windows 7"+bit;
-  
+
     if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0 )
          return "Microsoft Windows Vista"+bit;
 
@@ -199,7 +199,7 @@ std::string getOSVersion()
     Logger::system().warning("Error detecting linux version");
     return "Unknown";
   }
-  
+
   return std::string(u.sysname) + " " + u.release + " " + u.version + " " + u.machine + "; libc version: " + gnu_get_libc_version();
 #else
    return "Unknown OS";
@@ -208,11 +208,11 @@ std::string getOSVersion()
 
 std::string getCpuSpec()
 {
-  std::string r="";
+  std::string r = "";
 #if __linux
   try{
     std::regex rg("model name[[:space:]]*:[[:space:]]*(.*)");
-    r= IOUtil::fileGrep("/proc/cpuinfo", rg, true, 1);
+    r = IOUtil::fileGrep("/proc/cpuinfo", rg, true, 1);
   }catch(std::regex_error& e){
     //beware of pre-4.9 gcc! see for example https://stackoverflow.com/a/12665408
 //    std::cerr << e.what() << e.code() << std::endl;
@@ -221,17 +221,56 @@ std::string getCpuSpec()
 #elif _MSC_VER
   int cpuInfo[4] = {-1};
   __cpuid(cpuInfo, 0);
+  char vendor[13];
+  vendor[12] = 0;
+  const char * ptr= reinterpret_cast<const char *>(&cpuInfo[1]);
+  for(int i = 0; i < 12; i++)
+    vendor[i] = ptr[i];
 # ifdef HAVE_BOOST
-  r = str(boost::format("cpuid: %08x %08x %08x %08x") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3]);
+  r = str(boost::format("cpuid: %08x %08x %08x %08x %s") % cpuInfo[0] % cpuInfo[1] % cpuInfo[2] % cpuInfo[3] % vendor);
 # else
   r.append("cpuid: ");
   r.append(IOUtil::to_string_hex(cpuInfo[0])).append(" ").append(IOUtil::to_string_hex(cpuInfo[1])).append(" ");
-  r.append(IOUtil::to_string_hex(cpuInfo[2])).append(" ").append(IOUtil::to_string_hex(cpuInfo[3]));
+  r.append(IOUtil::to_string_hex(cpuInfo[2])).append(" ").append(IOUtil::to_string_hex(cpuInfo[3])).append(" ");
+  r.append(vendor);
 # endif
   return r;
 #else
   return "Unknown OS";
 #endif
+}
+
+std::size_t getCpuL2CacheSize()
+{
+  std::size_t r = 1024*1024; //1MiB should be reasonable default for modern processors
+#if DEFAULT_L2_CACHE_SIZE > 1024
+  r = DEFAULT_L2_CACHE_SIZE;
+#endif
+  std::string s = "";
+#if _linux
+  try{
+    std::regex rg("cache size[[:space:]]*:[[:space:]]*([0-9]*)[[:space:]]");
+    s = IOUtil::fileGrep("/proc/cpuinfo", rg, true, 1);
+    int si = std::stoi(s);
+    if(si > 0)
+      r = 1024 * (size_t)si;
+  }catch(std::regex_error& e){
+    //beware of pre-4.9 gcc! see for example https://stackoverflow.com/a/12665408
+//    std::cerr << e.what() << e.code() << std::endl;
+  }
+#elif _MSC_VER
+  int test_cpuInfo[4] = {-1};
+  __cpuid(test_cpuInfo, 0x80000000);
+  if(test_cpuInfo[3] > 5)
+  {
+    int cpuInfo[4] = {-1};
+    __cpuid(cpuInfo, 0x80000006);
+    size_t sz = cpuInfo[3] & 0xf;
+    if(sz > 0)
+      r = sz * 1024;
+  }
+#endif
+  return r;
 }
 
 std::string getBuildOptions()

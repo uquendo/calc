@@ -94,6 +94,26 @@ namespace numeric {
 
   typedef std::unique_ptr<void,AlignedBufDeleter> unique_aligned_buf_ptr;
 
+  static constexpr inline std::size_t default_max_hw_vector_size()
+  {
+    return DEFAULT_MAX_HW_VECTOR_SIZE;
+  }
+
+  static constexpr inline std::size_t default_page_size()
+  {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  static constexpr inline std::size_t default_tlb_page_capacity()
+  {
+    return DEFAULT_TLB_PAGE_CAPACITY;
+  }
+
+  static constexpr inline std::size_t default_tlb_covered_size()
+  {
+    return DEFAULT_PAGE_SIZE * DEFAULT_TLB_PAGE_CAPACITY;
+  }
+
   static constexpr inline std::size_t default_cache_line_size()
   {
 //  return ( DEFAULT_CACHE_LINE_SIZE > alignof(std::max_align_t) ? DEFAULT_CACHE_LINE_SIZE : alignof(std::max_align_t) );

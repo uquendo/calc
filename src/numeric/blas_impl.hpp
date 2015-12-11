@@ -6,6 +6,7 @@
 #include "numeric/blas.hpp"
 #include "numeric/complex.hpp"
 #include "numeric/parallel.hpp"
+#include "numeric/cache.hpp"
 
 #ifdef HAVE_CILK
 #include <cilk/cilk.h>
@@ -21,7 +22,6 @@
 using std::size_t;
 
 namespace numeric {
-
 
 //helper for simple serial matrix multiplication
 template<typename T, bool tA, bool tB, bool cA, bool cB>
@@ -49,7 +49,7 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
 #define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
     case TMM_Algo::IJK:
         _FOR_I _FOR_J _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JKI:
         _FOR_J _FOR_K _FOR_I
@@ -61,7 +61,7 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
       return;
     case TMM_Algo::IKJ:
         _FOR_I _FOR_K _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+              _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KJI:
         _FOR_K _FOR_J _FOR_I
@@ -378,7 +378,6 @@ template<typename T>
   const bool tB = (transB != TMatrixTranspose::No) ;
   const bool cA = (transA == TMatrixTranspose::Conjugate && is_complex<T>::value) ;
   const bool cB = (transB == TMatrixTranspose::Conjugate && is_complex<T>::value) ;
-
   switch(stor)
   {
     case TMatrixStorage::RowMajor:
@@ -416,39 +415,38 @@ template<typename T>
     case TMatrixStorage::ColumnMajor:
       {
         //calculate C'=(op(B))'*(op(A))' instead of C=op(A)*op(B)
-        //corresponing mappings: tA->!tA,tB->!tB, A<->B
-        if(!tA && !tB) // KIJ
+        //column major C is row major C', so corresponing mappings are: A<->B, tA<->tB, cA<->cB
+        if(!tA && !tB) // IJK
         {
-          return dgemm_helper<T,TMM_Algo::IJK,true,true,false,false>(b,a,c,ncolumns_b,nrows_b,nrows_a,threading_model);
+          return dgemm_helper<T,TMM_Algo::IJK,false,false,false,false>(b,a,c,ncolumns_b,nrows_b,nrows_a,threading_model);
         }
         else if (!tB && tA) // JIK
         {
           if(cA)
-            return dgemm_helper<T,TMM_Algo::JIK,true,false,false,true>(b,a,c,ncolumns_b,nrows_b,ncolumns_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::JIK,false,true,false,true>(b,a,c,ncolumns_b,nrows_b,ncolumns_a,threading_model);
           else
-            return dgemm_helper<T,TMM_Algo::JIK,true,false,false,false>(b,a,c,ncolumns_b,nrows_b,ncolumns_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::JIK,false,true,false,false>(b,a,c,ncolumns_b,nrows_b,ncolumns_a,threading_model);
         }
         else if(tB && !tA) // IKJ
         {
           if(cB)
-            return dgemm_helper<T,TMM_Algo::IKJ,false,true,true,false>(b,a,c,nrows_b,ncolumns_b,nrows_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::IKJ,true,false,true,false>(b,a,c,nrows_b,ncolumns_b,nrows_a,threading_model);
           else
-            return dgemm_helper<T,TMM_Algo::IKJ,false,true,false,false>(b,a,c,nrows_b,ncolumns_b,nrows_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::IKJ,true,false,false,false>(b,a,c,nrows_b,ncolumns_b,nrows_a,threading_model);
         }
-        else //if(tA && tB) // IJK
+        else //if(tA && tB) // KIJ
         {
           if(cA && cB)
-            return dgemm_helper<T,TMM_Algo::KIJ,false,false,true,true>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,true,true>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
           else if(cA && !cB)
-            return dgemm_helper<T,TMM_Algo::KIJ,false,false,false,true>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,false,true>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
           else if(!cA && cB)
-            return dgemm_helper<T,TMM_Algo::KIJ,false,false,true,false>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,true,false>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
           else //if((!cA) && (!cB))
-            return dgemm_helper<T,TMM_Algo::KIJ,false,false,false,false>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
+            return dgemm_helper<T,TMM_Algo::KIJ,true,true,false,false>(b,a,c,nrows_b,ncolumns_b,ncolumns_a,threading_model);
         }
       }
   }
-
 }
 
 //generic version of dgemm for square matrices

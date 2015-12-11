@@ -14,6 +14,7 @@ namespace SysUtil {
     std::string getCurrentDirectory();
     std::string getOSVersion();
     std::string getCpuSpec();
+    std::size_t getCpuL2CacheSize();
     std::string getBuildOptions();
     std::string getMemStats();
     unsigned getCpuCoresCount();

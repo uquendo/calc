@@ -37,6 +37,8 @@ namespace Calc {
     struct numeric_cpp_valarray;
     //simple c++ version for square matrices in row major order with second matrix transposed using std::valarray
     struct numeric_cpp_valarray_transpose;
+    //block c++ version for square matrices in row major order
+    struct numeric_cpp_block;
     //strassen c++ version for matrices in row major order
     struct numeric_cpp_strassen;
 

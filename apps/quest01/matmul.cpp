@@ -151,6 +151,16 @@ namespace Calc
       }
     };
 
+    //block c++ version for matrices in row major order
+    struct numeric_cpp_block : numeric::MPFuncBase<numeric_cpp_block,AlgoParameters>
+    {
+      template<typename T> inline void perform(const AlgoParameters& p)
+      {
+        numeric::dgemm_block<T>(numeric::TMatrixStorage::RowMajor, p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(),
+            p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
+      }
+    };
+
 
     //strassen c++ version for matrices in row major order
     struct numeric_cpp_strassen : numeric::MPFuncBase<numeric_cpp_strassen,AlgoParameters>
@@ -374,6 +384,8 @@ namespace Calc
           return numeric_cpp_valarray()(parameters.Popt.type, parameters);
         case A_NumCppValarrayTranspose:
           return numeric_cpp_valarray_transpose()(parameters.Popt.type, parameters);
+        case A_NumCppBlock:
+          return numeric_cpp_block()(parameters.Popt.type, parameters);
         case A_NumCppStrassen:
 //          return numeric_cpp_strassen()(parameters.Popt.type, parameters);
           throw Calc::ParameterError("Algorithm is not implemented");
