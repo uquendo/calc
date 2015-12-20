@@ -74,7 +74,9 @@ namespace Calc
       template<typename T> inline void perform(const AlgoParameters& p)
       {
         numeric::dgemm<T>(numeric::TMatrixStorage::RowMajor, numeric::TMatrixTranspose::No, numeric::TMatrixTranspose::No,
-            p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(), p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
+            p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(),
+            p.a->getRowsNum(), p.a->getColumnsNum(),
+            p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
       }
     };
 
@@ -84,7 +86,9 @@ namespace Calc
       template<typename T> void perform(const AlgoParameters& p)
       {
         numeric::dgemm<T>(numeric::TMatrixStorage::RowMajor, numeric::TMatrixTranspose::No, numeric::TMatrixTranspose::Transpose,
-          p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(), p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
+          p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(),
+          p.a->getRowsNum(), p.a->getColumnsNum(),
+          p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
       }
     };
 

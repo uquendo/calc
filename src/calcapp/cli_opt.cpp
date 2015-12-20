@@ -1,5 +1,6 @@
 #include "calcapp/cli.hpp"
 #include "calcapp/system.hpp"
+#include "calcapp/exception.hpp"
 
 #include <iostream>
 #include <cassert>
@@ -187,13 +188,10 @@ bool CliAppOptions::parseLoggingOptions(){
 }
 
 bool CliAppOptions::parseThreadingOptions(){
-#ifdef CLIAPP_OPT_DEFAULT_THREADING
-  TThreading thr = CLIAPP_OPT_DEFAULT_THREADING;
-#else
-  TThreading thr = _threading_opt_names[0].type;
-#endif
+  TThreading thr = numeric::T_Undefined;
   unsigned thread_count = 0;
 #ifdef HAVE_BOOST
+  thread_count = argMap[THREADS_OPT].as<unsigned>();
   if ( argMap.count(THREADING_OPT) > 0 ) {
       const string& s = argMap[THREADING_OPT].as<string>();
       for ( int i = 0; _threading_opt_names[i].name; ++i ) {
@@ -202,23 +200,31 @@ bool CliAppOptions::parseThreadingOptions(){
               break;
           }
       }
-  }
-  thread_count = argMap[THREADS_OPT].as<unsigned>();
+      if(thr == numeric::T_Undefined)
+        return false;
+  } else
 #endif
+  {
+#ifdef CLIAPP_OPT_DEFAULT_THREADING
+    thr = CLIAPP_OPT_DEFAULT_THREADING;
+#else
+    thr = _threading_opt_names[0].type;
+#endif
+  }
   m_threading.type = thr;
   m_threading.num = thread_count;
   return true;
 }
 
 bool CliAppOptions::parsePrecisionOptions(){
-#if defined( CLIAPP_OPT_DEFAULT_PRECISION )
-  TPrecision prec = CLIAPP_OPT_DEFAULT_PRECISION;
-#else
-  TPrecision prec = _precision_opt_names[0].type;
-#endif
+  TPrecision prec = numeric::P_Undefined;
   unsigned digits = 10;
   ptrdiff_t print_precision = 10;
 #ifdef HAVE_BOOST
+# ifdef HAVE_MPREAL
+  digits = argMap[DIGITS_OPT].as<unsigned>();
+# endif
+  //print_precision =
   if ( argMap.count(PRECISION_OPT) > 0 ) {
       const string& s = argMap[PRECISION_OPT].as<string>();
       for ( int i = 0; _precision_opt_names[i].name; ++i ) {
@@ -227,12 +233,17 @@ bool CliAppOptions::parsePrecisionOptions(){
               break;
           }
       }
+      if(prec == numeric::P_Undefined)
+        return false;
+  } else
+#endif
+  {
+#if defined( CLIAPP_OPT_DEFAULT_PRECISION )
+    prec = CLIAPP_OPT_DEFAULT_PRECISION;
+#else
+    prec = _precision_opt_names[0].type;
+#endif
   }
-#ifdef HAVE_MPREAL
-  digits = argMap[DIGITS_OPT].as<unsigned>();
-#endif
-  //print_precision =
-#endif
   m_precision.type = prec;
   m_precision.decimal_digits = digits;
   m_precision.print_precision = print_precision;

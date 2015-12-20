@@ -54,7 +54,37 @@ InFileText::InFileText(const std::string& fileName, TFileType fileType /* = FT_U
   int posix_fd = fileno(cfile);
 # if _XOPEN_SOURCE >= 600 || _POSIX_C_SOURCE >= 200112L || HAVE_POSIX_FADVISE
   //hint os kernel about sequential access
-  posix_fadvise(posix_fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+  if(m_seqAccess)
+  {
+    posix_fadvise(posix_fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+  }
+# endif
+  __gnu_cxx::stdio_filebuf<char>* filebuf = new __gnu_cxx::stdio_filebuf<char>(posix_fd, std::ios::in);
+  m_f.reset(new std::istream(filebuf));
+#else
+  //TODO: on MSVC we can try to use winapi-ish CreateFile with FILE_FLAG_SEQUENTIAL_SCAN
+  m_f.reset(new ifstream(m_fileName.c_str()));
+#endif
+  if(m_f == nullptr)
+    throwIOError(FERR_IO_GENERAL_READ, "File open error");
+}
+
+void InFileText::reset()
+{
+  if(!IOUtil::isOkToReadFile(m_fileName))
+    throwIOError(FERR_IO_GENERAL_READ, "File open error");
+
+  m_lineNum = 0;
+  m_line[0] = 0;
+#ifdef __GLIBCXX__
+  FILE* cfile = fopen(m_fileName.c_str(), "r");
+  int posix_fd = fileno(cfile);
+# if _XOPEN_SOURCE >= 600 || _POSIX_C_SOURCE >= 200112L || HAVE_POSIX_FADVISE
+  //hint os kernel about sequential access
+  if(m_seqAccess)
+  {
+    posix_fadvise(posix_fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+  }
 # endif
   __gnu_cxx::stdio_filebuf<char>* filebuf = new __gnu_cxx::stdio_filebuf<char>(posix_fd, std::ios::in);
   m_f.reset(new std::istream(filebuf));

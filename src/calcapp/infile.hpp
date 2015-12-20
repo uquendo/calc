@@ -27,6 +27,7 @@ public:
   InFileText(const std::string& fileName, TFileType fileType = FT_Undefined, bool seqAccess = false);
   InFileText(const char * fileName, TFileType fileType = FT_Undefined, bool seqAccess = false);
   virtual ~InFileText() {}
+  void reset();
 
   inline TFileType fileType() const { return m_fileType; }
   inline const std::string fileName() const { return m_fileName; }
@@ -52,7 +53,7 @@ public:
   void readNextLine_untilExcept(const char * str, const char * except);
 
   int readNextLine_expectStr(int nStr, ...);
-  
+
   // for filling in array of numbers 
   template<typename T> int readNextLine_scanNumArray(const int minCount, const int maxCount, T * const data, const int stride=1);
 

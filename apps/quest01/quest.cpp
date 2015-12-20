@@ -107,7 +107,7 @@ namespace Calc {
 
   bool QuestAppOptions::parseInputOptions()
   {
-    TFileType input = _input_opt_names[0].type;
+    TFileType input = FT_Undefined;
 #ifdef HAVE_BOOST
     if ( argMap.count(INPUT_OPT) > 0 ) {
       const string& s = argMap[INPUT_OPT].as<string>();
@@ -117,8 +117,13 @@ namespace Calc {
           break;
         }
       }
-    }
+      if(input == FT_Undefined)
+        return false;
+    } else
 #endif
+    {
+      input = _input_opt_names[0].type;
+    }
     m_input.filetype = input;
     //parse filenames for A and B
 #ifdef HAVE_BOOST
@@ -130,7 +135,7 @@ namespace Calc {
 
   bool QuestAppOptions::parseOutputOptions()
   {
-    TFileType output = _output_opt_names[0].type;
+    TFileType output = FT_Undefined;
 #ifdef HAVE_BOOST
     if ( argMap.count(OUTPUT_OPT) > 0 ) {
       const string& s = argMap[OUTPUT_OPT].as<string>();
@@ -140,8 +145,13 @@ namespace Calc {
           break;
         }
       }
-    }
+      if(output == FT_Undefined)
+        return false;
+    } else
 #endif
+    {
+      output = _output_opt_names[0].type;
+    }
     m_output.filetype = output;
     //parse filename for C
 #ifdef HAVE_BOOST
@@ -153,11 +163,7 @@ namespace Calc {
 
   bool QuestAppOptions::parseAlgoOptions()
   {
-#ifdef QUESTAPP_OPT_DEFAULT_ALGO
-    TAlgo algo = QUESTAPP_OPT_DEFAULT_ALGO;
-#else
-    TAlgo algo = _algo_opt_names[0].type;
-#endif
+    TAlgo algo = A_Undefined;
 #ifdef HAVE_BOOST
     if ( argMap.count(ALGO_OPT) > 0 ) {
       const string& s = argMap[ALGO_OPT].as<string>();
@@ -167,8 +173,17 @@ namespace Calc {
           break;
         }
       }
-    }
+      if(algo == A_Undefined)
+        return false;
+    } else
 #endif
+    {
+#ifdef QUESTAPP_OPT_DEFAULT_ALGO
+      algo = QUESTAPP_OPT_DEFAULT_ALGO;
+#else
+      algo = _algo_opt_names[0].type;
+#endif
+    }
     m_algo.type = algo;
     return true;
   }
@@ -338,12 +353,13 @@ namespace Calc {
         mat_type = TMatrixType::Array;
         break;
     }
+    TMatrixFlavour mat_flavour = TMatrixFlavour::Dense;
     //create input matrices
     log().debug("creating input matrices...");
     m_pAlgoParameters->a.reset(NewMatrix(m_precision.type,
-          m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage, mat_type));
+          m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage, mat_type, mat_flavour));
     m_pAlgoParameters->b.reset(NewMatrix(m_precision.type,
-          m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage, mat_type));
+          m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage, mat_type, mat_flavour));
     log().fdebug("found input matrices: A ( %zu x %zu ), B ( %zu x %zu )",
         m_pAlgoParameters->a->getRowsNum(), m_pAlgoParameters->a->getColumnsNum(),
         m_pAlgoParameters->b->getRowsNum(), m_pAlgoParameters->b->getColumnsNum());
@@ -358,7 +374,7 @@ namespace Calc {
     //create output matrix
     log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C);
     m_pAlgoParameters->c.reset(NewMatrix(m_precision.type,
-          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage, mat_type));
+          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage, mat_type, mat_flavour));
     //read input data
     log().debug("reading input matrices...");
     readInput();
