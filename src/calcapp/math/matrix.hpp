@@ -461,6 +461,8 @@ public:
 
   inline TMatrixFlavour getFlavour() const override { return TMatrixFlavour::Banded; }
   inline size_t getStoredSize() const override { return (m_lower_band+m_upper_band+1)*std::min(m_nrows,m_ncolumns); }
+  inline size_t getUpperBand() const { return m_upper_band; }
+  inline size_t getLowerBand() const { return m_lower_band; }
 
   // data access
   inline size_t index(size_t i, size_t j) const override { return ( isRowMajor() ? 0 : 0 ); } //TODO: STUB!

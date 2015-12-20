@@ -243,8 +243,8 @@ template<typename T>
   //calculate block sizes and index limits
   constexpr size_t mr = default_max_hw_vector_size() / sizeof(T);
   constexpr size_t nr = default_max_hw_vector_size() / sizeof(T);
-//  const size_t mc = __round_up((default_tlb_page_capacity() - (nr+4)) * default_page_size() / ( sizeof(T) *__round_up(nrows_op_a, nr) ), mr);
-  const size_t mc = 128;
+  const size_t mc = __round_up((default_tlb_page_capacity() - (nr+4)) * default_page_size() / ( sizeof(T) *__round_up(nrows_op_a, nr) ), mr);
+//  const size_t mc = 128;
   const size_t kc = mc; // wild guess
   const size_t nrows_op_a_rounded = __round_up(nrows_op_a, nr);
   const size_t sz_i = nrows_op_a / nr;

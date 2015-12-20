@@ -155,12 +155,32 @@ namespace Calc
       }
     };
 
+    //TODO: allow non-POD types in block version(replace VLA with aligned_alloc or std::valarray)
+    template<typename T> struct BlockTraits
+    {
+      typedef T type;
+    };
+# ifdef HAVE_QUADMATH
+    template<> struct BlockTraits<numeric::quad>
+    {
+      typedef long double type;
+    };
+# endif
+# ifdef HAVE_MPREAL
+    template<> struct BlockTraits<numeric::mpreal>
+    {
+      typedef long double type;
+    };
+# endif
     //block c++ version for matrices in row major order
     struct numeric_cpp_block : numeric::MPFuncBase<numeric_cpp_block,AlgoParameters>
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        numeric::dgemm_block<T>(numeric::TMatrixStorage::RowMajor, p.a->getDataPtr<T>(), p.b->getDataPtr<T>(), p.c->getDataPtr<T>(),
+        numeric::dgemm_block<typename BlockTraits<T>::type>(numeric::TMatrixStorage::RowMajor,
+            p.a->getDataPtr<typename BlockTraits<T>::type>(),
+            p.b->getDataPtr<typename BlockTraits<T>::type>(),
+            p.c->getDataPtr<typename BlockTraits<T>::type>(),
             p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
       }
     };

@@ -25,7 +25,7 @@ namespace numeric {
 
 //helper for simple serial matrix multiplication
 template<typename T, bool tA, bool tB, bool cA, bool cB>
-  __FORCEINLINE inline void _mm_op(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
+  __FORCEINLINE inline void _gemm_op(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
     const size_t stride_a, const size_t stride_b, const size_t stride_c,
     const size_t i, const size_t j, const size_t k)
 {
@@ -49,27 +49,27 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
 #define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
     case TMM_Algo::IJK:
         _FOR_I _FOR_J _FOR_K
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JKI:
         _FOR_J _FOR_K _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KIJ:
         _FOR_K _FOR_I _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::IKJ:
         _FOR_I _FOR_K _FOR_J
-              _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+              _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KJI:
         _FOR_K _FOR_J _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JIK:
         _FOR_J _FOR_I _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
 #undef _FOR_I
 #undef _FOR_J
@@ -91,27 +91,27 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
 #define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
     case TMM_Algo::IJK:
         _FOR_I _FOR_J _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JKI:
         _FOR_J _FOR_K _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KIJ:
         _FOR_K _FOR_I _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::IKJ:
         _FOR_I _FOR_K _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KJI:
         _FOR_K _FOR_J _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JIK:
         _FOR_J _FOR_I _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
 #undef _FOR_I
 #undef _FOR_J
@@ -134,27 +134,27 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
 #define _FOR_K for(size_t k=0; k < ncolumns_op_b; k++)
     case TMM_Algo::IJK:
         _FOR_I _FOR_J _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JKI:
         _FOR_J _FOR_K _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KIJ:
         _FOR_K _FOR_I _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::IKJ:
         _FOR_I _FOR_K _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KJI:
         _FOR_K _FOR_J _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JIK:
         _FOR_J _FOR_I _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
 #undef _FOR_I
 #undef _FOR_J
@@ -180,40 +180,40 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
 #pragma omp parallel for
         _FOR_I {
           _FOR_J _FOR_K
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         }
       return;
     case TMM_Algo::JKI:
 #pragma omp parallel for
         _FOR_J {
           _FOR_K _FOR_I
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         }
     case TMM_Algo::KIJ:
 #pragma omp parallel for
         _FOR_K {
           _FOR_I _FOR_J
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         }
     case TMM_Algo::IKJ:
 #pragma omp parallel for
         _FOR_I {
           _FOR_K _FOR_J
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         }
       return;
     case TMM_Algo::KJI:
 #pragma omp parallel for
         _FOR_K {
           _FOR_J _FOR_I
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         }
       return;
     case TMM_Algo::JIK:
 #pragma omp parallel for
         _FOR_J {
           _FOR_I _FOR_K
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         }
       return;
 #undef _FOR_I
@@ -241,27 +241,27 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
 #define _CILK_FOR_K cilk_for(size_t k=0; k < ncolumns_op_b; k++)
     case TMM_Algo::IJK:
         _CILK_FOR_I _FOR_J _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JKI:
         _CILK_FOR_J _FOR_K _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KIJ:
         _CILK_FOR_K _FOR_I _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::IKJ:
         _CILK_FOR_I _FOR_K _FOR_J
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::KJI:
         _CILK_FOR_K _FOR_J _FOR_I
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
     case TMM_Algo::JIK:
         _CILK_FOR_J _FOR_I _FOR_K
-          _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+          _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
       return;
 #undef _FOR_I
 #undef _FOR_J
@@ -292,35 +292,35 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
     case TMM_Algo::IJK:
         parallelForElem( _TBB_FOR_I {
           _FOR_J _FOR_K
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         } );
       return;
     case TMM_Algo::JKI:
         parallelForElem( _TBB_FOR_J {
           _FOR_K _FOR_I
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         } );
     case TMM_Algo::KIJ:
         parallelForElem( _TBB_FOR_K {
           _FOR_I _FOR_J
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         } );
     case TMM_Algo::IKJ:
         parallelForElem( _TBB_FOR_I {
           _FOR_K _FOR_J
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         } );
       return;
     case TMM_Algo::KJI:
         parallelForElem( _TBB_FOR_K {
           _FOR_J _FOR_I
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         } );
       return;
     case TMM_Algo::JIK:
         parallelForElem( _TBB_FOR_J {
           _FOR_I _FOR_K
-            _mm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
+            _gemm_op<T,tA,tB,ccA,ccB>(a,b,c,ncolumns_op_a,ncolumns_op_b,ncolumns_op_b,i,j,k);
         } );
       return;
 #undef _FOR_I
