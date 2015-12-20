@@ -168,13 +168,13 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::init(InFileText& f, cons
          f_upper_band=0,
          f_lower_band=0;
   ParseHeaderDat(f,f_nrows,f_ncolumns,f_upper_band,f_lower_band);
-  this->m_nrows = f_nrows;
-  this->m_ncolumns = f_ncolumns;
+  m_nrows = f_nrows;
+  m_ncolumns = f_ncolumns;
   m_upper_band = f_upper_band;
   m_lower_band = f_lower_band;
   if(transpose)
   {
-    std::swap(this->m_nrows,this->m_ncolumns);
+    std::swap(m_nrows,m_ncolumns);
     std::swap(m_upper_band,m_lower_band);
   }
 
@@ -182,20 +182,20 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::init(InFileText& f, cons
     ensureAllocated();
 
     const size_t f_stored_rows = std::min(f_nrows,f_ncolumns);
-    const size_t input_stride = ( ((this->isRowMajor() && transpose) || (!this->isRowMajor() && !transpose)) ? f_stored_rows : 1 );
-    const size_t input_inc = ( ((this->isRowMajor() && transpose) || (!this->isRowMajor() && !transpose)) ? 1 : f_upper_band+f_lower_band+1 );
+    const size_t input_stride = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? f_stored_rows : 1 );
+    const size_t input_inc = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? 1 : f_upper_band+f_lower_band+1 );
     //no placement new call is required, data should be initialized when read in
     for (size_t i = 0; i < f_lower_band; ++i)
     {
-      f.readNextLine_scanNumArray<T>(f_upper_band+1+i, f_upper_band+1+i, this->getDataPtr()+input_inc*i+f_lower_band-i, input_stride);
+      f.readNextLine_scanNumArray<T>(f_upper_band+1+i, f_upper_band+1+i, getDataPtr()+input_inc*i+f_lower_band-i, input_stride);
     }
     for(size_t i = f_lower_band; i < f_stored_rows - f_upper_band; i++)
     {
-      f.readNextLine_scanNumArray<T>(f_upper_band+1+f_lower_band, f_upper_band+1+f_lower_band, this->getDataPtr()+input_inc*i, input_stride);
+      f.readNextLine_scanNumArray<T>(f_upper_band+1+f_lower_band, f_upper_band+1+f_lower_band, getDataPtr()+input_inc*i, input_stride);
     }
     for(size_t i = f_upper_band; i > 0; i++)
     {
-      f.readNextLine_scanNumArray<T>(i+1+f_lower_band, i+1+f_lower_band, this->getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
+      f.readNextLine_scanNumArray<T>(i+1+f_lower_band, i+1+f_lower_band, getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
     }
     if(std::is_class<T>::value)
     {
@@ -210,8 +210,8 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::readFromFile(InFileText&
   if(f.fileType() != FT_MatrixText)
     throw FileFormatUnsupportedError("File format unsupported",f.fileType(),f.fileName().c_str(),f.lineNum());
 
-  size_t f_nrows = this->m_nrows,
-         f_ncolumns = this->m_ncolumns,
+  size_t f_nrows = m_nrows,
+         f_ncolumns = m_ncolumns,
          f_upper_band = m_upper_band,
          f_lower_band = m_lower_band;
   if(transpose)
@@ -236,20 +236,20 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::readFromFile(InFileText&
   ensureAllocated();
 
   const size_t f_stored_rows = std::min(f_nrows,f_ncolumns);
-  const size_t input_stride = ( ((this->isRowMajor() && transpose) || (!this->isRowMajor() && !transpose)) ? f_stored_rows : 1 );
-  const size_t input_inc = ( ((this->isRowMajor() && transpose) || (!this->isRowMajor() && !transpose)) ? 1 : f_upper_band+f_lower_band+1 );
+  const size_t input_stride = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? f_stored_rows : 1 );
+  const size_t input_inc = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? 1 : f_upper_band+f_lower_band+1 );
   //no placement new call is required, data should be initialized when read in
   for (size_t i = 0; i < f_lower_band; ++i)
   {
-    f.readNextLine_scanNumArray<T>(f_upper_band+1+i, f_upper_band+1+i, this->getDataPtr()+input_inc*i+f_lower_band-i, input_stride);
+    f.readNextLine_scanNumArray<T>(f_upper_band+1+i, f_upper_band+1+i, getDataPtr()+input_inc*i+f_lower_band-i, input_stride);
   }
   for(size_t i = f_lower_band; i < f_stored_rows - f_upper_band; i++)
   {
-    f.readNextLine_scanNumArray<T>(f_upper_band+1+f_lower_band, f_upper_band+1+f_lower_band, this->getDataPtr()+input_inc*i, input_stride);
+    f.readNextLine_scanNumArray<T>(f_upper_band+1+f_lower_band, f_upper_band+1+f_lower_band, getDataPtr()+input_inc*i, input_stride);
   }
   for(size_t i = f_upper_band; i > 0; i++)
   {
-    f.readNextLine_scanNumArray<T>(i+1+f_lower_band, i+1+f_lower_band, this->getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
+    f.readNextLine_scanNumArray<T>(i+1+f_lower_band, i+1+f_lower_band, getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
   }
   if(std::is_class<T>::value)
   {
@@ -262,8 +262,8 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::writeToFile(OutFileText&
   if(f.fileType() != FT_MatrixText)
     throw FileFormatUnsupportedError("File format unsupported",f.fileType(),f.fileName().c_str(),f.lineNum());
 
-  size_t f_nrows = this->m_nrows,
-         f_ncolumns = this->m_ncolumns,
+  size_t f_nrows = m_nrows,
+         f_ncolumns = m_ncolumns,
          f_upper_band = m_upper_band,
          f_lower_band = m_lower_band;
   if(transpose)
@@ -275,19 +275,19 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::writeToFile(OutFileText&
   WriteHeaderDat(f, f_nrows, f_ncolumns, f_upper_band, f_lower_band);
 
   const size_t f_stored_rows = std::min(f_nrows,f_ncolumns);
-  const size_t output_stride = ( ((this->isRowMajor() && transpose) || (!this->isRowMajor() && !transpose)) ? f_stored_rows : 1 );
-  const size_t output_inc = ( ((this->isRowMajor() && transpose) || (!this->isRowMajor() && !transpose)) ? 1 : f_upper_band+f_lower_band+1 );
+  const size_t output_stride = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? f_stored_rows : 1 );
+  const size_t output_inc = ( ((isRowMajor() && transpose) || (!isRowMajor() && !transpose)) ? 1 : f_upper_band+f_lower_band+1 );
   for (size_t i = 0; i < f_lower_band; ++i)
   {
-    f.println_printNumArray(f_upper_band+1+i, this->getDataPtr()+output_inc*i+f_lower_band-i, output_stride , print_precision);
+    f.println_printNumArray(f_upper_band+1+i, getDataPtr()+output_inc*i+f_lower_band-i, output_stride , print_precision);
   }
   for(size_t i = f_lower_band; i < f_stored_rows - f_upper_band; i++)
   {
-    f.println_printNumArray(f_upper_band+1+f_lower_band, this->getDataPtr()+output_inc*i, output_stride , print_precision);
+    f.println_printNumArray(f_upper_band+1+f_lower_band, getDataPtr()+output_inc*i, output_stride , print_precision);
   }
   for(size_t i = f_upper_band; i > 0; i++)
   {
-    f.println_printNumArray(i+1+f_lower_band, this->getDataPtr()+output_inc*(f_stored_rows-i), output_stride , print_precision);
+    f.println_printNumArray(i+1+f_lower_band, getDataPtr()+output_inc*(f_stored_rows-i), output_stride , print_precision);
   }
   f.flush();
 }

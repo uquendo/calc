@@ -448,18 +448,22 @@ protected:
   {}
 
 public:
+  using MatrixBase::m_nrows;
+  using MatrixBase::m_ncolumns;
   size_t m_upper_band;
   size_t m_lower_band;
 
 public:
+  using ArrayBasedDenseMatrix<T>::getDataPtr;
+  using MatrixBase::isRowMajor;
   void init(InFileText& f, const bool readData = true, const bool transpose = false) override;
   virtual ~ArrayBasedCDSBandedMatrix() {}
 
   inline TMatrixFlavour getFlavour() const override { return TMatrixFlavour::Banded; }
-  inline size_t getStoredSize() const override { return (m_lower_band+m_upper_band+1)*std::min(this->m_nrows,this->m_ncolumns); }
+  inline size_t getStoredSize() const override { return (m_lower_band+m_upper_band+1)*std::min(m_nrows,m_ncolumns); }
 
   // data access
-  inline size_t index(size_t i, size_t j) const override { return ( this->isRowMajor() ? 0 : 0 ); } //TODO: STUB!
+  inline size_t index(size_t i, size_t j) const override { return ( isRowMajor() ? 0 : 0 ); } //TODO: STUB!
 
   //data IO
   void readFromFile(InFileText& f, const bool transpose = false) override;

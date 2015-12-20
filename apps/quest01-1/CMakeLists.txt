@@ -1,4 +1,4 @@
-set(APP_NAME quest01)
+set(APP_NAME quest01-1)
 set(APP_VERSION 0.1)
 set(APP_SRCNAME quest)
 
