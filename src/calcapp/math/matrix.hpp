@@ -80,6 +80,8 @@ public:
   inline size_t getSize() const { return m_nrows*m_ncolumns; }
   inline size_t getRowsNum() const { return m_nrows; }
   inline size_t getColumnsNum() const { return m_ncolumns; }
+  virtual inline size_t getUpperBand() const { return m_ncolumns; }
+  virtual inline size_t getLowerBand() const { return m_nrows; }
   virtual inline TMatrixType getBackendType() const = 0;
   virtual inline TMatrixFlavour getFlavour() const = 0;
   virtual inline size_t getStoredSize() const = 0;
@@ -461,8 +463,8 @@ public:
 
   inline TMatrixFlavour getFlavour() const override { return TMatrixFlavour::Banded; }
   inline size_t getStoredSize() const override { return (m_lower_band+m_upper_band+1)*std::min(m_nrows,m_ncolumns); }
-  inline size_t getUpperBand() const { return m_upper_band; }
-  inline size_t getLowerBand() const { return m_lower_band; }
+  inline size_t getUpperBand() const override { return m_upper_band; }
+  inline size_t getLowerBand() const override { return m_lower_band; }
 
   // data access
   inline size_t index(size_t i, size_t j) const override { return ( isRowMajor() ? 0 : 0 ); } //TODO: STUB!
@@ -544,10 +546,10 @@ inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, co
   const bool reset = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor,
   const TMatrixType type = TMatrixType::Array, const TMatrixFlavour flavour = TMatrixFlavour::Dense,
   const size_t upper_band = 0, const size_t lower_band = 0);
-inline MatrixBase* NewMatrix(const numeric::TPrecision p, InFileText& f, const bool readData = true,
+inline MatrixBase* NewMatrix(const numeric::TPrecision p, InFileText* pf, const bool readData = true,
   const bool transpose = false, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor,
   const TMatrixType type = TMatrixType::Array, const TMatrixFlavour flavour = TMatrixFlavour::Dense);
-inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns, InFileText& f,
+inline MatrixBase* NewMatrix(const numeric::TPrecision p, const size_t nrows, const size_t ncolumns, InFileText* f,
   const bool transpose = true, const numeric::TMatrixStorage storage = numeric::TMatrixStorage::RowMajor,
   const TMatrixType type = TMatrixType::Array, const TMatrixFlavour flavour = TMatrixFlavour::Dense,
   const size_t upper_band = 0, const size_t lower_band = 0);

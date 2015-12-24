@@ -266,10 +266,6 @@ namespace Calc
     //dispatcher
     void perform(const AlgoParameters& parameters, Logger& log)
     {
-      if(parameters.Aopt.type == A_NumCppValarray || parameters.Aopt.type == A_NumCppValarrayTranspose)
-      {
-
-      }
       numeric::ParallelScheduler __ps(parameters.Topt.type,parameters.Topt.num);
       ExecTimeMeter __etm(log, "matmul::perform");
 //      PERF_METER(log, "matmul::perform");

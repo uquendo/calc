@@ -1,18 +1,31 @@
 +- AppOptions options processing implementation
 +- App variants interfaces & implementation
 +- Input/Output file processing interface & implementation
-* working quest-example and quest01 from quest-template:
+* quest-template and quest-examples :
+  + algorithms dispatcher
+  * example measuring memory bandwidth
+  * example measuring flops
+  * example measuring cache properties
+  * example measuring file io
+* working quest01 :
   + simple wrapper class/struct for matrices
   + i/o for matrices
-  + algorithms dispatcher
-  * thread pool for std::thread/pthreads
   +/- c++ variants of quest01 algorithms(strassen remaines untouched)
-  * remainder loops(or proper init of ) for block algo
+  * remainder loops(or proper init of blocks) for block algo
   * c variants of quest01 algorithms
   * fortran variants of quest01 algorithms
   * performance comparsion
+* working quest02
+* working quest03
+* working quest04
+* working quest05
 * README
-* threading dispatcher via some generic parallelisable constructs(i.e. map/reduce)
+* review precision dispatching mechanism:
+  * add more flexible method to list set of float types suitable to dispatch
+  * find some way to simplify generic datastructures following CRTP
+* write threading dispatching mechanism with flexible method to list set of threading models suitable to dispatch
+* thread pool for std::thread/pthreads
+* some generic parallelisable constructs(i.e. map/reduce) for threading dispatcher
 +- BUILD_VANILLA review
 * BUILD_THREADING review
 * progress bar and logger logic review
@@ -23,6 +36,10 @@
   3(linux/os x/win) * 3(basic/full/vanilla) * 3(gnu/intel/clang/msvc compiler)
 * test compilation on ibm/pgi/pathscale compilers
 * add support for gziped i/o via boost::iostreams
-* add extra third parties for tests: GSL, FFTW, PETSc, Hypre/BoomerAMG, SuiteSparse, 
+* add extra third parties for tests: GSL, FFTW, PETSc, Hypre/BoomerAMG, SuiteSparse,
   CGAL, libFLAME/BLIS(https://www.cs.utexas.edu/~flame/web/),
   TiledArray(https://github.com/ValeevGroup/tiledarray) etc
+* add generic framework to test matrix algorithms on matrices from some well-known matrix collections:
+  - https://www.cise.ufl.edu/research/sparse/matrices/
+  - http://math.nist.gov/MatrixMarket/collections/hb.html
+  etc...

@@ -72,6 +72,7 @@ namespace Calc {
 #ifdef HAVE_BLAS
     //cblas version for matrices in row major order
     struct contrib_c_blas;
+    //cblas version for matrices in column major order
     struct contrib_fortran_blas;
 #endif
 

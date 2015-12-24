@@ -22,6 +22,7 @@
 namespace Calc {
 
 static const int LOG_LEVEL_NAME_COUNT=7;
+static constexpr int BUF_SIZE=1024;
 extern const char * LOG_LEVEL_NAME[LOG_LEVEL_NAME_COUNT];
 
 class BaseException;

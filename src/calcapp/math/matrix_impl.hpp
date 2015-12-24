@@ -144,8 +144,8 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::ParseHeaderDat(InFileTex
       f_lower_band++;
   }
   lower_band = f_lower_band;
-  if(f.lineNum() != std::min(rows,columns)+1)
-    throw FileFormatValueBoundsError("Mismatched size of banded matrix in file",f.fileType(),f.fileName().c_str(),f.lineNum());
+//  if(f.lineNum() != std::min(rows,columns)+2)
+//    throw FileFormatValueBoundsError("Mismatched size of banded matrix in file",f.fileType(),f.fileName().c_str(),f.lineNum());
   f.reset();
   f.readNextLine();
 }
@@ -193,9 +193,9 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::init(InFileText& f, cons
     {
       f.readNextLine_scanNumArray<T>(f_upper_band+1+f_lower_band, f_upper_band+1+f_lower_band, getDataPtr()+input_inc*i, input_stride);
     }
-    for(size_t i = f_upper_band; i > 0; i++)
+    for(size_t i = f_upper_band; i > 0; i--)
     {
-      f.readNextLine_scanNumArray<T>(i+1+f_lower_band, i+1+f_lower_band, getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
+      f.readNextLine_scanNumArray<T>(i+f_lower_band, i+f_lower_band, getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
     }
     if(std::is_class<T>::value)
     {
@@ -247,9 +247,9 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::readFromFile(InFileText&
   {
     f.readNextLine_scanNumArray<T>(f_upper_band+1+f_lower_band, f_upper_band+1+f_lower_band, getDataPtr()+input_inc*i, input_stride);
   }
-  for(size_t i = f_upper_band; i > 0; i++)
+  for(size_t i = f_upper_band; i > 0; i--)
   {
-    f.readNextLine_scanNumArray<T>(i+1+f_lower_band, i+1+f_lower_band, getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
+    f.readNextLine_scanNumArray<T>(i+f_lower_band, i+f_lower_band, getDataPtr()+input_inc*(f_stored_rows-i), input_stride);
   }
   if(std::is_class<T>::value)
   {
@@ -285,9 +285,9 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::writeToFile(OutFileText&
   {
     f.println_printNumArray(f_upper_band+1+f_lower_band, getDataPtr()+output_inc*i, output_stride , print_precision);
   }
-  for(size_t i = f_upper_band; i > 0; i++)
+  for(size_t i = f_upper_band; i > 0; i--)
   {
-    f.println_printNumArray(i+1+f_lower_band, getDataPtr()+output_inc*(f_stored_rows-i), output_stride , print_precision);
+    f.println_printNumArray(i+f_lower_band, getDataPtr()+output_inc*(f_stored_rows-i), output_stride , print_precision);
   }
   f.flush();
 }

@@ -27,6 +27,20 @@ namespace Calc {
     return about;
   }
 
+  const string QuestAppOptions::Help() const
+  {
+    string help = CliAppOptions::Help();
+#ifndef HAVE_BOOST
+    help.append("\nAlgorithm options:\n");
+    help.append("  -s [ --algorithm ] arg (=");
+    help.append(_algo_opt_names[0].opt);
+    help.append(")\n");
+    help.append(algoHelp);
+    help.append("\n");
+#endif
+    return help;
+  }
+
   bool QuestAppOptions::processOptions(int argc, char* argv[])
   {
     return CliAppOptions::processOptions(argc,argv);
@@ -102,7 +116,50 @@ namespace Calc {
   }
 
   bool QuestAppOptions::parseOptions(int argc, char* argv[]){
-    return CliAppOptions::parseOptions(argc,argv);
+    bool result = CliAppOptions::parseOptions(argc,argv);
+#ifndef HAVE_BOOST
+    //fallback limited cli parsing for vanilla build
+    std::string algo_opt;
+    bool check_algo_opt = false;
+    for(int i = 1; i < argc; i++)
+    {
+      if(std::strncmp(argv[i],"--algorithm",11) == 0)
+      {
+        if(!algo_opt.empty())
+          throw OptionsParsingError("option '--algorithm' cannot be specified more than once");
+        algo_opt = std::string(argv[i]+11);
+        check_algo_opt = true;
+      }
+      if(std::strncmp(argv[i],"-a",2) == 0)
+      {
+        if(!algo_opt.empty())
+          throw OptionsParsingError("option '-a' cannot be specified more than once");
+        if(i == argc - 1 )
+          throw OptionsParsingError("option '-a' should be followed by algorithm name");
+        algo_opt = std::string(argv[i+1]);
+        check_algo_opt = true;
+      }
+      if(check_algo_opt)
+      {
+        TAlgo algo = A_Undefined;
+        for ( int j = 0; _algo_opt_names[j].name; ++j ) {
+          if ( _algo_opt_names[j].opt == algo_opt ) {
+            algo = _algo_opt_names[j].type;
+            break;
+          }
+        }
+        if(algo == A_Undefined)
+        {
+          std::string err = "Unknown algorithm type option given: ";
+          err.append(algo_opt);
+          throw OptionsParsingError(err.c_str());
+        }
+        check_algo_opt = false;
+        m_algo.type = algo;
+      }
+    }
+#endif
+    return result;
   }
 
   bool QuestAppOptions::parseInputOptions()
@@ -326,6 +383,7 @@ namespace Calc {
       case A_NumFortranStrassen :
       case A_ExtCppEigen :
       case A_ExtCppArmadillo :
+      case A_ExtCBLAS :
         m_pAlgoParameters->storage = numeric::TMatrixStorage::ColumnMajor;
       default:
         break;

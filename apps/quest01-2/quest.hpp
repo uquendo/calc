@@ -114,22 +114,23 @@ class QuestAppOptions : public CliAppOptions {
 public:
     QuestAppOptions();
     virtual ~QuestAppOptions() {};
-    virtual bool processOptions(int argc, char* argv[]) override;
-    virtual const std::string About() const override;
+    bool processOptions(int argc, char* argv[]) override;
+    const std::string About() const override;
+    const std::string Help() const override;
     inline const InputOptions& getInOpts() const { return m_input; };
     inline const OutputOptions& getOutOpts() const { return m_output; };
     inline const AlgoOptions& getAlgoOpts() const { return m_algo; };
 protected:
     //prepare cli options
-    virtual void prepareOptions() override;
-    virtual void prepareInputOptions() override;
-    virtual void prepareOutputOptions() override;
-    virtual void prepareAlgoOptions() override;
+    void prepareOptions() override;
+    void prepareInputOptions() override;
+    void prepareOutputOptions() override;
+    void prepareAlgoOptions() override;
     //parse cli options
-    virtual bool parseOptions(int argc, char* argv[]) override;
-    virtual bool parseInputOptions() override;
-    virtual bool parseOutputOptions() override;
-    virtual bool parseAlgoOptions() override;
+    bool parseOptions(int argc, char* argv[]) override;
+    bool parseInputOptions() override;
+    bool parseOutputOptions() override;
+    bool parseAlgoOptions() override;
 protected:
     std::string inputHelp;
     std::string outputHelp;
@@ -147,10 +148,10 @@ public:
     QuestApp(const QuestAppOptions&, ProgressCtrl* pc);
     QuestApp(ProgressCtrl* pc);
     virtual ~QuestApp(){};
-    virtual void setDefaultOptions() override;
-    virtual void readInput() override;
-    virtual void writeOutput() override;
-    virtual void run() override;
+    void setDefaultOptions() override;
+    void readInput() override;
+    void writeOutput() override;
+    void run() override;
     const std::string Summary() const;
 private:
     InputOptions m_input;

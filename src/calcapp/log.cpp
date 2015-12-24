@@ -70,11 +70,10 @@ inline Logger::LogMessage Logger::swarning() { return slog(L_WARNING); }
 inline Logger::LogMessage Logger::sdebug() { return slog(L_DEBUG); }
 
 void Logger::vflog(LogLevel level, const char * format, va_list va) {
-  static const int BUF_SIZE=1024;
-  char * buf = new char[1024];
+  char buf[BUF_SIZE];
+  buf[0] = 0;
   vsnprintf(buf, BUF_SIZE, format, va);
   log(level, buf);
-  delete[] buf;
 }
 
 class DefaultLogger : public Logger {
@@ -115,7 +114,7 @@ ExecTimeMeter::ExecTimeMeter(Logger& log, const char * name)
 {
 }
 
-ExecTimeMeter::~ExecTimeMeter() 
+ExecTimeMeter::~ExecTimeMeter()
 {
   double endTime = SysUtil::getCurTimeSec() - m_startTime;
   m_log.fdebug("PERF: %s: %f seconds", m_name, endTime);

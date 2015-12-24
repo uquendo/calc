@@ -27,6 +27,20 @@ namespace Calc {
     return about;
   }
 
+  const string QuestAppOptions::Help() const
+  {
+    string help = CliAppOptions::Help();
+#ifndef HAVE_BOOST
+    help.append("\nAlgorithm options:\n");
+    help.append("  -s [ --algorithm ] arg (=");
+    help.append(_algo_opt_names[0].opt);
+    help.append(")\n");
+    help.append(algoHelp);
+    help.append("\n");
+#endif
+    return help;
+  }
+
   bool QuestAppOptions::processOptions(int argc, char* argv[])
   {
     return CliAppOptions::processOptions(argc,argv);
@@ -97,7 +111,50 @@ namespace Calc {
   }
 
   bool QuestAppOptions::parseOptions(int argc, char* argv[]){
-    return CliAppOptions::parseOptions(argc,argv);
+    bool result = CliAppOptions::parseOptions(argc,argv);
+#ifndef HAVE_BOOST
+    //fallback limited cli parsing for vanilla build
+    std::string algo_opt;
+    bool check_algo_opt = false;
+    for(int i = 1; i < argc; i++)
+    {
+      if(std::strncmp(argv[i],"--algorithm",11) == 0)
+      {
+        if(!algo_opt.empty())
+          throw OptionsParsingError("option '--algorithm' cannot be specified more than once");
+        algo_opt = std::string(argv[i]+11);
+        check_algo_opt = true;
+      }
+      if(std::strncmp(argv[i],"-a",2) == 0)
+      {
+        if(!algo_opt.empty())
+          throw OptionsParsingError("option '-a' cannot be specified more than once");
+        if(i == argc - 1 )
+          throw OptionsParsingError("option '-a' should be followed by algorithm name");
+        algo_opt = std::string(argv[i+1]);
+        check_algo_opt = true;
+      }
+      if(check_algo_opt)
+      {
+        TAlgo algo = A_Undefined;
+        for ( int j = 0; _algo_opt_names[j].name; ++j ) {
+          if ( _algo_opt_names[j].opt == algo_opt ) {
+            algo = _algo_opt_names[j].type;
+            break;
+          }
+        }
+        if(algo == A_Undefined)
+        {
+          std::string err = "Unknown algorithm type option given: ";
+          err.append(algo_opt);
+          throw OptionsParsingError(err.c_str());
+        }
+        check_algo_opt = false;
+        m_algo.type = algo;
+      }
+    }
+#endif
+    return result;
   }
 
   bool QuestAppOptions::parseInputOptions()
@@ -339,9 +396,11 @@ namespace Calc {
           m_pfA.get(), false, m_pAlgoParameters->transposeA, m_pAlgoParameters->storage, mat_type, mat_flavour));
     m_pAlgoParameters->b.reset(NewMatrix(m_precision.type,
           m_pfB.get(), false, m_pAlgoParameters->transposeB, m_pAlgoParameters->storage, mat_type, mat_flavour));
-    log().fdebug("found input matrices: A ( %zu x %zu ), B ( %zu x %zu )",
+    log().fdebug("found input banded matrices: A ( %zu x %zu ), (upper, lower) = ( %zu, %zu ), B ( %zu x %zu ),  (upper, lower) = ( %zu, %zu )",
         m_pAlgoParameters->a->getRowsNum(), m_pAlgoParameters->a->getColumnsNum(),
-        m_pAlgoParameters->b->getRowsNum(), m_pAlgoParameters->b->getColumnsNum());
+        m_pAlgoParameters->a->getUpperBand(), m_pAlgoParameters->a->getLowerBand(),
+        m_pAlgoParameters->b->getRowsNum(), m_pAlgoParameters->b->getColumnsNum(),
+        m_pAlgoParameters->b->getUpperBand(), m_pAlgoParameters->b->getLowerBand());
     //sanity check(input can be used by selected algorithm)
     log().debug("sanity check of matrix sizes...");
     //check that sizes are valid
@@ -351,9 +410,14 @@ namespace Calc {
     }
     //initialize output structure[s] and possibly file[s]
     //create output matrix
-    log().fdebug("creating output matrix C ( %zu x %zu )...", m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C);
+    log().fdebug("creating output matrix C ( %zu x %zu ), (upper, lower) = ( %zu, %zu )...",
+        m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C,
+        m_pAlgoParameters->a->getUpperBand() + m_pAlgoParameters->b->getUpperBand(),
+        m_pAlgoParameters->a->getLowerBand() + m_pAlgoParameters->b->getLowerBand());
     m_pAlgoParameters->c.reset(NewMatrix(m_precision.type,
-          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage, mat_type, mat_flavour));
+          m_pAlgoParameters->nrows_C, m_pAlgoParameters->ncolumns_C, true, m_pAlgoParameters->storage, mat_type, mat_flavour,
+          m_pAlgoParameters->a->getUpperBand() + m_pAlgoParameters->b->getUpperBand(),
+          m_pAlgoParameters->a->getLowerBand() + m_pAlgoParameters->b->getLowerBand()));
     //read input data
     log().debug("reading input matrices...");
     readInput();

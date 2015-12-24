@@ -19,7 +19,6 @@
 #include <limits>
 #include <cstddef>
 #include <cstring>
-#include <iostream>
 
 using std::size_t;
 
@@ -55,7 +54,7 @@ template<typename T, size_t nr, size_t mr>
   }
 }
 
-
+#ifdef NDEBUG
 template<>
   __FORCEINLINE inline void __mm_block_op<double, 4, 4>(const double * const  __RESTRICT a, const size_t stride_a,
                                                         const double * const  __RESTRICT b, const size_t stride_b,
@@ -118,7 +117,7 @@ template<>
       _mm256_storeu_pd(&c[(kk+3*c_sz)*pack_size], c_pack3);
   }
 }
-
+#endif
 
 /*
 template<>

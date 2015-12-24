@@ -16,6 +16,13 @@
 # include <armadillo>
 #endif
 #ifdef HAVE_BLAS
+extern "C"
+{
+# include <cblas.h>
+# define NOCHANGE
+# include <cblas_f77.h>
+# undef NOCHANGE
+}
 #endif
 
 namespace Calc
@@ -177,11 +184,16 @@ namespace Calc
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
+        if(!std::is_class<T>::value)
+        {
         numeric::dgemm_block<typename BlockTraits<T>::type>(numeric::TMatrixStorage::RowMajor,
             p.a->getDataPtr<typename BlockTraits<T>::type>(),
             p.b->getDataPtr<typename BlockTraits<T>::type>(),
             p.c->getDataPtr<typename BlockTraits<T>::type>(),
             p.a->getRowsNum(), p.a->getColumnsNum(), p.b->getRowsNum(), p.b->getColumnsNum(), p.Topt.type);
+        } else {
+          throw Calc::ParameterError("Algotithm is not implemented");
+        }
       }
     };
 
@@ -362,7 +374,26 @@ namespace Calc
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        //TODO:
+        if(numeric::TraitEnum<T>::type == numeric::P_Float)
+          cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+              p.a->getRowsNum(), p.b->getColumnsNum(), p.a->getColumnsNum(),
+              1.0f,
+              p.a->getDataPtr<float>(), p.a->getColumnsNum(),
+              p.b->getDataPtr<float>(), p.b->getColumnsNum(),
+              0.0f,
+              p.c->getDataPtr<float>(), p.c->getColumnsNum()
+              );
+        else if(numeric::TraitEnum<T>::type == numeric::P_Double)
+          cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+              p.a->getRowsNum(), p.b->getColumnsNum(), p.a->getColumnsNum(),
+              1.0,
+              p.a->getDataPtr<double>(), p.a->getColumnsNum(),
+              p.b->getDataPtr<double>(), p.b->getColumnsNum(),
+              0.0,
+              p.c->getDataPtr<double>(), p.c->getColumnsNum()
+              );
+        else
+          throw Calc::ParameterError("Algotithm is not implemented");
       }
     };
 
@@ -371,7 +402,33 @@ namespace Calc
     {
       template<typename T> inline void perform(const AlgoParameters& p)
       {
-        //TODO:
+        char trans = 'N';
+        const int n = (int)p.a->getRowsNum(),
+                  m = (int)p.b->getColumnsNum(),
+                  k = (int)p.a->getColumnsNum();
+        const float salpha = 1.0f, sbeta = 0.0f;
+        const double dalpha = 1.0, dbeta = 0.0;
+
+        if(numeric::TraitEnum<T>::type == numeric::P_Float)
+          F77_sgemm(&trans,&trans,
+              &m, &n, &k,
+              &salpha,
+              p.a->getDataPtr<float>(), &n,
+              p.b->getDataPtr<float>(), &k,
+              &sbeta,
+              p.c->getDataPtr<float>(), &n
+              );
+        else if(numeric::TraitEnum<T>::type == numeric::P_Double)
+          F77_dgemm(&trans, &trans,
+              &m, &n, &k,
+              &dalpha,
+              p.a->getDataPtr<double>(), &n,
+              p.b->getDataPtr<double>(), &k,
+              &dbeta,
+              p.c->getDataPtr<double>(), &n
+              );
+        else
+          throw Calc::ParameterError("Algotithm is not implemented");
       }
     };
 #endif
@@ -379,10 +436,6 @@ namespace Calc
     //dispatcher
     void perform(const AlgoParameters& parameters, Logger& log)
     {
-      if(parameters.Aopt.type == A_NumCppValarray || parameters.Aopt.type == A_NumCppValarrayTranspose)
-      {
-
-      }
       numeric::ParallelScheduler __ps(parameters.Topt.type,parameters.Topt.num);
       ExecTimeMeter __etm(log, "matmul::perform");
 //      PERF_METER(log, "matmul::perform");
@@ -444,9 +497,9 @@ namespace Calc
 #endif
 #ifdef HAVE_BLAS
         case A_ExtCBLAS:
-//          return contrib_c_blas()(parameters.Popt.type, parameters);
+          return contrib_c_blas()(parameters.Popt.type, parameters);
         case A_ExtFortranBLAS:
-//          return contrib_fortran_blas()(parameters.Popt.type, parameters);
+          return contrib_fortran_blas()(parameters.Popt.type, parameters);
 #endif
         case A_Undefined:
         default:
