@@ -23,10 +23,14 @@ typedef __int64 int64_t;
 #ifdef HAVE_MPREAL
 # ifdef HAVE_BOOST_MPREAL
 #include <boost/multiprecision/mpfr.hpp>
+#include <boost/math/constants/constants.hpp>
 # else
 #include <mpreal.h>
 # endif
 #endif
+
+#include <limits>
+#include <cmath>
 
 namespace numeric {
 
@@ -133,6 +137,67 @@ struct TraitEnum<mpreal> {
 
 #endif
 
+template<typename T, int ulp = 1> inline bool isEqualReal(const T& a, const T& b)
+{
+  using std::abs;
+  return abs(a - b) < std::numeric_limits<T>::epsilon() * abs(a + b) * ulp
+#ifndef BUILD_FASTMATH
+    //check for subnormals
+    || abs(a - b) < std::numeric_limits<T>::min()
+#endif
+    ;
+}
+
+template<typename T> inline T pi_const()
+{
+  return T(3.141592653589793238462643383279502884L);
+}
+
+template<typename T> inline T half_pi_const()
+{
+  return T(1.570796326794896619231321691639751442L);
+}
+
+#ifdef HAVE_MPREAL
+template<> inline mpreal pi_const()
+{
+# ifdef HAVE_BOOST_MPREAL
+  return boost::math::constants::pi<mpreal>();
+# else
+  return const_pi();
+#endif
+}
+
+template<> inline mpreal half_pi_const()
+{
+# ifdef HAVE_BOOST_MPREAL
+  return boost::math::constants::half_pi<mpreal>();
+# else
+  return const_pi() / mpreal(2);
+#endif
+}
+#endif
+
+template<typename T> inline double toDouble(T x)
+{
+  return (double)x;
+}
+#ifdef HAVE_QUADMATH
+template<> inline double toDouble(numeric::quad x)
+{
+  return x.convert_to<double>();
+}
+#endif
+#ifdef HAVE_MPREAL
+template<> inline double toDouble(numeric::mpreal x)
+{
+# ifdef HAVE_BOOST_MPREAL
+  return x.convert_to<double>();
+# else
+  return x.toDouble();
+# endif
+}
+#endif
 
 }
 

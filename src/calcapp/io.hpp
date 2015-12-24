@@ -21,23 +21,28 @@ enum TFileType : int {
     FT_MatrixText = 0,
     FT_MatrixBin = 1,
     FT_Csv = 2,
-    FT_Count = 3
+    //TODO: do we really need those?
+    FT_InterpolationTableText = 3,
+    FT_FunctionTableText = 4,
+    FT_Count = 5
 };
 
-static const int FILE_EXTENSION_WIDTH=10;
+static const int FILE_EXTENSION_WIDTH = 10;
 static const char TFileExt[FT_Count][FILE_EXTENSION_WIDTH] =
 {
     ".dat",
     ".bdat",
-    ".csv"
+    ".csv",
+    ".dat",
+    ".dat"
 };
 
 #if CALC_DEFAULT_LINE_BUF_SIZE > 1024
-static const int LINE_BUF_SIZE=CALC_DEFAULT_LINE_BUF_SIZE;
+static const int LINE_BUF_SIZE = CALC_DEFAULT_LINE_BUF_SIZE;
 #else
 //4KiB is default page size for most architectures
 //modern system though usualy support also the so-called Huge(Super/Large) pages with sizes of several MiB (2,4,16 and so on)
-static const int LINE_BUF_SIZE=4*1024*1024;
+static const int LINE_BUF_SIZE = 4*1024*1024;
 #endif
 
 namespace IOUtil {

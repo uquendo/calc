@@ -146,6 +146,19 @@ bool CliAppOptions::parseOptions(int argc, char* argv[]){
   }
 #else
   //TODO: invent some cli options parsing wheel there to make boost haters happy enough
+  for(int i = 1; i < argc; i++)
+  {
+    if((strncmp(argv[i],"--version",9) == 0) || (strncmp(argv[i],"-V",2) == 0))
+    {
+      printAbout();
+      return false;
+    }
+    if((strncmp(argv[i],"--help",6) == 0 ) || (strncmp(argv[i],"-h",2) == 0))
+    {
+      printHelp();
+      return false;
+    }
+  }
 #endif
   bool parsing_succeded = (
     parseLoggingOptions() &&
@@ -286,7 +299,13 @@ const string CliAppOptions::Help() const {
   oss << allOpt;
 #else
   //TODO: invent some cli options parsing wheel there to make boost haters happy enough
-  oss << "App was compiled without boost.program_options, so no fancy cli options yet. sorry.";
+  oss << "App was compiled without boost::program_options, so no fancy cli options yet." << std::endl;
+  oss << "Only very limited subset of options is supported at the moment. sorry." << std::endl;
+  oss << "Run without any options to use default parameters." << std::endl << std::endl;
+  oss << "Allowed options:" << std::endl;
+  oss << "Common options:" << std::endl;
+  oss << "  -h [ --help ]                print help message" << std::endl;
+  oss << "  -V [ --version ]             print build and version information" << std::endl;
 #endif
   return oss.str();
 }

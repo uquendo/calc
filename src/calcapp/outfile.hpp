@@ -33,7 +33,15 @@ public:
   void println(const char * str);
   inline void println(const std::string& str) { println(str.c_str()); }
   inline void println() { println(""); }
-  template<typename T> int println_printNumArray(const int count, T * const data, const int stride=1, const int digits=6, const char delim = ' ');
+  template<typename T> int println_printNumArray(const int count, const T * const data, const int stride=1, const int digits=6, const char delim = ' ');
+  // for lines with small number of individual parameters
+  template<typename T, typename... Tdata> int println_printNums(const int digits, const char delim, T data1, Tdata... dataN);
+  // version with default arguments
+  template<typename T, typename... Tdata> int println_printNumsDefault(T data1, Tdata... dataN)
+  { return println_printNums(6, ' ', data1, dataN...); }
+  // recursion base
+  int println_printNums(const int digits, const char delim)
+  { println(); return 0; }
 
   void print(const char * str);
   inline void print(const std::string& str) { print(str.c_str()); }
@@ -51,7 +59,7 @@ private:
   OutFileText& operator= (const OutFileText&);
 };
 
-template<typename T> int OutFileText::println_printNumArray(const int count, T * const data, const int stride, const int digits, const char delim)
+template<typename T> int OutFileText::println_printNumArray(const int count, const T * const data, const int stride, const int digits, const char delim)
 {
   static const size_t PRINTF_FLOAT_OVERHEAD = 10;
   const size_t bufSize = digits + PRINTF_FLOAT_OVERHEAD;
@@ -70,7 +78,25 @@ template<typename T> int OutFileText::println_printNumArray(const int count, T *
     }
   }
   println();
+  delete [] buf;
   return wrote;
+}
+
+template<typename T, typename... Tdata> int OutFileText::println_printNums(const int digits, const char delim, T data1, Tdata... dataN)
+{
+  static const size_t PRINTF_FLOAT_OVERHEAD = 10;
+  const size_t bufSize = digits + PRINTF_FLOAT_OVERHEAD;
+  char * buf = new char[bufSize];
+  buf[0] = 0;
+  if( IOUtil::printNumber(buf, bufSize, data1, digits) )
+  {
+      //TODO: setup assert about small buffer
+      *(m_f.get()) << buf << delim;
+      delete [] buf;
+      return 1 + println_printNums(digits,delim,dataN...);
+  }
+  delete [] buf;
+  return println_printNums(digits,delim,dataN...);
 }
 
 }

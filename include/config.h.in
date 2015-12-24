@@ -49,6 +49,7 @@
 //#cmakedefine HAVE_CLBLAS
 //#cmakedefine HAVE_CUBLAS
 #cmakedefine HAVE_EIGEN
+#cmakedefine HAVE_GSL
 #cmakedefine HAVE_MPREAL
 #cmakedefine HAVE_MTL
 //#cmakedefine HAVE_NVBLAS

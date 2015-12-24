@@ -42,6 +42,11 @@ public:
   inline const std::exception& cause() const { return m_cause; }
 };
 
+class OptionsParsingError : public BaseException {
+public:
+  OptionsParsingError(const char * errStr) : BaseException(FERR_DATA_ERROR, errStr) {}
+};
+
 class ParameterError : public BaseException {
 public:
   ParameterError(const char * errStr) : BaseException(FERR_DATA_ERROR, errStr) {}
