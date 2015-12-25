@@ -282,7 +282,8 @@ namespace Calc {
   QuestApp::QuestApp(const QuestAppOptions& opt)
     : CliApp(dynamic_cast<const CliAppOptions&>(opt))
     , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
-    , m_pAlgoParameters(new interpolate::AlgoParameters({m_threading,m_precision,m_algo,nullptr}))
+    , m_pAlgoParameters(new interpolate::AlgoParameters({m_threading,m_precision,m_algo,nullptr,
+          interpolate::default_output_fineness_factor,0,nullptr}))
     , m_pfIn(new InFileText(m_input.filename,m_input.filetype,true))
     , m_pfOut(new OutFileText(m_output.filename,m_output.filetype,false))
   {
@@ -291,7 +292,8 @@ namespace Calc {
   QuestApp::QuestApp(const QuestAppOptions& opt, ProgressCtrl* pc)
     : CliApp(dynamic_cast<const CliAppOptions&>(opt), pc)
     , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
-    , m_pAlgoParameters(new interpolate::AlgoParameters({m_threading,m_precision,m_algo,nullptr}))
+    , m_pAlgoParameters(new interpolate::AlgoParameters({m_threading,m_precision,m_algo,nullptr,
+          interpolate::default_output_fineness_factor,0,pc}))
     , m_pfIn(new InFileText(m_input.filename,m_input.filetype,true))
     , m_pfOut(new OutFileText(m_output.filename,m_output.filetype,false))
   {
@@ -318,7 +320,7 @@ namespace Calc {
     m_algo.type = A_NumCppChebyshev;
 #endif
     m_pAlgoParameters.reset(new interpolate::AlgoParameters({m_threading,m_precision,m_algo,nullptr,
-          interpolate::default_output_fineness_factor,0}));
+          interpolate::default_output_fineness_factor,0,ctrl()}));
     m_pfIn.reset(new InFileText(m_input.filename,m_input.filetype,true));
     m_pfOut.reset(new OutFileText(m_output.filename,m_output.filetype,false));
   }

@@ -58,7 +58,15 @@ public:
   template<typename T> int readNextLine_scanNumArray(const int minCount, const int maxCount, T * const data, const int stride=1);
 
   // for lines with small number of individual parameters
-  template<typename T> int readNextLine_scanNums(const int minCount, const int maxCount, /* T * dataN */ ...);
+  template<typename T, typename... Tdata> int readNextLine_scanNums(const int minCount, T* data1, Tdata... dataN);
+  template<typename T, typename... Tdata> int readNextLine_scanNumsDefault(const char*& str , T* data1, Tdata... dataN)
+  {
+    const int n = IOUtil::scanArray<T>(str, 1, data1, 1, &str);
+    return n + readNextLine_scanNumsDefault(str, dataN...);
+  }
+  // recursion base
+  template<typename T> int readNextLine_scanNumsDefault(const char*& str, T* data1) { return IOUtil::scanArray<T>(str, 1, data1, 1, &str); }
+
   int readNextLine_scan(int minCount, const char * format, ...);
 
   inline bool currentLineIs(const char * str) const { return strcmp(m_line, str) == 0; }
@@ -92,21 +100,13 @@ template <typename T> int InFileText::readNextLine_scanNumArray(const int minCou
   return n;
 }
 
-template <typename T> int InFileText::readNextLine_scanNums(const int minCount, const int maxCount, /* (T *) */...) 
+template<typename T, typename... Tdata> int InFileText::readNextLine_scanNums(const int minCount, T* data1, Tdata... dataN)
 {
 //  static_assert(std::is_arithmetic<T>::value, "Arithmetical type expected"); //TODO: check boost::multiprecision type traits
   const std::string s = ( std::is_integral<T>::value ? " integer values, got " : " floating point values, got " );
-
   readNextLine();
-
-  std::unique_ptr<T[]> v(new T[maxCount]);
-  int n = IOUtil::scanArray<T>(m_line, maxCount, &v[0]);
-
-  va_list va;
-  va_start(va, maxCount);
-  for ( int i = 0; i < n; ++i )
-    *va_arg(va, T *) = v[i];
-  va_end(va);
+  const char * str = &m_line[0];
+  const int n = readNextLine_scanNumsDefault(str,data1,dataN...);
 
   if ( n < minCount )
     throwIOError(FERR_IO_FORMAT_ERROR, std::string("Expected at least ").append(std::to_string(minCount)).append(s).append(std::to_string(n)).c_str());

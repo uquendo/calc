@@ -63,34 +63,42 @@ namespace IOUtil {
     std::string fileGrep(const std::string& fileName, const std::regex& rx, bool firstOnly = true, const unsigned submatchNumber = 0);
 
     template <typename T>
-    inline int scan(const char * str, const int nElem, T * const dest, T (*f)(const char *), const int stride=1){
+    inline int scan(const char * str, const int nElem, T * const dest, T (*f)(const char *), const int stride=1, const char** start_ptr = nullptr){
         const char * start = str;
         const char * end = start + strlen(str);
         int nTok = 0;
         while ( nTok < nElem ) {
             while ( start < end && isspace(*(unsigned const char *)start) ) ++start;
             if ( start >= end )
-                return nTok;
+            {
+              start = end;
+              break;
+            }
             dest[nTok*stride] = f(start);
             nTok++;
             while ( start < end && ! isspace(*(unsigned const char *)start) ) ++start;
         }
+        if(start_ptr != nullptr) *start_ptr = start;
         return nTok;
     }
 
     template <class Array, typename T>
-    inline int scan(const char * str, const int nElem, Array& dest, T (*f)(const char *), const int stride=1){
+    inline int scan(const char * str, const int nElem, Array& dest, T (*f)(const char *), const int stride=1, const char** start_ptr = nullptr){
         const char * start = str;
         const char * end = start + strlen(str);
         int nTok = 0;
         while ( nTok < nElem ) {
             while ( start < end && isspace(*(unsigned const char *)start) ) ++start;
             if ( start >= end )
-                return nTok;
+            {
+              start = end;
+              break;
+            }
             dest(nTok*stride) = f(start);
             nTok++;
             while ( start < end && ! isspace(*(unsigned const char *)start) ) ++start;
         }
+        if(start_ptr != nullptr) *start_ptr = start;
         return nTok;
     }
 
@@ -104,31 +112,31 @@ namespace IOUtil {
     numeric::mpreal __atompfr__(const char * str);
 #endif
 
-    template <typename T> inline int scanArray(const char * str, int nElem , T * const dest, int stride = 1) {
+    template <typename T> inline int scanArray(const char * str, int nElem , T * const dest, int stride = 1, const char** start_ptr = nullptr) {
       static_assert(std::is_arithmetic<T>::value, "Number required. No support for any other arrays yet.");
       return 0;
     }
 
-    template <> inline int scanArray<int>(const char * str, int nElem, int * dest, int stride)
-      { return scan<int>(str, nElem, dest, atoi, stride); }
-    template <> inline int scanArray<long>(const char * str, int nElem, long * dest, int stride)
-      { return scan<long>(str, nElem, dest, atol, stride); }
-    template <> inline int scanArray<long long>(const char * str, int nElem, long long * dest, int stride)
-      { return scan<long long>(str, nElem, dest, atoll, stride); }
+    template <> inline int scanArray<int>(const char * str, int nElem, int * dest, int stride, const char** start_ptr)
+      { return scan<int>(str, nElem, dest, atoi, stride,start_ptr); }
+    template <> inline int scanArray<long>(const char * str, int nElem, long * dest, int stride, const char** start_ptr)
+      { return scan<long>(str, nElem, dest, atol, stride,start_ptr); }
+    template <> inline int scanArray<long long>(const char * str, int nElem, long long * dest, int stride, const char** start_ptr)
+      { return scan<long long>(str, nElem, dest, atoll, stride,start_ptr); }
 
-    template <> inline int scanArray<float>(const char * str, int nElem, float * dest, int stride)
-      { return scan<float>(str, nElem, dest, __atof__, stride); }
-    template <> inline int scanArray<double>(const char * str, int nElem, double * dest, int stride)
-      { return scan<double>(str, nElem, dest, __atod__, stride); }
-    template <> inline int scanArray<long double>(const char * str, int nElem, long double * dest, int stride)
-      { return scan<long double>(str, nElem, dest, __atold__, stride); }
+    template <> inline int scanArray<float>(const char * str, int nElem, float * dest, int stride, const char** start_ptr)
+      { return scan<float>(str, nElem, dest, __atof__, stride,start_ptr); }
+    template <> inline int scanArray<double>(const char * str, int nElem, double * dest, int stride, const char** start_ptr)
+      { return scan<double>(str, nElem, dest, __atod__, stride,start_ptr); }
+    template <> inline int scanArray<long double>(const char * str, int nElem, long double * dest, int stride, const char** start_ptr)
+      { return scan<long double>(str, nElem, dest, __atold__, stride,start_ptr); }
 #ifdef HAVE_QUADMATH
-    template <> inline int scanArray<numeric::quad>(const char * str, int nElem, numeric::quad * dest, int stride)
-      { return scan<numeric::quad>(str, nElem, dest, __atoq__, stride); }
+    template <> inline int scanArray<numeric::quad>(const char * str, int nElem, numeric::quad * dest, int stride, const char** start_ptr)
+      { return scan<numeric::quad>(str, nElem, dest, __atoq__, stride,start_ptr); }
 #endif
 #ifdef HAVE_MPREAL
-    template <> inline int scanArray<numeric::mpreal>(const char * str, int nElem, numeric::mpreal * dest, int stride)
-      { return scan<numeric::mpreal>(str, nElem, dest, __atompfr__, stride); }
+    template <> inline int scanArray<numeric::mpreal>(const char * str, int nElem, numeric::mpreal * dest, int stride, const char** start_ptr)
+      { return scan<numeric::mpreal>(str, nElem, dest, __atompfr__, stride,start_ptr); }
 #endif
 
     template <typename T> inline constexpr const char* getNumFmt()

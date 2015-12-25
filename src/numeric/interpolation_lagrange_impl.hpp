@@ -31,9 +31,9 @@ namespace numeric {
     if(collision_check)
     {
       //binary search for arg in points to detect if it collides with some
-      auto candidate = std::lower_bound(&values[0],&values[sz],arg);
-      if((candidate != &values[sz]) && isEqualReal(arg, *candidate))
-        return *candidate;
+      auto candidate = std::lower_bound(&points[0],&points[sz],arg);
+      if((candidate != &points[sz]) && isEqualReal(arg, *candidate))
+        return values[candidate-points];
     }
     for(size_t i = 0; i < sz; i++)
     {
@@ -53,9 +53,9 @@ namespace numeric {
     if(collision_check)
     {
       //binary search for arg in points to detect if it collides with some
-      auto candidate = std::lower_bound(&values[0],&values[sz],arg);
-      if((candidate != &values[sz]) && isEqualReal(arg, *candidate))
-        return *candidate;
+      auto candidate = std::lower_bound(&points[0],&points[sz],arg);
+      if((candidate != &points[sz]) && isEqualReal(arg, *candidate))
+        return values[candidate-points];
     }
 #pragma omp parallel for reduction(+ : numerator, denominator)
     for(size_t i = 0; i < sz; i++)
@@ -77,9 +77,9 @@ namespace numeric {
     if(collision_check)
     {
       //binary search for arg in points to detect if it collides with some
-      auto candidate = std::lower_bound(&values[0],&values[sz],arg);
-      if((candidate != &values[sz]) && isEqualReal(arg, *candidate))
-        return *candidate;
+      auto candidate = std::lower_bound(&points[0],&points[sz],arg);
+      if((candidate != &points[sz]) && isEqualReal(arg, *candidate))
+        return values[candidate-points];
     }
     for(size_t i = 0; i < sz; i++)
     {
@@ -99,9 +99,9 @@ namespace numeric {
     if(collision_check)
     {
       //binary search for arg in points to detect if it collides with some
-      auto candidate = std::lower_bound(&values[0],&values[sz],arg);
-      if((candidate != &values[sz]) && isEqualReal(arg, *candidate))
-        return *candidate;
+      auto candidate = std::lower_bound(&points[0],&points[sz],arg);
+      if((candidate != &points[sz]) && isEqualReal(arg, *candidate))
+        return values[candidate-points];
     }
 
     struct _InterpolantReducer {

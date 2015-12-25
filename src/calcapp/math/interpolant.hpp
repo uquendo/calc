@@ -135,7 +135,7 @@ public:
   //precompute table of interpolated values on uniform grid
   void interpolateOnUniformGrid(size_t points_count, numeric::TThreading threading_model) override;
 protected:
-  static void ParseHeaderDat(InFileText& f, size_t& points_count, T lower_border, T upper_border);
+  static void ParseHeaderDat(InFileText& f, size_t& points_count, T& lower_border, T& upper_border);
 };
 
 template<typename T> class InterpolantUniform1d final : public InterpolantFixedGrid1d<T>

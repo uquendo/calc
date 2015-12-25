@@ -50,11 +50,11 @@ template<typename T> void InterpolantFixedGrid1d<T>::init(const bool reset /* = 
   }
 }
 
-template<typename T> void InterpolantFixedGrid1d<T>::ParseHeaderDat(InFileText& f, size_t& points_count, T lower_border, T upper_border)
+template<typename T> void InterpolantFixedGrid1d<T>::ParseHeaderDat(InFileText& f, size_t& points_count, T& lower_border, T& upper_border)
 {
   f.readNextLine_scan(1,"# %zu",&points_count);
   ++points_count;
-  f.readNextLine_scanNums<T>(2, 2, &lower_border, &upper_border);
+  f.readNextLine_scanNums(2, &lower_border, &upper_border);
 }
 
 template<typename T> void InterpolantFixedGrid1d<T>::init(InFileText& f, const bool readData /* = true */)
@@ -67,15 +67,15 @@ template<typename T> void InterpolantFixedGrid1d<T>::init(InFileText& f, const b
   if(m_lower_border >= m_upper_border)
     throw FileFormatValueBoundsError("Lower border should be less than upper one",f.fileType(),f.fileName().c_str(),f.lineNum());
 
+  preallocateFunctionTable();
+  preallocateWeights();
+
   if(readData)
   {
-    preallocateFunctionTable();
-    preallocateWeights();
-
     //no placement new call is required for interpolant value array, data should be initialized when read in(or computed)
     for (size_t i = 0; i < m_points_count; ++i)
     {
-      f.readNextLine_scanNums<T>(1, 1, m_values+i);
+      f.readNextLine_scanNums(1, m_values+i);
     }
   }
 }
@@ -119,7 +119,7 @@ template<typename T> void InterpolantFixedGrid1d<T>::readFromFile(InFileText& f)
   //no placement new call is required for interpolant arrays, data should be initialized when read in
   for (size_t i = 0; i < m_points_count; ++i)
   {
-    f.readNextLine_scanNums<T>(1, 1, m_values+i);
+    f.readNextLine_scanNums(1, m_values+i);
   }
 }
 
@@ -271,11 +271,9 @@ template<typename T> void InterpolantUniform1d<T>::computePoints(numeric::TThrea
 template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThreading threading_model)
 {
   m_weights[0] = T(1);
-  int sign = 1;
   for(size_t i = 1; i < m_points_count / 2 + 1; i++)
   {
-    sign = -sign;
-    m_weights[i] = sign*m_weights[i-1]*T(m_points_count - i)/T(i);
+    m_weights[i] = - m_weights[i-1]*T(m_points_count - i)/T(i);
   }
   switch(threading_model)
   {
@@ -291,11 +289,11 @@ template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThre
       {
 #pragma omp parallel for
         for(size_t i = m_points_count / 2 + 1; i < m_points_count ; i++)
-          m_weights[i] = m_weights[m_points_count - 1 - i];
+          m_weights[i] = - m_weights[m_points_count - 1 - i];
       } else {
 #pragma omp parallel for
         for(size_t i = m_points_count / 2 + 1; i < m_points_count ; i++)
-          m_weights[i] = - m_weights[m_points_count - 1 - i];
+          m_weights[i] = m_weights[m_points_count - 1 - i];
       }
 #endif
 #ifdef HAVE_CILK
@@ -303,10 +301,10 @@ template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThre
       if(m_points_count % 2 == 0)
       {
         cilk_for(size_t i = m_points_count / 2 + 1; i < m_points_count ; i++)
-          m_weights[i] = m_weights[m_points_count - 1 - i];
+          m_weights[i] = - m_weights[m_points_count - 1 - i];
       } else {
         cilk_for(size_t i = m_points_count / 2 + 1; i < m_points_count ; i++)
-          m_weights[i] = - m_weights[m_points_count - 1 - i];
+          m_weights[i] = m_weights[m_points_count - 1 - i];
       }
 #endif
 #ifdef HAVE_TBB
@@ -316,14 +314,14 @@ template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThre
         numeric::parallelForElem( size_t(m_points_count / 2 + 1), m_points_count,
           [this](size_t i)
             {
-              this->m_weights[i] = this->m_weights[this->m_points_count - 1 - i];
+              this->m_weights[i] = - this->m_weights[this->m_points_count - 1 - i];
             }
           );
       } else {
         numeric::parallelForElem( size_t(m_points_count / 2 + 1), m_points_count,
           [this](size_t i)
             {
-              this->m_weights[i] = - this->m_weights[this->m_points_count - 1 - i];
+              this->m_weights[i] = this->m_weights[this->m_points_count - 1 - i];
             }
           );
       }
@@ -334,10 +332,10 @@ template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThre
       if(m_points_count % 2 == 0)
       {
         for(size_t i = m_points_count / 2 + 1; i < m_points_count ; i++)
-          m_weights[i] = m_weights[m_points_count - 1 - i];
+          m_weights[i] = - m_weights[m_points_count - 1 - i];
       } else {
         for(size_t i = m_points_count / 2 + 1; i < m_points_count ; i++)
-          m_weights[i] = - m_weights[m_points_count - 1 - i];
+          m_weights[i] = m_weights[m_points_count - 1 - i];
       }
   }
 }
@@ -467,6 +465,7 @@ template<CreateInterpolantHelperArgs::InitType type> struct CreateInterpolantHel
           default:
             throw ParameterError("interpolant type unsupported");
         }
+        break;
       case TInterpolantFlavour::Uniform:
         switch(a.m_type)
         {
@@ -480,6 +479,7 @@ template<CreateInterpolantHelperArgs::InitType type> struct CreateInterpolantHel
           default:
             throw ParameterError("interpolant type unsupported");
         }
+        break;
       default:
         throw ParameterError("interpolant type unsupported");
     }

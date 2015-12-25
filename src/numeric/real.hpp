@@ -141,7 +141,7 @@ template<typename T, int ulp = 1> inline bool isEqualReal(const T& a, const T& b
 {
   using std::abs;
   return abs(a - b) < std::numeric_limits<T>::epsilon() * abs(a + b) * ulp
-#ifndef BUILD_FASTMATH
+#if !defined(BUILD_FASTMATH) || !defined(NDEBUG)
     //check for subnormals
     || abs(a - b) < std::numeric_limits<T>::min()
 #endif
