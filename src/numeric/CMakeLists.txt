@@ -7,6 +7,8 @@ set(numeric_HEADERS
     blas.hpp
     blas_impl.hpp
     cache.hpp
+    interpolation.hpp
+    interpolation_lagrange_impl.hpp
     parallel.hpp
     parallel_tbb.hpp
     real.hpp

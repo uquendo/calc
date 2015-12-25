@@ -22,6 +22,8 @@ set(calcapp_HEADERS
     progress.hpp
     parallel_progress.hpp
     system.hpp
+    math/interpolant.hpp
+    math/interpolant_impl.hpp
     math/matrix.hpp
     math/matrix_impl.hpp
     )

@@ -141,11 +141,8 @@ template<typename T, int ulp = 1> inline bool isEqualReal(const T& a, const T& b
 {
   using std::abs;
   return abs(a - b) < std::numeric_limits<T>::epsilon() * abs(a + b) * ulp
-#if !defined(BUILD_FASTMATH) || !defined(NDEBUG)
-    //check for subnormals
-    || abs(a - b) < std::numeric_limits<T>::min()
-#endif
-    ;
+    //check for subnormals and corner cases like 0 == 0
+    || abs(a - b) < std::numeric_limits<T>::min();
 }
 
 template<typename T> inline T pi_const()
