@@ -33,7 +33,7 @@ namespace Calc {
     string help = CliAppOptions::Help();
 #ifndef HAVE_BOOST
     help.append("\nAlgorithm options:\n");
-    help.append("  -s [ --algorithm ] arg (=");
+    help.append("  -a [ --algorithm ] arg (=");
     help.append(_algo_opt_names[0].opt);
     help.append(")\n");
     help.append(algoHelp);
@@ -122,7 +122,9 @@ namespace Calc {
       {
         if(!algo_opt.empty())
           throw OptionsParsingError("option '--algorithm' cannot be specified more than once");
-        algo_opt = string(argv[i]+11);
+        if( argv[i][11] != '=' )
+          throw OptionsParsingError("option '--algorithm' should be followed by '=' and algorithm name without any spaces");
+        algo_opt = string(argv[i]+12);
         check_algo_opt = true;
       }
       if(std::strncmp(argv[i],"-a",2) == 0)
