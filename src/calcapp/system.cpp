@@ -299,9 +299,13 @@ std::string getBuildOptions()
 #endif
   r+="\n";
   //build string
-#if defined(INFO_C_FLAGS) && defined (INFO_CXX_FLAGS) && defined(INFO_COMPILE_OPTIONS)
+#if defined(INFO_C_FLAGS)
   r+="CMAKE_C_FLAGS: " INFO_C_FLAGS "\n";
+#endif
+#if defined(INFO_CXX_FLAGS)
   r+="CMAKE_CXX_FLAGS: " INFO_CXX_FLAGS "\n";
+#endif
+#if defined(INFO_COMPILE_OPTIONS)
   r+="extra compilation options: " INFO_COMPILE_OPTIONS "\n";
 #endif
   return r;

@@ -63,7 +63,7 @@ void CliAppOptions::prepareOptions(){
     (THREADING_OPT ",l", bpo::value<string>()->default_value(_threading_opt_names[0].opt), threadingHelp.c_str())
     (THREADS_OPT ",t", bpo::value<unsigned>()->default_value(0), "number of threads to use. 0=auto")
 #endif
-    (PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[0].opt), precisionHelp.c_str())
+    (PRECISION_OPT ",p", bpo::value<string>()->default_value(_precision_opt_names[1].opt), precisionHelp.c_str())
 #ifdef HAVE_MPREAL
     (DIGITS_OPT ",d", bpo::value<unsigned>()->default_value(10), "MPFR number of decimal digits to use")
 #endif
@@ -251,10 +251,10 @@ bool CliAppOptions::parsePrecisionOptions(){
   } else
 #endif
   {
-#if defined( CLIAPP_OPT_DEFAULT_PRECISION )
+#ifdef CLIAPP_OPT_DEFAULT_PRECISION
     prec = CLIAPP_OPT_DEFAULT_PRECISION;
 #else
-    prec = _precision_opt_names[0].type;
+    prec = _precision_opt_names[1].type;
 #endif
   }
   m_precision.type = prec;
