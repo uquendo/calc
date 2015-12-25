@@ -63,6 +63,8 @@ public:
   //data IO
   virtual void readFromFile(InFileText& f) = 0;
   virtual void writeToFile(OutFileText& f, const int print_precision = 6) = 0;
+  //debug dumping
+  virtual void dumpInterpolant() = 0;
 
   //memory management
   virtual void preallocateFunctionTable() = 0;
@@ -126,6 +128,8 @@ public:
   //data IO
   void readFromFile(InFileText& f) override;
   void writeToFile(OutFileText& f, const int print_precision = 6) override;
+  //debug dumping
+  void dumpInterpolant() override;
 
   //memory management
   void preallocateFunctionTable() override;

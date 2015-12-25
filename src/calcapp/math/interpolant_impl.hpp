@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <iostream>
 
 #ifdef HAVE_CILK
 #include <cilk/cilk.h>
@@ -132,6 +133,14 @@ template<typename T> void InterpolantFixedGrid1d<T>::writeToFile(OutFileText& f,
     f.println_printNumsDefault(m_cached_points[i],m_cached_values[i]);
 
   f.flush();
+}
+
+template<typename T> void InterpolantFixedGrid1d<T>::dumpInterpolant()
+{
+  for(size_t i = 0; i < m_points_count; i++)
+  {
+    std::cerr << m_points[i] << " " << m_weights[i] << std::endl;
+  }
 }
 
 //memory management
@@ -340,12 +349,13 @@ template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThre
   }
 }
 
-//compute interpolant points: x_k = a + (b-a)*cos(\pi(2k+1)/(2N+2))
+//compute interpolant points: x_k = (b+a)/2 + (b-a)/2*cos(\pi(2k+1)/(2N+2))
 template<typename T> void InterpolantChebyshevFirstKind1d<T>::computePoints(numeric::TThreading threading_model)
 {
   using std::cos;
-  const T delta = m_upper_border - m_lower_border;
-  const T factor = numeric::half_pi_const<T>() / m_points_count;
+  const T delta = (m_upper_border - m_lower_border)/2.0;
+  const T shift = (m_upper_border + m_lower_border)/2.0;
+  const T factor = numeric::half_pi_const<T>() / T(m_points_count);
   switch(threading_model)
   {
     case numeric::T_Std:
@@ -358,19 +368,19 @@ template<typename T> void InterpolantChebyshevFirstKind1d<T>::computePoints(nume
     case numeric::T_OpenMP:
 #pragma omp parallel for
       for(size_t i = 0; i < m_points_count; i++)
-        m_points[i] = m_lower_border + delta*cos(T(2*i+1)*factor);
+        m_points[i] = shift + delta*cos(T(2*i+1)*factor);
 #endif
 #ifdef HAVE_CILK
     case numeric::T_Cilk:
       cilk_for(size_t i = 0; i < m_points_count; i++)
-        m_points[i] = m_lower_border + delta*cos(T(2*i+1)*factor);
+        m_points[i] = shift + delta*cos(T(2*i+1)*factor);
 #endif
 #ifdef HAVE_TBB
     case numeric::T_TBB:
       numeric::parallelForElem( size_t(0), m_points_count,
-        [this,&delta,&factor](size_t i)
+        [this,&delta,&shift,&factor](size_t i)
         {
-          this->m_points[i] = this->m_lower_border + delta*cos(T(2*i+1)*factor);
+          this->m_points[i] = shift + delta*cos(T(2*i+1)*factor);
         }
       );
 #endif
@@ -378,7 +388,7 @@ template<typename T> void InterpolantChebyshevFirstKind1d<T>::computePoints(nume
     case numeric::T_Undefined:
     default:
       for(size_t i = 0; i < m_points_count; i++)
-        m_points[i] = m_lower_border + delta*cos(T(2*i+1)*factor);
+        m_points[i] = shift + delta*cos(T(2*i+1)*factor);
   }
 }
 
