@@ -349,11 +349,11 @@ template<typename T> void InterpolantUniform1d<T>::computeWeights(numeric::TThre
   }
 }
 
-//compute interpolant points: x_k = (b+a)/2 + (b-a)/2*cos(\pi(2k+1)/(2N+2))
+//compute interpolant points: x_k = (b+a)/2 - (b-a)/2*cos(\pi(2k+1)/(2N+2))
 template<typename T> void InterpolantChebyshevFirstKind1d<T>::computePoints(numeric::TThreading threading_model)
 {
   using std::cos;
-  const T delta = (m_upper_border - m_lower_border)/2.0;
+  const T delta = - (m_upper_border - m_lower_border)/2.0;
   const T shift = (m_upper_border + m_lower_border)/2.0;
   const T factor = numeric::half_pi_const<T>() / T(m_points_count);
   switch(threading_model)
