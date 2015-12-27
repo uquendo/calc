@@ -1,5 +1,5 @@
 add_subdirectory(quest01-1)
 add_subdirectory(quest01-2)
 add_subdirectory(quest02)
-#add_subdirectory(quest03)
+add_subdirectory(quest03)
 #add_subdirectory(quest04)

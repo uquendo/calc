@@ -4,7 +4,7 @@ import sys
 
 if len(sys.argv) < 2:
     print  "Usage: "+sys.argv[0]+" <number of rows> [ <number of columns> [ <value to fill with> ] ]"
-    exit
+    exit()
 
 rows = int(sys.argv[1])
 

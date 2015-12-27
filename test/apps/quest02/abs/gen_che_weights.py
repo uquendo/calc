@@ -10,7 +10,7 @@ def f(x):
 
 if len(sys.argv) < 4:
     print "Usage: "+sys.argv[0]+" N a b"
-    exit
+    exit()
 
 N = int(sys.argv[1])
 a = float(sys.argv[2])
