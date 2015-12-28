@@ -14,8 +14,8 @@ namespace Calc {
   QuestAppOptions::QuestAppOptions():
     CliAppOptions(string(APP_NAME),string(APP_VERSION))
   {
-    m_input.filetype = FT_Undefined; m_input.filename = "";
-    m_output.filetype = FT_Undefined; m_output.filename = "";
+    m_input.filetype = FT_Undefined; m_input.filename = "data";
+    m_output.filetype = FT_Undefined; m_output.filename = "result";
     m_algo.type = A_Undefined;
   }
 

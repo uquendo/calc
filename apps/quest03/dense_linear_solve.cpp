@@ -17,7 +17,7 @@ namespace Calc
     {
       const T small_value = T(1.e-5);
       const size_t stride = sz + 1;
-      log.debug("Note that gaussian elimination without pivoting works well only on diagonaly-dominant matrices");
+      log.debug("Note that gaussian elimination without pivoting works well only on diagonally-dominant matrices");
       log.debug("And if your matrix has any zeroes on main diagonal, you're definitely absolutely totally entirely doomed.");
       for(size_t k = 0; k < sz - 1; k++)
       {
@@ -48,7 +48,7 @@ namespace Calc
     {
       const T small_value = T(1.e-5);
       const size_t stride = sz + 1;
-      log.debug("Note that gaussian elimination without pivoting works well only on diagonaly-dominant matrices");
+      log.debug("Note that gaussian elimination without pivoting works well only on diagonally-dominant matrices");
       log.debug("And if your matrix has any zeroes on main diagonal, you're definitely absolutely totally entirely doomed");
       for(size_t k = 0; k < sz; k++)
       {
