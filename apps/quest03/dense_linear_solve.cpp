@@ -64,7 +64,8 @@ namespace Calc
         for(size_t j = 0; j < k; j++)
         {
           T tmp = Ab[j*stride+k]*fac;
-          Ab[j*stride+sz] -= Ab[k*stride+sz]*tmp;
+          for(size_t i = k + 1; i < sz + 1; i++)
+            Ab[j*stride+i] -= Ab[k*stride+i]*tmp;
         }
       }
       //scaling rhs by diagonal matrix elements
