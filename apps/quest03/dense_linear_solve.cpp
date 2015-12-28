@@ -127,19 +127,15 @@ namespace Calc
       for(size_t k = 0; k < sz; k++)
       {
         const size_t idb = sz-1-k;
+        x[idb] = Ab_rows[idb][sz];
         for(size_t i = idb + 1; i < sz; i++)
-          Ab_rows[idb][sz] -= Ab_rows[idb][i] * Ab_rows[i][sz];
-        Ab_rows[idb][sz] /= Ab_rows[idb][idb];
-        //backtrack permutations
-        size_t idx = idb;
-        for(size_t j = 0; j < sz; j++)
-        {
-          if(idx == index[j])
-            idx = sz-1-j;
-          else if(idx == sz-1-j)
-            idx = index[j];
-        }
-        x[idx] = Ab_rows[idb][sz];
+          x[idb] -= Ab_rows[idb][i] * x[i];
+        x[idb] /= Ab_rows[idb][idb];
+      }
+      //backtrack permutations
+      for(size_t k = 0; k < sz; k++)
+      {
+        std::swap(x[sz-1-k],x[index[k]]);
       }
     }
 
