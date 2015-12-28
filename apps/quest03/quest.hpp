@@ -67,6 +67,7 @@ struct AlgoOptions {
 };
 
 namespace dense_linear_solve {
+  static constexpr bool print_residual = true; //TODO: cli option
   struct AlgoParameters {
     const Calc::ThreadingOptions Topt;
     const Calc::PrecisionOptions Popt;

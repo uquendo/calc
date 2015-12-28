@@ -355,6 +355,8 @@ namespace Calc {
     const size_t sz = m_pAlgoParameters->system_size;
     const size_t stride = sz + 1;
     double* const buf_ptr = m_pAlgoParameters->Ab_buf.get();
+    if(m_pfIn->lineNum() == 0)
+      m_pfIn->readNextLine();
     for(size_t i = 0; i < sz; i++)
     {
       m_pfIn->readNextLine_scanNumArray<double>(sz, sz, buf_ptr+i*stride);
@@ -402,7 +404,16 @@ namespace Calc {
     log().debug("running main task...");
     dense_linear_solve::perform(*m_pAlgoParameters, log());
     //output results
-    log().debug("writing output table...");
+    if(dense_linear_solve::print_residual) //TODO: add cli option
+    {
+      m_pfIn->reset();
+      readInput();
+      log().fdebug("Found solution with ||Ax-b||_1 = %g, ||Ax-b||_2 = %g"
+          , dense_linear_solve::residualL1Norm(m_pAlgoParameters->system_size,m_pAlgoParameters->Ab_buf.get(),m_pAlgoParameters->x)
+          , dense_linear_solve::residualL2Norm(m_pAlgoParameters->system_size,m_pAlgoParameters->Ab_buf.get(),m_pAlgoParameters->x)
+          );
+    }
+    log().debug("writing solution vector...");
     writeOutput();
     //POSTRUN:
     //finalize output file

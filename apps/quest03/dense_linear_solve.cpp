@@ -196,11 +196,11 @@ namespace Calc
       switch(p.Aopt.type)
       {
         case A_NumCppGauss:
-          return numeric_cpp_gauss_impl<double>(_sz,_buf,_x,log);
+          return numeric_cpp_gauss_impl(_sz,_buf,_x,log);
         case A_NumCppJordan:
-          return numeric_cpp_jordan_impl<double>(_sz,_buf,_x,log);
+          return numeric_cpp_jordan_impl(_sz,_buf,_x,log);
         case A_NumCppFullPivoting:
-          return numeric_cpp_gauss_full_pivoting_impl<double>(_sz,_buf,_Ab_rows,_x,reinterpret_cast<size_t * const>(new size_t[_sz]),log);
+          return numeric_cpp_gauss_full_pivoting_impl(_sz,_buf,_Ab_rows,_x,reinterpret_cast<size_t * const>(new size_t[_sz]),log);
         case A_Undefined:
         default:
           throw Calc::ParameterError("Algorithm is not implemented");
