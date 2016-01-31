@@ -126,12 +126,12 @@ namespace Calc
         }
         if(vectorDifferenceL2Norm(sz,x,x_next) < eps)
         {
-          log.fdebug("||x_{n+1} - x_n||_2 < %g , stoping iterations",numeric::toDouble(eps));
+          log.fdebug("at interation %d ||x_{n+1} - x_n||_2 < %g , stoping iterations",iter,numeric::toDouble(eps));
           return true;
         }
         std::swap(x,x_next);
       }
-      log.fwarning("maximum iteration count(%d) reached. chances are, we're still very far from the solution(or maybe requested epsilon(%g) is too small)",max_iter_count,numeric::toDouble(eps));
+      log.fwarning("maximum iteration count(%d) reached. chances are, we're still very far from the solution(or requested epsilon(%g) is too small)",max_iter_count,numeric::toDouble(eps));
       return true;
     }
 
@@ -161,12 +161,12 @@ namespace Calc
         }
         if(vectorDifferenceL2Norm(sz,x,x_next) < eps)
         {
-          log.fdebug("||x_{n+1} - x_n||_2 < %g , stoping iterations",numeric::toDouble(eps));
+          log.fdebug("at interation %d ||x_{n+1} - x_n||_2 < %g , stoping iterations",iter,numeric::toDouble(eps));
           return true;
         }
         std::swap(x,x_next);
       }
-      log.fwarning("maximum iteration count(%d) reached. chances are, we're still very far from the solution(or maybe requested epsilon(%g) is too small)",max_iter_count,numeric::toDouble(eps));
+      log.fwarning("maximum iteration count(%d) reached. chances are, we're still very far from the solution(or requested epsilon(%g) is too small)",max_iter_count,numeric::toDouble(eps));
       return true;
     }
 
@@ -174,7 +174,7 @@ namespace Calc
         const T* const __RESTRICT Ab, T* const __RESTRICT x,
         T* __RESTRICT residual, T* __RESTRICT residual_next,
         Logger& log,
-        const int max_iter_count = default_max_iter_count, const T eps = default_eps<T>())
+        const int max_iter_count = default_max_iter_count, const T eps = default_eps<T>() )
     {
       const size_t stride = sz + 1;
       log.debug("note that iterative solvers from Gauss-Seidel family work only for diagonally dominant matrices");
@@ -188,28 +188,31 @@ namespace Calc
       for(size_t i = 0; i < sz; i++)
       {
         x[i] = 0;
-        residual[i] = Ab[i*stride+sz];
+        residual[i] = Ab[i*stride+sz]/Ab[i*stride+i];
       }
       for(int iter = 0; iter < max_iter_count; iter++)
       {
-        const size_t max_component_index = std::max_element(residual,residual+sz) - residual;
+        const size_t max_component_index =
+          std::max_element(residual, residual+sz, [](const T& a, const T& b) { return (std::abs(a) < std::abs(b) ); } )
+            - residual;
         x[max_component_index] += residual[max_component_index];
         if(std::abs(residual[max_component_index]) < eps)
         {
-          log.fdebug("||x_{n+1} - x_n||_2 < %g , stoping iterations",numeric::toDouble(eps));
+          log.fdebug("at interation %d ||x_{n+1} - x_n||_2 < %g , stoping iterations",iter,numeric::toDouble(eps));
           return true;
         }
         //update residual vector
         for(size_t i = 0; i < sz; i++)
         {
-          residual_next[i] = residual[i];
+          residual_next[i] = 0.0;
           for(size_t j = 0; j < sz; j++)
             residual_next[i] -= Ab[i*stride+j]*residual[j];
           residual_next[i] /= Ab[i*stride+i];
+          residual_next[i] += residual[i];
         }
         std::swap(residual,residual_next);
       }
-      log.fwarning("maximum iteration count(%d) reached. chances are, we're still very far from the solution(or maybe requested epsilon(%g) is too small)",max_iter_count,numeric::toDouble(eps));
+      log.fwarning("maximum iteration count(%d) reached. chances are, we're still very far from the solution(or requested epsilon(%g) is too small)",max_iter_count,numeric::toDouble(eps));
       return true;
     }
 
@@ -251,7 +254,6 @@ namespace Calc
         T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
         T* const _x_tmp = reinterpret_cast<T* const>(p.x_tmp);
-        size_t * const _index = new size_t[_sz];
         return numeric_cpp_relaxation_impl<T>(_sz,_buf,_x,_x_tmp,p.progress_ptr->log());
       }
     };
