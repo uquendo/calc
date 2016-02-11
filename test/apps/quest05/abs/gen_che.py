@@ -6,7 +6,7 @@ import math
 import sys
 
 def f(x):
-    return math.fabs(x)+math.sin(x)
+    return math.fabs(x)
 
 if len(sys.argv) < 4:
     print "Usage: "+sys.argv[0]+" N a b"

@@ -377,7 +377,7 @@ template<typename T, TMM_Algo tAlgo, bool tA, bool tB, bool cA, bool cB>
   }
 }
 
-//reduced dgbmm for banded matrices, C=A*B
+//reduced dgbmm for banded matrices, C+=A*B
 template<typename T>
   void dgbmm(const TMatrixStorage stor, const TMatrixTranspose transA, const TMatrixTranspose transB,
       const T* const __RESTRICT a, const T* const __RESTRICT b, T* const __RESTRICT c,
@@ -410,6 +410,283 @@ template<typename T>
   return dgbmm<T>(stor,transA,transB,a,b,c,sz,sz,band,band,sz,sz,band,band,threading_model);
 }
 
+template<typename T, bool transA>
+  void dgbmv_helper(const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t nrows_a, const size_t ncolumns_a, const size_t upper_band_a, const size_t lower_band_a,
+      const T alpha,
+      const TThreading threading_model)
+{
+  const size_t sz = ( transA ? nrows_a : ncolumns_a );
+  const size_t stride_a = upper_band_a + lower_band_a + 1;
+  if(!transA)
+  {
+    //too few operations to benefit from threading(< stride_a^2)
+    for(size_t j = 0; j < upper_band_a; j++)
+    {
+      for(size_t i = 0; i <= j + lower_band_a; i++)
+      {
+        y[i] += alpha*a[lower_band_a + j + i*(stride_a - 1)]*x[j];
+      }
+    }
+    switch(threading_model)
+    {
+      case T_Std:
+  //      break;
+#ifdef HAVE_PTHREADS
+      case T_Posix:
+  //      break;
+#endif
+#ifdef HAVE_OPENMP
+      case T_OpenMP:
+#pragma omp parallel for
+        for(size_t j = 0; j <= sz - stride_a; j++)
+        {
+          for(size_t i = 0; i < stride_a; i++)
+          {
+            y[i + j] += alpha*a[stride_a - 1 + j*stride_a + i*(stride_a - 1)]*x[upper_band_a + j];
+          }
+        }
+        break;
+#endif
+#ifdef HAVE_CILK
+      case T_Cilk:
+        cilk_for(size_t j = 0; j <= sz - stride_a; j++)
+        {
+          for(size_t i = 0; i < stride_a; i++)
+          {
+            y[i + j] += alpha*a[stride_a - 1 + j*stride_a + i*(stride_a - 1)]*x[upper_band_a + j];
+          }
+        }
+        break;
+#endif
+#ifdef HAVE_TBB
+      case T_TBB:
+        parallelForElem(size_t(0), sz - stride_a + 1,
+        [&a,&x,&y,&stride_a,&alpha,&upper_band_a](size_t j){
+          for(size_t i = 0; i < stride_a; i++)
+          {
+            y[i + j] += alpha*a[stride_a - 1 + j*stride_a + i*(stride_a - 1)]*x[upper_band_a + j];
+          }
+        });
+        break;
+#endif
+      case T_Serial:
+      case T_Undefined:
+      default:
+        for(size_t j = 0; j <= sz - stride_a; j++)
+        {
+          for(size_t i = 0; i < stride_a; i++)
+          {
+            y[i + j] += alpha*a[stride_a - 1 + j*stride_a + i*(stride_a - 1)]*x[upper_band_a + j];
+          }
+        }
+        break;
+    }
+    //too few operations to benefit from threading(< stride_a^2)
+    for(size_t j = sz - stride_a + 1; j < sz - upper_band_a; j++)
+    {
+      for(size_t i = 0 ; i < sz - j; i++)
+      {
+        y[i + j] += alpha*a[stride_a - 1 + j*stride_a + i*(stride_a - 1)]*x[upper_band_a + j];
+      }
+    }
+  } else {
+    //TODO: STUB!
+  }
 }
 
+//generic dgbmv for banded matrices, y+=\alpha*op(A)*x
+template<typename T>
+  void dgbmv(const TMatrixStorage stor, const TMatrixTranspose transA,
+      const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t nrows_a, const size_t ncolumns_a, const size_t upper_band_a, const size_t lower_band_a,
+      const T alpha /* = T(1.0) */,
+      const TThreading threading_model /* = T_Serial */ )
+{
+  const bool tA = transA != TMatrixTranspose::No;
+//  const bool cA = transA == TMatrixTranspose::Conjugate; // TODO: STUB!
+  switch(stor)
+  {
+    case TMatrixStorage::RowMajor:
+      {
+        if(tA)
+          return dgbmv_helper<T,true>(a,x,y,nrows_a,ncolumns_a,upper_band_a,lower_band_a,alpha,threading_model);
+        else
+          return dgbmv_helper<T,false>(a,x,y,nrows_a,ncolumns_a,upper_band_a,lower_band_a,alpha,threading_model);
+      }
+    case TMatrixStorage::ColumnMajor:
+      {
+        if(tA)
+          return dgbmv_helper<T,false>(a,x,y,ncolumns_a,nrows_a,lower_band_a,upper_band_a,alpha,threading_model);
+        else
+          return dgbmv_helper<T,true>(a,x,y,ncolumns_a,nrows_a,lower_band_a,upper_band_a,alpha,threading_model);
+      }
+  }
+}
+
+//generic dgbmv for square symmetrically banded matrices
+template<typename T>
+  void dgbmv(const TMatrixStorage stor, const TMatrixTranspose transA,
+    const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+    const size_t sz, const size_t band,
+    const T alpha /* = T(1.0) */,
+    const TThreading threading_model /* = T_Serial */)
+{
+  return dgbmv<T>(stor,transA,a,x,y,sz,sz,band,band,alpha,threading_model);
+}
+
+
+//add for banded matrices, a += b, assuming that band width of b is less or equal than that of a
+template<typename T>
+  void banded_add_helper(
+    T* const __RESTRICT a, const T* const __RESTRICT b,
+    const size_t nrows, const size_t ncolumns,
+    const size_t upper_band_a, const size_t lower_band_a,
+    const size_t upper_band_b, const size_t lower_band_b,
+    const TThreading threading_model)
+{
+  const size_t lower_delta = lower_band_a - lower_band_b;
+  const size_t sz = std::min(nrows,ncolumns);
+  const size_t stride_a = upper_band_a + lower_band_a + 1;
+  const size_t stride_b = upper_band_b + lower_band_b + 1;
+  switch(threading_model)
+  {
+    case T_Serial:
+      for(size_t i = 0; i < sz; i++)
+      {
+        for(size_t j = 0; j < stride_b; j++)
+        {
+          a[i*stride_a + lower_delta + j] += b[i*stride_b + j];
+        }
+      }
+      break;
+    case T_Std:
+//      break;
+#ifdef HAVE_PTHREADS
+    case T_Posix:
+//      break;
+#endif
+#ifdef HAVE_OPENMP
+    case T_OpenMP:
+#pragma omp parallel for
+      for(size_t i = 0; i < sz; i++)
+      {
+        for(size_t j = 0; j < stride_b; j++)
+        {
+          a[i*stride_a + lower_delta + j] += b[i*stride_b + j];
+        }
+      }
+      break;
+#endif
+#ifdef HAVE_CILK
+    case T_Cilk:
+    cilk_for(size_t i = 0; i < sz; i++)
+      {
+        for(size_t j = 0; j < stride_b; j++)
+        {
+          a[i*stride_a + lower_delta + j] += b[i*stride_b + j];
+        }
+      }
+      break;
+#endif
+#ifdef HAVE_TBB
+    case T_TBB:
+      parallelForElem(size_t(0), sz,
+      [&a,&b,&stride_a,&stride_b,&lower_delta](size_t i){
+        for(size_t j = 0; j < stride_b; j++)
+        {
+          a[i*stride_a + lower_delta + j] += b[i*stride_b + j];
+        }
+      });
+      break;
+#endif
+    case T_Undefined:
+    default:
+      for(size_t i = 0; i < sz; i++)
+      {
+        for(size_t j = 0; j < stride_b; j++)
+        {
+          a[i*stride_a + lower_delta + j] += b[i*stride_b + j];
+        }
+      }
+      break;
+  }
+}
+
+//add for banded matrices, a += b, assuming that band width of b is equal or less than that of a
+template<typename T>
+  void banded_add(const TMatrixStorage stor,
+    T* const __RESTRICT a, const T* const __RESTRICT b,
+    const size_t nrows, const size_t ncolumns,
+    const size_t upper_band_a, const size_t lower_band_a,
+    const size_t upper_band_b, const size_t lower_band_b,
+    const TThreading threading_model)
+{
+  switch(stor)
+  {
+    case TMatrixStorage::RowMajor:
+      {
+        return banded_add_helper<T>(a,b,nrows,ncolumns,
+            upper_band_a,lower_band_a,upper_band_b,lower_band_b,
+            threading_model);
+      }
+    case TMatrixStorage::ColumnMajor:
+      {
+        return banded_add_helper<T>(a,b,ncolumns,nrows,
+            lower_band_a,upper_band_a,lower_band_b,upper_band_b,
+            threading_model);
+      }
+  }
+}
+
+//add for square banded matrices, a += b, assuming that band width of b is equal or less than that of a
+template<typename T>
+  void banded_add(const TMatrixStorage stor,
+    T* const __RESTRICT a, const T* const __RESTRICT b,
+    const size_t sz,
+    const size_t upper_band_a, const size_t lower_band_a,
+    const size_t upper_band_b, const size_t lower_band_b,
+    const TThreading threading_model)
+{
+  return banded_add<T>(stor,a,b,sz,sz,upper_band_a,lower_band_a,upper_band_b,lower_band_b,threading_model);
+}
+
+//add for square symmetrically banded matrices, a += b, assuming that band width of b is equal or less than that of a
+template<typename T>
+  void banded_add(const TMatrixStorage stor,
+    T* const __RESTRICT a, const T* const __RESTRICT b,
+    const size_t sz,
+    const size_t band_a,
+    const size_t band_b,
+    const TThreading threading_model)
+{
+  return banded_add<T>(stor,a,b,sz,sz,band_a,band_a,band_b,band_b,threading_model);
+}
+
+
+template<typename T> bool is_banded_diagonally_dominant(const size_t sz,
+    const size_t lower_band, const size_t upper_band,
+    const size_t stride, const T* const __RESTRICT A)
+{
+  for(size_t i = 0; i < sz; i++)
+  {
+    T row_sum = T(0.0);
+    //no subnormals, please
+    if(std::abs(A[i*stride+lower_band]) < std::numeric_limits<T>::min())
+      return false;
+    for(size_t j = 0; j < lower_band; j++)
+    {
+      row_sum += std::abs(A[i*stride+j]);
+    }
+    for(size_t j = lower_band + 1; j < lower_band + upper_band + 1; j++)
+    {
+      row_sum += std::abs(A[i*stride+j]);
+    }
+    if(!(row_sum < std::abs(A[i*stride+lower_band])))
+      return false;
+  }
+  return true;
+}
+
+}
 #endif /* _BLAS_BANDED_IMPL_HPP */

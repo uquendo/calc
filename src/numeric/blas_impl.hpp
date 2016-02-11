@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include "numeric/blas.hpp"
+#include "numeric/real.hpp"
 #include "numeric/complex.hpp"
 #include "numeric/parallel.hpp"
 #include "numeric/cache.hpp"
@@ -457,6 +458,162 @@ template<typename T>
     const TThreading threading_model)
 {
     return dgemm<T>(stor,transA,transB,a,b,c,sz,sz,sz,sz,threading_model);
+}
+
+template<typename T> bool is_diagonally_dominant(const size_t sz, const size_t stride, const T* const __RESTRICT A)
+{
+  for(size_t i = 0; i < sz; i++)
+  {
+    T row_sum = T(0.0);
+    //no subnormals, please
+    if(std::abs(A[i*stride+i]) < std::numeric_limits<T>::min())
+      return false;
+    for(size_t j = 0; j < i; j++)
+    {
+      row_sum += std::abs(A[i*stride+j]);
+    }
+    for(size_t j = i+1; j < sz; j++)
+    {
+      row_sum += std::abs(A[i*stride+j]);
+    }
+    if(!(row_sum < std::abs(A[i*stride+i])))
+      return false;
+  }
+  return true;
+}
+
+//vector distance(induced by norm of difference) calculation
+template<typename T> T vector_norm_L2(const size_t sz, const T* const __RESTRICT x)
+{
+  T norm = T(0.0);
+  const T zero = T(0.0);
+  const T one = T(1.0);
+  if(sz == 1)
+  {
+    norm = std::abs(x[0]);
+  } else {
+    T component = T(0.0);
+    T scale = T(0.0);
+    T sum   = T(1.0);
+    for(size_t i = 0; i < sz; i++)
+    {
+      //compute component i of vector difference
+      component = std::abs(x[i]);
+      //update norm blas-ish way
+      if(!numeric::isEqualReal(component, zero))
+      {
+        if (scale < component)
+        {
+          sum = one + sum * std::pow(scale / component, 2);
+          scale = component;
+        } else {
+          sum += std::pow(component / scale, 2);
+        }
+      }
+    }
+    norm = scale * sqrt(sum);
+  }
+  return norm;
+}
+
+//vector distance(induced by norm of difference) calculation
+template<typename T> T vector_distance_L2(const size_t sz, const T* const __RESTRICT x, const T* const __RESTRICT y)
+{
+  T norm = T(0.0);
+  const T zero = T(0.0);
+  const T one = T(1.0);
+  if(sz == 1)
+  {
+    norm = std::abs(x[0] - y[0]);
+  } else {
+    T component = T(0.0);
+    T scale = T(0.0);
+    T sum   = T(1.0);
+    for(size_t i = 0; i < sz; i++)
+    {
+      //compute component i of vector difference
+      component = std::abs(x[i] - y[i]);
+      //update norm blas-ish way
+      if(!numeric::isEqualReal(component, zero))
+      {
+        if (scale < component)
+        {
+          sum = one + sum * std::pow(scale / component, 2);
+          scale = component;
+        } else {
+          sum += std::pow(component / scale, 2);
+        }
+      }
+    }
+    norm = scale * sqrt(sum);
+  }
+  return norm;
+}
+
+template<typename T> T vector_norm_L1(const size_t sz, const T* const __RESTRICT x)
+{
+  T norm = T(0.0);
+  const T zero = T(0.0);
+  const T one = T(1.0);
+  if(sz == 1)
+  {
+    norm = std::abs(x[0]);
+  } else {
+    T component = T(0.0);
+    T scale = T(0.0);
+    T sum   = T(1.0);
+    for(size_t i = 0; i < sz; i++)
+    {
+      //compute component i of vector difference
+      component = std::abs(x[i]);
+      //update norm blas-ish way
+      if(!numeric::isEqualReal(component, zero))
+      {
+        if (scale < component)
+        {
+          sum = one + sum * (scale / component);
+          scale = component;
+        } else {
+          sum += component / scale;
+        }
+      }
+    }
+    norm = scale * sum;
+  }
+  return norm;
+}
+
+template<typename T> T vector_distance_L1(const size_t sz, const T* const __RESTRICT x, const T* const __RESTRICT y)
+{
+  T norm = T(0.0);
+  const T zero = T(0.0);
+  const T one = T(1.0);
+  if(sz == 1)
+  {
+    norm = std::abs(x[0] - y[0]);
+  } else {
+    T component = T(0.0);
+    T scale = T(0.0);
+    T sum   = T(1.0);
+    for(size_t i = 0; i < sz; i++)
+    {
+      //compute component i of vector difference
+      component = std::abs(x[i] - y[i]);
+      //update norm blas-ish way
+      if(!numeric::isEqualReal(component, zero))
+      {
+        if (scale < component)
+        {
+          sum = one + sum * (scale / component);
+          scale = component;
+        } else {
+          sum += component / scale;
+        }
+      }
+    }
+    norm = scale * sum;
+  }
+  return norm;
 }
 
 }

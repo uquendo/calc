@@ -192,7 +192,7 @@ template<typename T> void InterpolantFixedGrid1d<T>::preallocateInterpolatedTabl
 }
 
 //precompute table of interpolated values on uniform grid
-template<typename T> void InterpolantFixedGrid1d<T>::interpolateOnUniformGrid(size_t points_count, numeric::TThreading threading_model)
+template<typename T> void InterpolantFixedGrid1d<T>::evaluateOnUniformGrid(size_t points_count, numeric::TThreading threading_model)
 {
   //prepare points for interpolation
   const T delta = (m_upper_border - m_lower_border) / T(points_count - 1);

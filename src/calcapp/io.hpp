@@ -22,19 +22,21 @@ enum TFileType : int {
     FT_MatrixBin = 1,
     FT_Csv = 2,
     //TODO: do we really need those?
-    FT_InterpolationTableText = 3,
-    FT_FunctionTableText = 4,
-    FT_Count = 5
+    FT_InterpolationTableText,
+    FT_ApproximationTableText,
+    FT_FunctionTableText,
+    FT_Count
 };
 
 static const int FILE_EXTENSION_WIDTH = 10;
 static const char TFileExt[FT_Count][FILE_EXTENSION_WIDTH] =
 {
-    ".dat",
-    ".bdat",
-    ".csv",
-    ".dat",
-    ".dat"
+     ".dat"
+    ,".bdat"
+    ,".csv"
+    ,".dat"
+    ,".dat"
+    ,".dat"
 };
 
 #if CALC_DEFAULT_LINE_BUF_SIZE > 1024

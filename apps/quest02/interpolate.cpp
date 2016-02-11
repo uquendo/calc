@@ -19,7 +19,7 @@ namespace Calc
         p.f->computeWeights(p.Topt.type);
         //p.f->dumpInterpolant();
         p.progress_ptr->log().debug("Computing interpolated values on uniform grid...");
-        p.f->interpolateOnUniformGrid(p.output_fineness_factor * (p.f->getPointsCount() - 1) + 1, p.Topt.type);
+        p.f->evaluateOnUniformGrid(p.output_fineness_factor * (p.f->getPointsCount() - 1) + 1, p.Topt.type);
       }
     };
 

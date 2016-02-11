@@ -76,7 +76,7 @@ public:
   //compute interpolant weights
   virtual void computeWeights(numeric::TThreading threading_model = numeric::T_Serial) = 0; // should be called from init() normally
   //precompute table of interpolated values on uniform grid
-  virtual void interpolateOnUniformGrid(size_t points_count, numeric::TThreading threading_model) = 0;
+  virtual void evaluateOnUniformGrid(size_t points_count, numeric::TThreading threading_model) = 0;
 };
 
 template<typename T> class InterpolantFixedGrid1d : public InterpolantBase1d
@@ -137,7 +137,7 @@ public:
   void preallocateInterpolatedTable(size_t table_size) override;
 
   //precompute table of interpolated values on uniform grid
-  void interpolateOnUniformGrid(size_t points_count, numeric::TThreading threading_model) override;
+  void evaluateOnUniformGrid(size_t points_count, numeric::TThreading threading_model) override;
 protected:
   static void ParseHeaderDat(InFileText& f, size_t& points_count, T& lower_border, T& upper_border);
 };
@@ -217,11 +217,11 @@ private:
 #endif
 
 //helper functions to create interpolants with given type
-inline InterpolantBase1d* NewInterpolant1d(const numeric::TPrecision p, const size_t points_count, const size_t cached_points_count,
-  const TInterpolantType type = TInterpolantType::Array, const TInterpolantFlavour flavour = TInterpolantFlavour::ChebyshevFirstKind);
 inline InterpolantBase1d* NewInterpolant1d(const numeric::TPrecision p, InFileText* f, const bool readData = true,
   const TInterpolantType type = TInterpolantType::Array, const TInterpolantFlavour flavour = TInterpolantFlavour::ChebyshevFirstKind);
 /*
+inline InterpolantBase1d* NewInterpolant1d(const numeric::TPrecision p, const size_t points_count, const size_t cached_points_count,
+  const TInterpolantType type = TInterpolantType::Array, const TInterpolantFlavour flavour = TInterpolantFlavour::ChebyshevFirstKind);
 inline InterpolantBase1d* NewInterpolant1d(const numeric::TPrecision p, const size_t points_count, const size_t cached_points_count,
   InFileText& f,
   const TInterpolantType type = TInterpolantType::Array, const TInterpolantFlavour flavour = TInterpolantFlavour::ChebyshevFirstKind);

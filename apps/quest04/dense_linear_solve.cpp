@@ -49,7 +49,7 @@ namespace Calc
         for(size_t i = 0; i < sz; i++)
         {
           //compute component i of vector difference
-          component = std::abs(x[0] - y[0]);
+          component = std::abs(x[i] - y[i]);
           //update norm blas-ish way
           if(!numeric::isEqualReal(component, zero))
           {
@@ -82,7 +82,7 @@ namespace Calc
         for(size_t i = 0; i < sz; i++)
         {
           //compute component i of vector difference
-          component = std::abs(x[0] - y[0]);
+          component = std::abs(x[i] - y[i]);
           //update norm blas-ish way
           if(!numeric::isEqualReal(component, zero))
           {

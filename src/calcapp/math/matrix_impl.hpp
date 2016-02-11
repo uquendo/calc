@@ -292,7 +292,7 @@ template<typename T> void ArrayBasedCDSBandedMatrix<T>::writeToFile(OutFileText&
   f.flush();
 }
 
-//type-speciefic allocation
+//type-specific allocation
 template<typename T> inline void Matrix<T>::ensureAllocated()
 {
   if( m_buf==nullptr || ArrayBasedDenseMatrix<T>::m_data==nullptr )

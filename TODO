@@ -1,13 +1,13 @@
 +- AppOptions options processing implementation
 +- App variants interfaces & implementation
 +- Input/Output file processing interface & implementation
-* quest-template and quest-examples :
++- quest-template and quest-examples :
   + algorithms dispatcher
   * example measuring memory bandwidth
   * example measuring flops
   * example measuring cache properties
   * example measuring file io
-* working quest01 :
++- working quest01 :
   + simple wrapper class/struct for matrices
   + i/o for matrices
   +/- c++ variants of quest01 algorithms(strassen remaines untouched)
@@ -15,21 +15,24 @@
   * c variants of quest01 algorithms
   * fortran variants of quest01 algorithms
   * performance comparsion
-* working quest02
-* working quest03
-* working quest04
-* working quest05
++- working quest02
++- working quest03
++- working quest04
++- working quest05
 * README
 * review precision dispatching mechanism:
   * add more flexible method to list set of float types suitable to dispatch
   * find some way to simplify generic datastructures following CRTP
-* write threading dispatching mechanism with flexible method to list set of threading models suitable to dispatch
-* thread pool for std::thread/pthreads
-* some generic parallelisable constructs(i.e. map/reduce) for threading dispatcher
+* review threading dispatching mechanism:
+  * write threading dispatching mechanism with flexible method to list set of threading models suitable to dispatch
+  * write thread pool for std::thread/pthreads
+  * some generic parallelisable constructs(i.e. map/reduce) for threading dispatcher
+  * BUILD_THREADING review
 +- BUILD_VANILLA review
-* BUILD_THREADING review
 * progress bar and logger logic review
 * cli parsing review, further reduce copypasting
+* review numeric library design(see f.e. ulmBLAS/FLENS, libFLAME/BLIS etc)
+* review aligned buffers management: [de]allocation, storing, passing etc
 * implement (some) standard cblas interfaces
 * write tests and scripts to automate running them
 * write build tests for at least 27 build variants:

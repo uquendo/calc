@@ -84,7 +84,7 @@ namespace Calc
     {
       const T small_value = T(1.e-5);
       const size_t stride = sz + 1;
-      index[0] = sz-1;
+      index[0] = sz - 1;
       for(size_t k = 0; k < sz - 1; k++)
       {
         size_t pivot_row = k;
@@ -127,7 +127,7 @@ namespace Calc
       //back substitution
       for(size_t k = 0; k < sz; k++)
       {
-        const size_t idb = sz-1-k;
+        const size_t idb = sz - 1 - k;
         x[idb] = Ab_rows[idb][sz];
         for(size_t i = idb + 1; i < sz; i++)
           x[idb] -= Ab_rows[idb][i] * x[i];
@@ -136,7 +136,7 @@ namespace Calc
       //backtrack permutations
       for(size_t k = 0; k < sz; k++)
       {
-        std::swap(x[sz-1-k],x[index[k]]);
+        std::swap(x[sz - 1 - k],x[index[k]]);
       }
     }
 
