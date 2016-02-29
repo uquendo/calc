@@ -129,13 +129,17 @@ namespace numeric {
     {
       table[i] = cubic_spline_evaluate_value_left_helper(knots,S0,S2,args[i]);
     }
-    size_t interval_id = 1;
-#pragma omp parallel for private(interval_id)
-    for(size_t i = from_id; i < to_id; i++)
+    size_t interval_id;
+#pragma omp parallel private(interval_id)
     {
-      while(args[i] > knots[interval_id])
-        ++interval_id;
-      table[i] = cubic_spline_evaluate_value_internal_helper(knots,S0,S2,args[i],interval_id);
+      interval_id = 1;
+#pragma omp for
+      for(size_t i = from_id; i < to_id; i++)
+      {
+        while(args[i] > knots[interval_id])
+          ++interval_id;
+        table[i] = cubic_spline_evaluate_value_internal_helper(knots,S0,S2,args[i],interval_id);
+      }
     }
 #pragma omp parallel for
     for(size_t i = to_id; i < table_sz; i++)
@@ -197,13 +201,19 @@ namespace numeric {
       }
     );
 
-    struct {
+    struct _EvalFunc {
       size_t m_interval_id;
       const T* const m_knots;
       const T* const m_S0;
       const T* const m_S2;
       const T* const m_args;
       T* const m_table;
+
+      _EvalFunc(size_t interval_id, const T* const knots, const T* const S0, const T* const S2,
+          const T* const args, T* const table)
+        : m_interval_id(interval_id), m_knots(knots), m_S0(S0), m_S2(S2)
+        , m_args(args), m_table(table)
+      {}
 
       void operator()(size_t i)
       {

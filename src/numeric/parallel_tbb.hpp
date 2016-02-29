@@ -63,7 +63,18 @@ void parallelReduceBlock(const Range & range, BlockFunction & f)
 }
 
 template <class Index, class ElemFunction>
-void parallelForElem(Index first, Index last, const ElemFunction & f) 
+void parallelForElem(Index first, Index last, ElemFunction const & f) 
+{
+  parallelForBlock(first, last,
+    [&f](const tbb::blocked_range<Index>& br) {
+      for ( Index i = br.begin(); i < br.end(); ++i )
+        f(i);
+    }
+  );
+}
+
+template <class Index, class ElemFunction>
+void parallelForElem(Index first, Index last, ElemFunction & f) 
 {
   parallelForBlock(first, last,
     [&f](const tbb::blocked_range<Index>& br) {

@@ -189,10 +189,14 @@ public:
   void preallocateTemporaries() override;
 
   //compute approximant
-  static __FORCEINLINE inline void prepare_matrices_op(const size_t i,
+  static __FORCEINLINE inline void __prepare_matrices_op(const size_t i,
     const T* const __RESTRICT points, const T* const __RESTRICT weights,
     T* const __RESTRICT R, T* const __RESTRICT Q, T* const __RESTRICT WQ,
     const T smoothing_k = 1.0);
+  void prepare_matrices_op(const size_t i)
+  {
+    __prepare_matrices_op(i, m_points, m_weights, m_R, m_Q, m_WQ, (T(1) - m_smoothing_p)/m_smoothing_p );
+  }
   void prepare_matrices(numeric::TThreading threading_model = numeric::T_Serial);
   void assemble_equations(numeric::TThreading threading_model = numeric::T_Serial) override;
   void solve_equations(numeric::TThreading threading_model = numeric::T_Serial) override;

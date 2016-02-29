@@ -229,7 +229,7 @@ template<typename T> void ApproximantCubicSmoothingSpline1d<T>::preallocateParam
 }
 
 template<typename T> __FORCEINLINE inline
-  void ApproximantCubicSmoothingSpline1d<T>::prepare_matrices_op(const size_t i,
+  void ApproximantCubicSmoothingSpline1d<T>::__prepare_matrices_op(const size_t i,
     const T* const __RESTRICT points, const T* const __RESTRICT weights,
     T* const __RESTRICT R, T* const __RESTRICT Q, T* const __RESTRICT WQ,
     const T smoothing_k /* = 1.0 */ )
@@ -270,7 +270,7 @@ template<typename T> void ApproximantCubicSmoothingSpline1d<T>::prepare_matrices
     {
 #pragma omp parallel for
       for(size_t i = 1; i < m_points_count - 1; i++)
-        prepare_matrices_op(i,m_points,m_weights,m_R,m_Q,m_WQ,k);
+        prepare_matrices_op(i);
       break;
     }
 #endif
@@ -278,27 +278,20 @@ template<typename T> void ApproximantCubicSmoothingSpline1d<T>::prepare_matrices
     case numeric::T_Cilk:
     {
       cilk_for(size_t i = 1; i < m_points_count - 1; i++)
-        prepare_matrices_op(i,m_points,m_weights,m_R,m_Q,m_WQ,k);
+        prepare_matrices_op(i);
       break;
     }
 #endif
 #ifdef HAVE_TBB
     case numeric::T_TBB:
     {
-      struct {
-        const T* const points;
-        const T* const weights;
-        T* const R;
-        T* const Q;
-        T* const WQ;
-        const T k;
-        void operator()(size_t i)
-        {
-          return prepare_matrices_op(i,points,weights,R,Q,WQ,k);
-        }
-      } EvalFunc(m_points,m_weights,m_R,m_Q,m_WQ,k);
-      numeric::parallelForElem( size_t(1), m_points_count - 1, EvalFunc);
+      auto evalLambda = [&](size_t i)
+      {
+        return this->prepare_matrices_op(i);
+      };
+      numeric::parallelForElem( size_t(1), m_points_count - 1, evalLambda);
       break;
+
     }
 #endif
     case numeric::T_Serial:
@@ -306,7 +299,7 @@ template<typename T> void ApproximantCubicSmoothingSpline1d<T>::prepare_matrices
     default:
     {
       for(size_t i = 1; i < m_points_count - 1; i++)
-        prepare_matrices_op(i,m_points,m_weights,m_R,m_Q,m_WQ,k);
+        prepare_matrices_op(i);
       break;
     }
   }
