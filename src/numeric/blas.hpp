@@ -46,6 +46,22 @@ template<typename T>
     const size_t sz,
     const TThreading threading_model = T_Serial);
 
+//generic dgbmv, y = \beta*y + \alpha*op(A)*x
+template<typename T>
+  void dgemv(const TMatrixStorage stor, const TMatrixTranspose transA,
+      const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t nrows_a, const size_t ncolumns_a,
+      const T alpha = T(1.0), const T beta = T(1.0),
+      const TThreading threading_model = T_Serial);
+
+//generic dgbmv for square matrices
+template<typename T>
+  void dgemv(const TMatrixStorage stor, const TMatrixTranspose transA,
+      const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t sz,
+      const T alpha = T(1.0), const T beta = T(1.0),
+      const TThreading threading_model = T_Serial);
+
 //vector norm calculation
 template<typename T>
   T vector_norm_L1(const size_t sz, const T* const __RESTRICT x);
@@ -79,7 +95,7 @@ template<typename T>
     const size_t sz, const size_t band,
     const TThreading threading_model = T_Serial);
 
-//generic dgbmv for banded matrices, y=op(A)*x
+//generic dgbmv for banded matrices, y+=op(A)*x
 //TODO:STUB! only tridiagonal matrices at the moment
 template<typename T>
   void dgbmv(const TMatrixStorage stor, const TMatrixTranspose transA,

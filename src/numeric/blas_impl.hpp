@@ -24,7 +24,7 @@ using std::size_t;
 
 namespace numeric {
 
-//helper for simple serial matrix multiplication
+//elemental operation for simple matrix multiplication
 template<typename T, bool tA, bool tB, bool cA, bool cB>
   __FORCEINLINE inline void _gemm_op(const T* const  __RESTRICT a, const T* const  __RESTRICT b, T* const __RESTRICT c,
     const size_t stride_a, const size_t stride_b, const size_t stride_c,
@@ -458,6 +458,123 @@ template<typename T>
     const TThreading threading_model)
 {
     return dgemm<T>(stor,transA,transB,a,b,c,sz,sz,sz,sz,threading_model);
+}
+
+//elemental operation for simple matrix-vector multiplication
+template<typename T, bool tA, bool tB, bool cA, bool cB>
+  __FORCEINLINE inline void _gemv_op(const T* const  __RESTRICT a, const T* const  __RESTRICT x, T* const __RESTRICT y,
+    const size_t stride_a, const T alpha,
+    const size_t i, const size_t j)
+{
+  //if nothing's transposed, do  y(i) += a(i,j) * x(j)
+  //transpose option switches corresponding indices. tA: a(i,j) -> a(j,i)
+  y[i] +=  ( cA ? conj<T>(a[tA ? j*stride_a+i : i*stride_a+j]) : a[tA ? j*stride_a+i : i*stride_a+j] ) * x[j] * alpha;
+}
+
+template<typename T, bool tA, bool cA>
+  inline void gemv_serial(const T* const  __RESTRICT a, const T* const  __RESTRICT x, T* const __RESTRICT y,
+    const size_t nrows_op_a, const size_t ncolumns_op_a,
+    const T alpha, const T beta)
+{
+  if(tA)
+  {
+    for(size_t i=0; i < ncolumns_op_a; i++)
+      y[i]*=beta;
+    for(size_t j=0; j < nrows_op_a; j++)
+      for(size_t i=0; i < ncolumns_op_a; i++)
+        _gemv_op<T,tA,cA>(a,x,y,ncolumns_op_a,alpha,i,j);
+  } else {
+    for(size_t i=0; i < nrows_op_a; i++)
+    {
+      y[i]*=beta;
+      for(size_t j=0; j < ncolumns_op_a; j++)
+        _gemv_op<T,tA,cA>(a,x,y,ncolumns_op_a,alpha,i,j);
+    }
+  }
+}
+
+template<typename T, bool tA, bool cA>
+  inline void dgemv_helper(const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t nrows_op_a, const size_t ncolumns_op_a,
+      const T alpha, const T beta,
+      const TThreading threading_model)
+{
+  switch(threading_model)
+  {
+    case T_Serial:
+      return gemv_serial<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+    case T_Std:
+//      return gemv_stdthreads<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+#ifdef HAVE_PTHREADS
+    case T_Posix:
+//      return gemv_pthreads<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+#endif
+#ifdef HAVE_OPENMP
+    case T_OpenMP:
+//      return gemv_openmp<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+#endif
+#ifdef HAVE_CILK
+    case T_Cilk:
+//      return gemv_cilk<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+#endif
+#ifdef HAVE_TBB
+    case T_TBB:
+//      return gemv_tbb<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+#endif
+    case T_Undefined:
+    default:
+      return gemv_serial<T,tA,cA>(a,x,y,nrows_op_a,ncolumns_op_a,alpha,beta);
+  }
+}
+
+//generic dgbmv, y = \beta*y + \alpha*op(A)*x
+template<typename T>
+  void dgemv(const TMatrixStorage stor, const TMatrixTranspose transA,
+      const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t nrows_a, const size_t ncolumns_a,
+      const T alpha, const T beta,
+      const TThreading threading_model)
+{
+  const bool tA = (transA != TMatrixTranspose::No) ;
+  const bool cA = (transA == TMatrixTranspose::Conjugate && is_complex<T>::value) ;
+  switch(stor)
+  {
+    case TMatrixStorage::RowMajor:
+      if(tA) {
+        if(cA)
+          return dgemv_helper<T,true,true>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+        else
+          return dgemv_helper<T,true,false>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+      } else {
+        if(cA)
+          return dgemv_helper<T,false,true>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+        else
+          return dgemv_helper<T,false,false>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+      }
+    case TMatrixStorage::ColumnMajor:
+      if(!tA) {
+        if(cA)
+          return dgemv_helper<T,true,true>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+        else
+          return dgemv_helper<T,true,false>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+      } else {
+        if(cA)
+          return dgemv_helper<T,false,true>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+        else
+          return dgemv_helper<T,false,false>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+      }
+  }
+}
+
+//generic dgbmv for square matrices
+template<typename T>
+  void dgemv(const TMatrixStorage stor, const TMatrixTranspose transA,
+      const T* const __RESTRICT a, const T* const __RESTRICT x, T* const __RESTRICT y,
+      const size_t sz,
+      const T alpha, const T beta,
+      const TThreading threading_model)
+{
+    return dgemv<T>(stor,transA,a,x,y,sz,sz,alpha,beta,threading_model);
 }
 
 template<typename T> bool is_diagonally_dominant(const size_t sz, const size_t stride, const T* const __RESTRICT A)

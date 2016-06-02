@@ -8,130 +8,131 @@ namespace Calc
   namespace dense_linear_solve
  {
 
-    //dispatcher
-    void perform(const AlgoParameters& parameters, Logger& log);
-
     template<typename T> void numeric_cpp_gauss_impl(const size_t sz,
-        T* const __RESTRICT Ab, T* const __RESTRICT x,
+        T* const __RESTRICT A, T* const __RESTRICT b, T* const __RESTRICT x,
         Logger& log)
     {
-      const T small_value = T(1.e-5);
-      const size_t stride = sz + 1;
+      const T small_value = T(1.e-5); //TODO: type-independent value
+      const size_t stride = sz;
       log.debug("Note that gaussian elimination without pivoting works well only on diagonally-dominant matrices");
       log.debug("And if your matrix has any zeroes on main diagonal, you're definitely absolutely totally entirely doomed.");
       for(size_t k = 0; k < sz - 1; k++)
       {
-        if(std::abs(Ab[k*stride+k]) < small_value)
-          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,std::abs(Ab[k*stride+k]));
-        T fac = T(1.0)/Ab[k*stride+k];
+        if(std::abs(A[k*stride + k]) < small_value)
+          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,std::abs(A[k*stride + k]));
+        T fac = T(1.0)/A[k*stride + k];
         for(size_t j = k + 1; j < sz; j++)
         {
-          T tmp = Ab[j*stride+k]*fac;
-          for(size_t i = k + 1; i < sz + 1; i++)
-            Ab[j*stride+i] -= Ab[k*stride+i]*tmp;
+          T tmp = A[j*stride + k]*fac;
+          for(size_t i = k + 1; i < sz; i++)
+            A[j*stride + i] -= A[k*stride + i]*tmp;
+          b[j] -= b[k]*tmp;
         }
       }
       //back substitution
       for(size_t k = 0; k < sz; k++)
       {
         const size_t idx = sz - 1 - k;
-        x[idx] = Ab[idx*stride+sz];
+        x[idx] = b[idx];
         for(size_t i = idx + 1; i < sz; i++)
-          x[idx] -= Ab[idx*stride+i] * x[i];
-        x[idx] /= Ab[idx*stride+idx];
+          x[idx] -= A[idx*stride + i] * x[i];
+        x[idx] /= A[idx*stride + idx];
       }
     }
 
     template<typename T> void numeric_cpp_jordan_impl(const size_t sz,
-        T* const __RESTRICT Ab, T* const __RESTRICT x,
+        T* const __RESTRICT A, T* const __RESTRICT b, T* const __RESTRICT x,
         Logger& log)
     {
-      const T small_value = T(1.e-5);
-      const size_t stride = sz + 1;
+      const T small_value = T(1.e-5); //TODO: type-independent value
+      const size_t stride = sz;
       log.debug("Note that gaussian elimination without pivoting works well only on diagonally-dominant matrices");
       log.debug("And if your matrix has any zeroes on main diagonal, you're definitely absolutely totally entirely doomed");
       for(size_t k = 0; k < sz; k++)
       {
-        if(std::abs(Ab[k*stride+k]) < small_value)
-          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,numeric::toDouble(std::abs(Ab[k*stride+k])));
-        T fac = T(1.0)/Ab[k*stride+k];
+        if(std::abs(A[k*stride + k]) < small_value)
+          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,numeric::toDouble(std::abs(A[k*stride + k])));
+        T fac = T(1.0)/A[k*stride + k];
         for(size_t j = k + 1; j < sz; j++)
         {
-          T tmp = Ab[j*stride+k]*fac;
-          for(size_t i = k + 1; i < sz + 1; i++)
-            Ab[j*stride+i] -= Ab[k*stride+i]*tmp;
+          T tmp = A[j*stride + k]*fac;
+          for(size_t i = k + 1; i < sz; i++)
+            A[j*stride + i] -= A[k*stride + i]*tmp;
+          b[j] -= b[k]*tmp;
         }
         for(size_t j = 0; j < k; j++)
         {
-          T tmp = Ab[j*stride+k]*fac;
-          for(size_t i = k + 1; i < sz + 1; i++)
-            Ab[j*stride+i] -= Ab[k*stride+i]*tmp;
+          T tmp = A[j*stride + k]*fac;
+          for(size_t i = k + 1; i < sz; i++)
+            A[j*stride + i] -= A[k*stride + i]*tmp;
+          b[j] -= b[k]*tmp;
         }
       }
       //scaling rhs by diagonal matrix elements
       for(size_t k = 0; k < sz; k++)
       {
         const size_t idx = sz - 1 - k;
-        x[idx] = Ab[idx*stride+sz] / Ab[idx*stride+idx];
+        x[idx] = b[idx] / A[idx*stride + idx];
       }
     }
 
     template<typename T> void numeric_cpp_gauss_full_pivoting_impl(const size_t sz,
-        T* const __RESTRICT Ab,
-        T* __RESTRICT *  __RESTRICT Ab_rows, T* const __RESTRICT x,
+        T* const __RESTRICT A, T* const __RESTRICT b,
+        T* __RESTRICT *  __RESTRICT A_rows, T* const __RESTRICT x,
         size_t * const __RESTRICT index,
         Logger& log)
     {
-      const T small_value = T(1.e-5);
-      const size_t stride = sz + 1;
+      const T small_value = T(1.e-5); //TODO: type-independent value
+      const size_t stride = sz;
       index[0] = sz - 1;
       for(size_t k = 0; k < sz - 1; k++)
       {
         size_t pivot_row = k;
         size_t pivot_column = k;
-        T pivot = Ab_rows[k][k];
+        T pivot = A_rows[k][k];
         //find pivot element
         for(size_t j = k; j < sz; j++)
         {
           for(size_t i = k; i < sz; i++)
           {
-            if( std::abs(pivot) < std::abs(Ab_rows[j][i]) )
+            if( std::abs(pivot) < std::abs(A_rows[j][i]) )
             {
-              pivot = Ab_rows[j][i];
+              pivot = A_rows[j][i];
               pivot_row = j;
               pivot_column = i;
             }
           }
         }
-        if(pivot_row != k) std::swap(Ab_rows[k],Ab_rows[pivot_row]);
+        if(pivot_row != k) std::swap(A_rows[k],A_rows[pivot_row]);
         const bool swap_columns = (pivot_column != k);
         if(swap_columns)
         {
           index[sz - 1 - k] = pivot_column;
           for(size_t j = 0; j < sz; j++)
-            std::swap(Ab[j*stride+k],Ab[j*stride+pivot_column]);
+            std::swap(A[j*stride + k],A[j*stride + pivot_column]);
         } else {
           index[sz - 1 - k] = k;
         }
-        if(std::abs(Ab_rows[k][k]) < small_value)
+        if(std::abs(A_rows[k][k]) < small_value)
           log.fwarning("Despite all pivot selection efforts, pivot element A(%zu,%zu) is rather small, %g",
-              k,k,numeric::toDouble(std::abs(Ab_rows[k][k])));
-        T fac = T(1.0)/Ab_rows[k][k];
+              k,k,numeric::toDouble(std::abs(A_rows[k][k])));
+        T fac = T(1.0)/A_rows[k][k];
         for(size_t j = k + 1; j < sz; j++)
         {
-          T tmp = Ab_rows[j][k]*fac;
-          for(size_t i = k + 1; i < sz + 1; i++)
-            Ab_rows[j][i] -= Ab_rows[k][i]*tmp;
+          T tmp = A_rows[j][k]*fac;
+          for(size_t i = k + 1; i < sz; i++)
+            A_rows[j][i] -= A_rows[k][i]*tmp;
+          b[j] -= b[k]*tmp;
         }
       }
       //back substitution
       for(size_t k = 0; k < sz; k++)
       {
         const size_t idb = sz - 1 - k;
-        x[idb] = Ab_rows[idb][sz];
+        x[idb] = b[idb];
         for(size_t i = idb + 1; i < sz; i++)
-          x[idb] -= Ab_rows[idb][i] * x[i];
-        x[idb] /= Ab_rows[idb][idb];
+          x[idb] -= A_rows[idb][i] * x[i];
+        x[idb] /= A_rows[idb][idb];
       }
       //backtrack permutations
       for(size_t k = 0; k < sz; k++)
@@ -147,10 +148,11 @@ namespace Calc
       {
         //warmup
         const size_t _sz = p.system_size;
-        T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
+        T* const _A_buf = reinterpret_cast<T*>(p.A_buf);
+        T* const _b_buf = reinterpret_cast<T*>(p.b_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
-        T**  _Ab_rows = reinterpret_cast<T** const>(p.Ab_rows);
-        return numeric_cpp_gauss_impl<T>(_sz,_buf,_x,p.progress_ptr->log());
+        T**  _A_rows = reinterpret_cast<T** const>(p.A_rows);
+        return numeric_cpp_gauss_impl<T>(_sz,_A_buf,_b_buf,_x,p.progress_ptr->log());
       }
     };
 
@@ -161,10 +163,11 @@ namespace Calc
       {
         //warmup
         const size_t _sz = p.system_size;
-        T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
+        T* const _A_buf = reinterpret_cast<T*>(p.A_buf);
+        T* const _b_buf = reinterpret_cast<T*>(p.b_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
-        T**  _Ab_rows = reinterpret_cast<T** const>(p.Ab_rows);
-        return numeric_cpp_jordan_impl<T>(_sz,_buf,_x,p.progress_ptr->log());
+        T**  _A_rows = reinterpret_cast<T** const>(p.A_rows);
+        return numeric_cpp_jordan_impl<T>(_sz,_A_buf,_b_buf,_x,p.progress_ptr->log());
       }
     };
 
@@ -175,11 +178,12 @@ namespace Calc
       {
         //warmup
         const size_t _sz = p.system_size;
-        T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
+        T* const _A_buf = reinterpret_cast<T*>(p.A_buf);
+        T* const _b_buf = reinterpret_cast<T*>(p.b_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
-        T** _Ab_rows = reinterpret_cast<T** const>(p.Ab_rows);
+        T** _A_rows = reinterpret_cast<T** const>(p.A_rows);
         size_t * const _index = new size_t[_sz];
-        return numeric_cpp_gauss_full_pivoting_impl<T>(_sz,_buf,_Ab_rows,_x,_index,p.progress_ptr->log());
+        return numeric_cpp_gauss_full_pivoting_impl<T>(_sz,_A_buf,_b_buf,_A_rows,_x,_index,p.progress_ptr->log());
       }
     };
 
@@ -190,17 +194,22 @@ namespace Calc
       ExecTimeMeter __etm(log, "dense_linear_solve::perform");
 //      PERF_METER(log, "dense_linear_solve::perform");
       const size_t _sz = p.system_size;
-      double* const _buf = p.Ab_buf.get();
+      double* const _A_buf = p.A_buf.get();
+      double* const _b_buf = p.b_buf.get();
       double* const _x = p.x;
-      double** _Ab_rows = p.Ab_rows;
+      double** _A_rows = p.A_rows;
       switch(p.Aopt.type)
       {
         case A_NumCppGauss:
-          return numeric_cpp_gauss_impl(_sz,_buf,_x,log);
+//          return numeric_cpp_gauss()(p.Popt.type, p);
+          return numeric_cpp_gauss_impl<double>(_sz,_A_buf,_b_buf,_x,log);
         case A_NumCppJordan:
-          return numeric_cpp_jordan_impl(_sz,_buf,_x,log);
+//          return numeric_cpp_jordan()(p.Popt.type, p);
+          return numeric_cpp_jordan_impl<double>(_sz,_A_buf,_b_buf,_x,log);
         case A_NumCppFullPivoting:
-          return numeric_cpp_gauss_full_pivoting_impl(_sz,_buf,_Ab_rows,_x,reinterpret_cast<size_t * const>(new size_t[_sz]),log);
+//          return numeric_cpp_gauss_full_pivoting()(p.Popt.type, p);
+          return numeric_cpp_gauss_full_pivoting_impl<double>(_sz,_A_buf,_b_buf,_A_rows,_x,
+              reinterpret_cast<size_t * const>(new size_t[_sz]),log);
         case A_Undefined:
         default:
           throw Calc::ParameterError("Algorithm is not implemented");

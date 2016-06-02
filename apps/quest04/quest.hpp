@@ -72,7 +72,8 @@ namespace dense_linear_solve {
     const Calc::ThreadingOptions Topt;
     const Calc::PrecisionOptions Popt;
     const Calc::AlgoOptions Aopt;
-    std::unique_ptr<double[]> Ab_buf;
+    std::unique_ptr<double[]> A_buf;
+    std::unique_ptr<double[]> b_buf;
     double* x;
     double* x_tmp;
     double* residual_tmp;

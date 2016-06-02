@@ -72,8 +72,9 @@ namespace dense_linear_solve {
     const Calc::ThreadingOptions Topt;
     const Calc::PrecisionOptions Popt;
     const Calc::AlgoOptions Aopt;
-    std::unique_ptr<double[]> Ab_buf;
-    double** Ab_rows;
+    std::unique_ptr<double[]> A_buf;
+    std::unique_ptr<double[]> b_buf;
+    double** A_rows;
     double* x;
     size_t system_size;
     ProgressCtrl * progress_ptr;

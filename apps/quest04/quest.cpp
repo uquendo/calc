@@ -265,7 +265,7 @@ namespace Calc {
     : CliApp(dynamic_cast<const CliAppOptions&>(opt))
     , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
     , m_pAlgoParameters(new dense_linear_solve::AlgoParameters({m_threading,m_precision,m_algo,
-          nullptr,nullptr,nullptr,nullptr,0,nullptr}))
+          nullptr,nullptr,nullptr,nullptr,nullptr,0,nullptr}))
     , m_pfIn(new InFileText(m_input.filename,m_input.filetype,true))
     , m_pfOut(new OutFileText(m_output.filename,m_output.filetype,false))
   {
@@ -275,7 +275,7 @@ namespace Calc {
     : CliApp(dynamic_cast<const CliAppOptions&>(opt), pc)
     , m_input(opt.getInOpts()),m_output(opt.getOutOpts()),m_algo(opt.getAlgoOpts())
     , m_pAlgoParameters(new dense_linear_solve::AlgoParameters({m_threading,m_precision,m_algo,
-          nullptr,nullptr,nullptr,nullptr,0,pc}))
+          nullptr,nullptr,nullptr,nullptr,nullptr,0,pc}))
     , m_pfIn(new InFileText(m_input.filename,m_input.filetype,true))
     , m_pfOut(new OutFileText(m_output.filename,m_output.filetype,false))
   {
@@ -302,7 +302,7 @@ namespace Calc {
     m_algo.type = A_NumCppGauss;
 #endif
     m_pAlgoParameters.reset(new dense_linear_solve::AlgoParameters({m_threading,m_precision,m_algo,
-          nullptr,nullptr,nullptr,nullptr,0,ctrl()}));
+          nullptr,nullptr,nullptr,nullptr,nullptr,0,ctrl()}));
     m_pfIn.reset(new InFileText(m_input.filename,m_input.filetype,true));
     m_pfOut.reset(new OutFileText(m_output.filename,m_output.filetype,false));
   }
@@ -353,17 +353,18 @@ namespace Calc {
   {
     //read input table from file
     const size_t sz = m_pAlgoParameters->system_size;
-    const size_t stride = sz + 1;
-    double* const buf_ptr = m_pAlgoParameters->Ab_buf.get();
+    const size_t stride = sz;
+    double* const A_buf_ptr = m_pAlgoParameters->A_buf.get();
+    double* const b_buf_ptr = m_pAlgoParameters->b_buf.get();
     if(m_pfIn->lineNum() == 0)
       m_pfIn->readNextLine();
     for(size_t i = 0; i < sz; i++)
     {
-      m_pfIn->readNextLine_scanNumArray<double>(sz, sz, buf_ptr+i*stride);
+      m_pfIn->readNextLine_scanNumArray<double>(sz, sz, A_buf_ptr+i*stride);
     }
     for(size_t i = 0; i < sz; i++)
     {
-      m_pfIn->readNextLine_scanNums(1,buf_ptr+i*stride+sz);
+      m_pfIn->readNextLine_scanNums(1,b_buf_ptr+i);
     }
   }
 
@@ -389,7 +390,8 @@ namespace Calc {
     log().fdebug("found system of %zu linear equations", m_pAlgoParameters->system_size);
     //sanity check(input can be used by selected algorithm)
     //initialize output structure[s] and possibly file[s]
-    m_pAlgoParameters->Ab_buf.reset(new double[m_pAlgoParameters->system_size*(m_pAlgoParameters->system_size+1)]);
+    m_pAlgoParameters->A_buf.reset(new double[m_pAlgoParameters->system_size*m_pAlgoParameters->system_size]);
+    m_pAlgoParameters->b_buf.reset(new double[m_pAlgoParameters->system_size]);
     m_pAlgoParameters->x = new double[m_pAlgoParameters->system_size];
     m_pAlgoParameters->x_tmp = new double[m_pAlgoParameters->system_size];
     m_pAlgoParameters->residual_tmp = new double[m_pAlgoParameters->system_size];
@@ -415,8 +417,10 @@ namespace Calc {
         m_pfIn->reset();
         readInput();
         log().fdebug("found solution with ||Ax-b||_1 = %g, ||Ax-b||_2 = %g"
-            , dense_linear_solve::residualL1Norm(m_pAlgoParameters->system_size,m_pAlgoParameters->Ab_buf.get(),m_pAlgoParameters->x)
-            , dense_linear_solve::residualL2Norm(m_pAlgoParameters->system_size,m_pAlgoParameters->Ab_buf.get(),m_pAlgoParameters->x)
+            , numeric::residual_l1_norm(m_pAlgoParameters->system_size, m_pAlgoParameters->system_size,
+                m_pAlgoParameters->A_buf.get(), m_pAlgoParameters->b_buf.get(), m_pAlgoParameters->x)
+            , numeric::residual_l2_norm(m_pAlgoParameters->system_size, m_pAlgoParameters->system_size,
+                m_pAlgoParameters->A_buf.get(), m_pAlgoParameters->b_buf.get(), m_pAlgoParameters->x)
             );
       }
     } else {

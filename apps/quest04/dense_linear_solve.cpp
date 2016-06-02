@@ -8,107 +8,16 @@ namespace Calc
   namespace dense_linear_solve
  {
 
-    //dispatcher
-    bool perform(const AlgoParameters& parameters, Logger& log);
-
-    template<typename T> bool isDiagonallyDominant(const size_t sz, const size_t stride, const T* const __RESTRICT A)
-    {
-      for(size_t i = 0; i < sz; i++)
-      {
-        T row_sum = T(0.0);
-        //no subnormals, please
-        if(std::abs(A[i*stride+i]) < std::numeric_limits<T>::min())
-          return false;
-        for(size_t j = 0; j < i; j++)
-        {
-          row_sum += std::abs(A[i*stride+j]);
-        }
-        for(size_t j = i+1; j < sz; j++)
-        {
-          row_sum += std::abs(A[i*stride+j]);
-        }
-        if(!(row_sum < std::abs(A[i*stride+i])))
-          return false;
-      }
-      return true;
-    }
-
-    //residual norm calculation
-    template<typename T> T vectorDifferenceL2Norm(const size_t sz, const T* const __RESTRICT x, const T* const __RESTRICT y)
-    {
-      T norm = T(0.0);
-      const T zero = T(0.0);
-      const T one = T(1.0);
-      if(sz == 1)
-      {
-        norm = std::abs(x[0] - y[0]);
-      } else {
-        T component = T(0.0);
-        T scale = T(0.0);
-        T sum   = T(1.0);
-        for(size_t i = 0; i < sz; i++)
-        {
-          //compute component i of vector difference
-          component = std::abs(x[i] - y[i]);
-          //update norm blas-ish way
-          if(!numeric::isEqualReal(component, zero))
-          {
-            if (scale < component)
-            {
-              sum = one + sum * std::pow(scale / component, 2);
-              scale = component;
-            } else {
-              sum += std::pow(component / scale, 2);
-            }
-          }
-        }
-        norm = scale * sqrt(sum);
-      }
-      return norm;
-    }
-
-    template<typename T> T vectorDifferenceL1Norm(const size_t sz, const T* const __RESTRICT x, const T* const __RESTRICT y)
-    {
-      T norm = T(0.0);
-      const T zero = T(0.0);
-      const T one = T(1.0);
-      if(sz == 1)
-      {
-        norm = std::abs(x[0] - y[0]);
-      } else {
-        T component = T(0.0);
-        T scale = T(0.0);
-        T sum   = T(1.0);
-        for(size_t i = 0; i < sz; i++)
-        {
-          //compute component i of vector difference
-          component = std::abs(x[i] - y[i]);
-          //update norm blas-ish way
-          if(!numeric::isEqualReal(component, zero))
-          {
-            if (scale < component)
-            {
-              sum = one + sum * (scale / component);
-              scale = component;
-            } else {
-              sum += component / scale;
-            }
-          }
-        }
-        norm = scale * sum;
-      }
-      return norm;
-    }
-
     template<typename T> bool numeric_cpp_jacobi_impl(const size_t sz,
-        const T* const __RESTRICT Ab, T* __RESTRICT x, T* __RESTRICT x_next,
+        const T* const __RESTRICT A, const T* const __RESTRICT b,
+        T* __RESTRICT x, T* __RESTRICT x_next,
         Logger& log,
         const int max_iter_count = default_max_iter_count, const T eps = default_eps<T>())
     {
-      const size_t stride = sz + 1;
+      const size_t stride = sz;
       log.debug("note that iterative solvers from Gauss-Seidel family work only for diagonally dominant matrices");
       log.debug("checking that given matrix is diagonally dominant...");
-      if(!isDiagonallyDominant(sz,stride,Ab))
+      if(!numeric::is_diagonally_dominant(sz,stride,A))
       {
         log.error("the matrix of the system is NOT diagonally dominant, nothing to do here, exiting");
         return false;
@@ -117,14 +26,14 @@ namespace Calc
       {
         for(size_t i = 0; i < sz; i++)
         {
-          x_next[i] = Ab[i*stride + sz];
+          x_next[i] = b[i];
           for(size_t j = 0; j < i; j++)
-            x_next[i] -= Ab[i*stride+j]*x[j];
+            x_next[i] -= A[i*stride + j]*x[j];
           for(size_t j = i+1; j < sz; j++)
-            x_next[i] -= Ab[i*stride+j]*x[j];
-          x_next[i] /= Ab[i*stride+i];
+            x_next[i] -= A[i*stride + j]*x[j];
+          x_next[i] /= A[i*stride + i];
         }
-        if(vectorDifferenceL2Norm(sz,x,x_next) < eps)
+        if(numeric::vector_distance_L2(sz,x,x_next) < eps)
         {
           log.fdebug("at interation %d ||x_{n+1} - x_n||_2 < %g , stoping iterations",iter,numeric::toDouble(eps));
           return true;
@@ -136,14 +45,15 @@ namespace Calc
     }
 
     template<typename T> bool numeric_cpp_seidel_impl(const size_t sz,
-        const T* const __RESTRICT Ab, T* __RESTRICT x, T* __RESTRICT x_next,
+        const T* const __RESTRICT A, const T* const __RESTRICT b,
+        T* __RESTRICT x, T* __RESTRICT x_next,
         Logger& log,
         const int max_iter_count = default_max_iter_count, const T eps = default_eps<T>())
     {
-      const size_t stride = sz + 1;
+      const size_t stride = sz;
       log.debug("note that iterative solvers from Gauss-Seidel family work only for diagonally dominant matrices");
       log.debug("checking that given matrix is diagonally dominant...");
-      if(!isDiagonallyDominant(sz,stride,Ab))
+      if(!numeric::is_diagonally_dominant(sz,stride,A))
       {
         log.error("the matrix of the system is NOT diagonally dominant, nothing to do here, exiting");
         return false;
@@ -152,14 +62,14 @@ namespace Calc
       {
         for(size_t i = 0; i < sz; i++)
         {
-          x_next[i] = Ab[i*stride + sz];
+          x_next[i] = b[i];
           for(size_t j = 0; j < i; j++)
-            x_next[i] -= Ab[i*stride+j]*x_next[j];
+            x_next[i] -= A[i*stride + j]*x_next[j];
           for(size_t j = i+1; j < sz; j++)
-            x_next[i] -= Ab[i*stride+j]*x[j];
-          x_next[i] /= Ab[i*stride+i];
+            x_next[i] -= A[i*stride + j]*x[j];
+          x_next[i] /= A[i*stride + i];
         }
-        if(vectorDifferenceL2Norm(sz,x,x_next) < eps)
+        if(numeric::vector_distance_L2(sz,x,x_next) < eps)
         {
           log.fdebug("at interation %d ||x_{n+1} - x_n||_2 < %g , stoping iterations",iter,numeric::toDouble(eps));
           return true;
@@ -171,15 +81,15 @@ namespace Calc
     }
 
     template<typename T> bool numeric_cpp_relaxation_impl(const size_t sz,
-        const T* const __RESTRICT Ab, T* const __RESTRICT x,
+        const T* const __RESTRICT A, const T* const __RESTRICT b, T* const __RESTRICT x,
         T* __RESTRICT residual, T* __RESTRICT residual_next,
         Logger& log,
         const int max_iter_count = default_max_iter_count, const T eps = default_eps<T>() )
     {
-      const size_t stride = sz + 1;
+      const size_t stride = sz;
       log.debug("note that iterative solvers from Gauss-Seidel family work only for diagonally dominant matrices");
       log.debug("checking that given matrix is diagonally dominant...");
-      if(!isDiagonallyDominant(sz,stride,Ab))
+      if(!numeric::is_diagonally_dominant(sz,stride,A))
       {
         log.error("the matrix of the system is NOT diagonally dominant, nothing to do here, exiting");
         return false;
@@ -188,7 +98,7 @@ namespace Calc
       for(size_t i = 0; i < sz; i++)
       {
         x[i] = 0;
-        residual[i] = Ab[i*stride+sz]/Ab[i*stride+i];
+        residual[i] = b[i]/A[i*stride + i];
       }
       for(int iter = 0; iter < max_iter_count; iter++)
       {
@@ -206,8 +116,8 @@ namespace Calc
         {
           residual_next[i] = 0.0;
           for(size_t j = 0; j < sz; j++)
-            residual_next[i] -= Ab[i*stride+j]*residual[j];
-          residual_next[i] /= Ab[i*stride+i];
+            residual_next[i] -= A[i*stride + j]*residual[j];
+          residual_next[i] /= A[i*stride + i];
           residual_next[i] += residual[i];
         }
         std::swap(residual,residual_next);
@@ -223,10 +133,11 @@ namespace Calc
       {
         //warmup
         const size_t _sz = p.system_size;
-        T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
+        T* const _A_buf = reinterpret_cast<T*>(p.A_buf);
+        T* const _b_buf = reinterpret_cast<T*>(p.b_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
         T* const _x_tmp = reinterpret_cast<T* const>(p.x_tmp);
-        return numeric_cpp_jacobi_impl<T>(_sz,_buf,_x,_x_tmp,p.progress_ptr->log());
+        return numeric_cpp_jacobi_impl<T>(_sz,_A_buf,_b_buf,_x,_x_tmp,p.progress_ptr->log());
       }
     };
 
@@ -237,10 +148,11 @@ namespace Calc
       {
         //warmup
         const size_t _sz = p.system_size;
-        T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
+        T* const _A_buf = reinterpret_cast<T*>(p.A_buf);
+        T* const _b_buf = reinterpret_cast<T*>(p.b_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
         T* const _x_tmp = reinterpret_cast<T* const>(p.x_tmp);
-        return numeric_cpp_seidel_impl<T>(_sz,_buf,_x,_x_tmp,p.progress_ptr->log());
+        return numeric_cpp_seidel_impl<T>(_sz,_A_buf,_b_buf,_x,_x_tmp,p.progress_ptr->log());
       }
     };
 
@@ -251,10 +163,12 @@ namespace Calc
       {
         //warmup
         const size_t _sz = p.system_size;
-        T* const _buf = reinterpret_cast<T*>(p.Ab_buf);
+        T* const _A_buf = reinterpret_cast<T*>(p.A_buf);
+        T* const _b_buf = reinterpret_cast<T*>(p.b_buf);
         T* const _x = reinterpret_cast<T* const>(p.x);
         T* const _x_tmp = reinterpret_cast<T* const>(p.x_tmp);
-        return numeric_cpp_relaxation_impl<T>(_sz,_buf,_x,_x_tmp,p.progress_ptr->log());
+        T* const _residual_tmp = reinterpret_cast<T* const>(p.residual_tmp);
+        return numeric_cpp_relaxation_impl<T>(_sz,_A_buf,_b_buf,_x,_x_tmp,_residual_tmp,p.progress_ptr->log());
       }
     };
 
@@ -265,18 +179,22 @@ namespace Calc
       ExecTimeMeter __etm(log, "dense_linear_solve::perform");
 //      PERF_METER(log, "dense_linear_solve::perform");
       const size_t _sz = p.system_size;
-      double* const _buf = p.Ab_buf.get();
+      double* const _A_buf = p.A_buf.get();
+      double* const _b_buf = p.b_buf.get();
       double* const _x = p.x;
       double* const _x_next = p.x_tmp;
       double* const _residual_next = p.residual_tmp;
       switch(p.Aopt.type)
       {
         case A_NumCppJacobi:
-          return numeric_cpp_jacobi_impl<double>(_sz,_buf,_x,_x_next,log);
+//          return numeric_cpp_jacobi()(p.Popt.type, p);
+          return numeric_cpp_jacobi_impl<double>(_sz,_A_buf,_b_buf,_x,_x_next,log);
         case A_NumCppSeidel:
-          return numeric_cpp_seidel_impl<double>(_sz,_buf,_x,_x_next,log);
+//          return numeric_cpp_seidel()(p.Popt.type, p);
+          return numeric_cpp_seidel_impl<double>(_sz,_A_buf,_b_buf,_x,_x_next,log);
         case A_NumCppRelaxation:
-          return numeric_cpp_relaxation_impl<double>(_sz,_buf,_x,_x_next,_residual_next,log);
+//          return numeric_cpp_relaxation()(p.Popt.type, p);
+          return numeric_cpp_relaxation_impl<double>(_sz,_A_buf,_b_buf,_x,_x_next,_residual_next,log);
         case A_Undefined:
         default:
           throw Calc::ParameterError("Algorithm is not implemented");
