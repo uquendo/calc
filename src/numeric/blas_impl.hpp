@@ -461,7 +461,7 @@ template<typename T>
 }
 
 //elemental operation for simple matrix-vector multiplication
-template<typename T, bool tA, bool tB, bool cA, bool cB>
+template<typename T, bool tA, bool cA>
   __FORCEINLINE inline void _gemv_op(const T* const  __RESTRICT a, const T* const  __RESTRICT x, T* const __RESTRICT y,
     const size_t stride_a, const T alpha,
     const size_t i, const size_t j)
@@ -542,26 +542,26 @@ template<typename T>
     case TMatrixStorage::RowMajor:
       if(tA) {
         if(cA)
-          return dgemv_helper<T,true,true>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+          return dgemv_helper<T,true,true>(a, x, y, ncolumns_a, nrows_a, alpha, beta, threading_model);
         else
-          return dgemv_helper<T,true,false>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+          return dgemv_helper<T,true,false>(a, x, y, ncolumns_a, nrows_a, alpha, beta, threading_model);
       } else {
         if(cA)
-          return dgemv_helper<T,false,true>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+          return dgemv_helper<T,false,true>(a, x, y, nrows_a, ncolumns_a, alpha, beta, threading_model);
         else
-          return dgemv_helper<T,false,false>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+          return dgemv_helper<T,false,false>(a, x, y, nrows_a, ncolumns_a, alpha, beta, threading_model);
       }
     case TMatrixStorage::ColumnMajor:
       if(!tA) {
         if(cA)
-          return dgemv_helper<T,true,true>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+          return dgemv_helper<T,true,true>(a, x, y, ncolumns_a, nrows_a, alpha, beta, threading_model);
         else
-          return dgemv_helper<T,true,false>(a, x, y, ncolumns_a, nrows_a, alpha, beta);
+          return dgemv_helper<T,true,false>(a, x, y, ncolumns_a, nrows_a, alpha, beta, threading_model);
       } else {
         if(cA)
-          return dgemv_helper<T,false,true>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+          return dgemv_helper<T,false,true>(a, x, y, nrows_a, ncolumns_a, alpha, beta, threading_model);
         else
-          return dgemv_helper<T,false,false>(a, x, y, nrows_a, ncolumns_a, alpha, beta);
+          return dgemv_helper<T,false,false>(a, x, y, nrows_a, ncolumns_a, alpha, beta, threading_model);
       }
   }
 }
@@ -731,6 +731,14 @@ template<typename T> T vector_distance_L1(const size_t sz, const T* const __REST
     norm = scale * sum;
   }
   return norm;
+}
+
+//TODO: write faster block transpose
+template<typename T> void square_transpose(const size_t sz, T* const __RESTRICT a)
+{
+  for(size_t i = 0; i < sz - 1; i++)
+    for(size_t j = i + 1; j < sz - 1; j++)
+      std::swap(a[i*sz + j], a[j*sz + i]);
 }
 
 }

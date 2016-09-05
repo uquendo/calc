@@ -140,9 +140,14 @@ template<typename T>
     const TThreading threading_model = T_Serial);
 
 //test for diagonal dominance for banded matrices
-template<typename T> bool is_banded_diagonally_dominant(const size_t sz,
+template<typename T>
+  bool is_banded_diagonally_dominant(const size_t sz,
     const size_t lower_band, const size_t upper_band,
     const size_t stride, const T* const __RESTRICT a);
+
+//inplace transpose of square matrices
+template<typename T>
+  void square_transpose(const size_t, T* const __RESTRICT a);
 
 }
 
