@@ -13,13 +13,6 @@ using std::string;
 
 namespace Calc {
 
-class QuietLogger : public Logger {
-public:
-  virtual void log(Logger::LogLevel level, const char * msg) override
-    {};
-};
-
-
 class DumbLogger : public Logger {
 private:
   ios_guard<std::ofstream> m_logFile;

@@ -94,6 +94,12 @@ protected:
   std::atomic_bool m_oss_in_use;
 };
 
+class QuietLogger : public Logger {
+public:
+  virtual void log(Logger::LogLevel level, const char * msg) override
+    {};
+};
+
 
 class ExecTimeMeter {
 public: 

@@ -16,9 +16,6 @@ namespace Calc {
 
   namespace dense_linear_solve {
 
-    static constexpr int default_max_iter_count = 10000;
-    template<typename T> constexpr T default_eps() { return T(1.0e-12); }
-
     //dispatcher
     bool perform(const AlgoParameters& parameters, Logger& log);
 
