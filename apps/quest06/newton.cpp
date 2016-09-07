@@ -1,6 +1,6 @@
 #include "newton.hpp"
 
-#include "calcapp/math/dense_linear_solver.hpp"
+#include "calcapp/math/dense_linear_solver_func.hpp"
 #include "numeric/newton_solver.hpp"
 
 #include <cmath>
