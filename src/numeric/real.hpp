@@ -31,6 +31,7 @@ typedef __int64 int64_t;
 
 #include <limits>
 #include <cmath>
+#include <cstdlib>
 
 namespace numeric {
 
@@ -196,6 +197,26 @@ template<> inline double toDouble(numeric::mpreal x)
 }
 #endif
 
+}
+
+namespace std
+{
+#ifdef HAVE_QUADMATH
+inline numeric::quad abs(numeric::quad x)
+{
+  return boost::multiprecision::abs(x);
+}
+#endif
+#ifdef HAVE_MPREAL
+inline numeric::mpreal abs(numeric::mpreal x)
+{
+# ifdef HAVE_BOOST_MPREAL
+  return boost::multiprecision::abs(x);
+# else
+  return mpfr::abs(x);
+# endif
+}
+#endif
 }
 
 #endif /* _REAL_HPP */

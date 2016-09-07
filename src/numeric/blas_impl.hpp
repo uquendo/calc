@@ -621,10 +621,10 @@ template<typename T> T vector_norm_L2(const size_t sz, const T* const __RESTRICT
       {
         if (scale < component)
         {
-          sum = one + sum * std::pow(scale / component, 2);
+          sum = one + sum * pow(scale / component, 2);
           scale = component;
         } else {
-          sum += std::pow(component / scale, 2);
+          sum += pow(component / scale, 2);
         }
       }
     }
@@ -655,10 +655,10 @@ template<typename T> T vector_distance_L2(const size_t sz, const T* const __REST
       {
         if (scale < component)
         {
-          sum = one + sum * std::pow(scale / component, 2);
+          sum = one + sum * pow(scale / component, 2);
           scale = component;
         } else {
-          sum += std::pow(component / scale, 2);
+          sum += pow(component / scale, 2);
         }
       }
     }

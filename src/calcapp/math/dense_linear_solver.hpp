@@ -26,6 +26,7 @@ namespace Calc
         Logger& log,
         const bool safe_checks = true)
     {
+      T pivot_abs = T(0.0);
       const T small_value = T(1.e-5); //TODO: type-independent value
       const size_t stride = sz;
       if(safe_checks)
@@ -35,8 +36,9 @@ namespace Calc
       }
       for(size_t k = 0; k < sz - 1; k++)
       {
-        if(std::abs(A[k*stride + k]) < small_value)
-          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,std::abs(A[k*stride + k]));
+        pivot_abs = std::abs(A[k*stride + k]);
+        if(pivot_abs < small_value)
+          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,numeric::toDouble(pivot_abs));
         T fac = T(1.0)/A[k*stride + k];
         for(size_t j = k + 1; j < sz; j++)
         {
@@ -62,6 +64,7 @@ namespace Calc
         Logger& log,
         const bool safe_checks = true)
     {
+      T pivot_abs = T(0.0);
       const T small_value = T(1.e-5); //TODO: type-independent value
       const size_t stride = sz;
       if(safe_checks)
@@ -71,8 +74,9 @@ namespace Calc
       }
       for(size_t k = 0; k < sz; k++)
       {
-        if(std::abs(A[k*stride + k]) < small_value)
-          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,numeric::toDouble(std::abs(A[k*stride + k])));
+        pivot_abs = std::abs(A[k*stride + k]);
+        if(pivot_abs < small_value)
+          log.fwarning("Small pivot element A(%zu,%zu) found, %g",k,k,numeric::toDouble(pivot_abs));
         T fac = T(1.0)/A[k*stride + k];
         for(size_t j = k + 1; j < sz; j++)
         {
@@ -103,6 +107,7 @@ namespace Calc
         size_t * const __RESTRICT index,
         Logger& log)
     {
+      T pivot_abs = T(0.0);
       const T small_value = T(1.e-5); //TODO: type-independent value
       const size_t stride = sz;
       index[0] = sz - 1;
@@ -137,9 +142,10 @@ namespace Calc
         } else {
           index[sz - 1 - k] = k;
         }
-        if(std::abs(A_rows[k][k]) < small_value)
+        pivot_abs = std::abs(A[k*stride + k]);
+        if(pivot_abs < small_value)
           log.fwarning("Despite all pivot selection efforts, pivot element A(%zu,%zu) is rather small, %g",
-              k,k,numeric::toDouble(std::abs(A_rows[k][k])));
+              k,k,numeric::toDouble(pivot_abs));
         T fac = T(1.0)/A_rows[k][k];
         for(size_t j = k + 1; j < sz; j++)
         {

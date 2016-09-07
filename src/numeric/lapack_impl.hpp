@@ -174,10 +174,10 @@ namespace numeric
             component = std::abs(component);
             if (scale < component)
             {
-              sum = one + sum * std::pow(scale / component, 2);
+              sum = one + sum * pow(scale / component, 2);
               scale = component;
             } else {
-              sum += std::pow(component / scale, 2);
+              sum += pow(component / scale, 2);
             }
           }
         }
